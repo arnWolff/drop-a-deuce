@@ -606,6 +606,14 @@
     </button>
   </div>
 
+  <div class="auth-options">
+    <button class="auth-btn google" id="googleBtn">...</button>
+    <div class="auth-divider"></div>
+    <button class="cta secondary" id="signOutBtnAnonym">
+      Se déconnecter (Mode Invité)
+    </button>
+  </div>
+
   <div class="auth-divider"><span data-i18n="or">ou</span></div>
 
   <div class="auth-form">
@@ -2186,13 +2194,20 @@ function updateUserBtn() {
 }
 
 $('userBtn').addEventListener('click', () => {
-  // Si l'utilisateur est anonyme, on veut lui montrer les options de CONNEXION
-  // S'il est réellement connecté (Google/Email), on montre son PROFIL
+  // On ouvre toujours une interface, mais on adapte le contenu
   if (currentUser && !currentUser.isAnonymous) {
-    openSheet('profileSheet'); // ou le nom de votre sheet de profil
+    openSheet('profileSheet'); // Utilisateur réel
   } else {
-    openSheet('authSheet');    // Ouvre la boîte avec le bouton Google
+    // Pour l'anonyme, on peut soit ouvrir l'authSheet 
+    // soit une version simplifiée du profil avec un bouton "Quitter le mode invité"
+    openSheet('authSheet'); 
   }
+});
+
+$('signOutBtnAnonym')?.addEventListener('click', async () => {
+  await signOut(auth);
+  toast(t('signedOut'));
+  closeSheets();
 });
 
 function openProfileSheet() {
