@@ -2097,7 +2097,7 @@ $('emailAuthBtn').addEventListener('click', async () => {
   } catch (e) { showAuthError(e); }
 });
 
-$('googleBtn').addEventListener('click', async () => {
+$('googleBtn').addEventListener('click', async () => { console.log(666);
   if (!FIREBASE_ON) return;
   const provider = new GoogleAuthProvider();
   
