@@ -2097,39 +2097,21 @@ $('emailAuthBtn').addEventListener('click', async () => {
   } catch (e) { showAuthError(e); }
 });
 
-$('googleBtn').addEventListener('click', async () => { console.log(666);
-  if (!FIREBASE_ON) return;
+$('googleBtn').addEventListener('click', async () => {
+  if (!FIREBASE_ON) { toast(t('offlineBanner'), 'warn'); return; }
   const provider = new GoogleAuthProvider();
-  
-  // Optionnel : Forcer la sélection du compte Google à chaque fois
-  provider.setCustomParameters({ prompt: 'select_account' });
-
   try {
-    // Si l'utilisateur est anonyme, on tente d'abord de lier son compte (pour garder ses stats)
     if (currentUser && currentUser.isAnonymous) {
-      try {
-        await linkWithPopup(currentUser, provider);
-        toast(t('signedIn'), 'win');
-        closeSheets();
-      } catch (linkError) {
-        // Si l'e-mail est déjà utilisé, on bascule sur une connexion classique
-        if (linkError.code === 'auth/credential-already-in-use') {
-          console.log("Compte déjà existant, bascule sur connexion simple...");
-          await signInWithPopup(auth, provider);
-          toast(t('signedIn'), 'win');
-          closeSheets();
-        } else {
-          throw linkError;
-        }
-      }
+      await linkWithPopup(currentUser, provider);
     } else {
-      // Si l'utilisateur n'est pas anonyme (ou déjà identifié), connexion directe
       await signInWithPopup(auth, provider);
-      toast(t('signedIn'), 'win');
-      closeSheets();
     }
-  } catch(e) {
-    showAuthError(e);
+    closeSheets();
+    toast(t('signedIn'), 'win');
+  } catch (e) {
+    if (e.code === 'auth/popup-blocked') {
+      try { await signInWithRedirect(auth, provider); } catch (e2) { showAuthError(e2); }
+    } else { showAuthError(e); }
   }
 });
 
@@ -2204,16 +2186,12 @@ function updateUserBtn() {
 }
 
 $('userBtn').addEventListener('click', () => {
-  if (!FIREBASE_ON) {
-    toast(t('offlineBanner'), 'warn');
-    return;
-  }
+  // Si l'utilisateur est anonyme, on veut lui montrer les options de CONNEXION
+  // S'il est réellement connecté (Google/Email), on montre son PROFIL
   if (currentUser && !currentUser.isAnonymous) {
-    openProfileSheet();
-  } else if (currentUser && currentUser.isAnonymous) {
-    openProfileSheet();
+    openSheet('profileSheet'); // ou le nom de votre sheet de profil
   } else {
-    openSheet('authSheet');
+    openSheet('authSheet');    // Ouvre la boîte avec le bouton Google
   }
 });
 
@@ -2369,7 +2347,7 @@ if (FIREBASE_ON && auth) {
       renderAllMarkers(); renderLocationsList(); renderDropLocRow();
       updateUserBtn();
       // Auto sign-in anonymously after sign-out so the app stays usable
-      try { await signInAnonymously(auth); } catch(e) { console.warn(e); }
+      //try { await signInAnonymously(auth); } catch(e) { console.warn(e); }
     }
   });
 } else {
