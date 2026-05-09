@@ -34,73 +34,65 @@
   html, body { height: 100%; overflow: hidden; font-family: 'Plus Jakarta Sans', sans-serif;
     background: var(--bg); color: var(--brown-1); overscroll-behavior: none; }
 
-  /* ===== TOP BAR ===== */
   .topbar { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; padding: 10px 14px;
     display: flex; align-items: center; gap: 8px;
     background: linear-gradient(180deg, rgba(250,243,231,0.96) 70%, rgba(250,243,231,0));
     backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
-  .logo { font-family: 'Bagel Fat One', cursive; font-size: 22px; color: var(--brown-1); display: flex; align-items: center; gap: 5px; letter-spacing: -0.3px; }
+  .logo { font-family: 'Bagel Fat One', cursive; font-size: 22px; color: var(--brown-1);
+    display: flex; align-items: center; gap: 5px; letter-spacing: -0.3px; }
   .logo .blob { display: inline-block; animation: wobble 3s ease-in-out infinite; }
-  @keyframes wobble { 0%,100% { transform: rotate(-8deg); } 50% { transform: rotate(8deg) translateY(-2px); } }
+  @keyframes wobble { 0%,100%{transform:rotate(-8deg)} 50%{transform:rotate(8deg) translateY(-2px)} }
   .spacer { flex: 1; }
-  .pill { background: var(--cream); border: 2px solid var(--brown-1); border-radius: 999px; padding: 6px 11px;
-    font-weight: 700; font-size: 12px; cursor: pointer; box-shadow: 2px 2px 0 var(--brown-1);
-    transition: transform .12s, box-shadow .12s; user-select: none; white-space: nowrap; }
+  .pill { background: var(--cream); border: 2px solid var(--brown-1); border-radius: 999px;
+    padding: 6px 11px; font-weight: 700; font-size: 12px; cursor: pointer;
+    box-shadow: 2px 2px 0 var(--brown-1); transition: transform .12s, box-shadow .12s;
+    user-select: none; white-space: nowrap; }
   .pill:active { transform: translate(2px,2px); box-shadow: 0 0 0 var(--brown-1); }
   .pill.premium { background: linear-gradient(135deg, var(--gold), var(--gold-deep)); }
 
-  /* ===== GLOBAL COUNTER BANNER ===== */
   .ticker { position: fixed; top: 50px; left: 0; right: 0; z-index: 999;
-    background: var(--brown-1); color: var(--cream);
-    padding: 8px 14px; border-bottom: 2px solid var(--brown-2);
-    box-shadow: 0 4px 14px rgba(61,40,23,0.25);
-    transform: translateY(-100%); animation: ticker-in 0.6s 0.2s cubic-bezier(0.34, 1.4, 0.64, 1) forwards; }
+    background: var(--brown-1); color: var(--cream); padding: 8px 14px;
+    border-bottom: 2px solid var(--brown-2); box-shadow: 0 4px 14px rgba(61,40,23,0.25);
+    transform: translateY(-100%); animation: ticker-in 0.6s 0.2s cubic-bezier(0.34,1.4,0.64,1) forwards; }
   @keyframes ticker-in { to { transform: translateY(0); } }
   .ticker-row { display: flex; align-items: center; justify-content: center; gap: 18px; flex-wrap: wrap; }
   .ticker-stat { display: flex; align-items: center; gap: 7px; font-weight: 700; font-size: 13px; }
   .ticker-stat .em { font-size: 18px; }
-  .ticker-stat .num {
-    font-family: 'Bagel Fat One', cursive;
-    font-size: clamp(16px, 4.5vw, 22px);
-    color: var(--gold);
-    letter-spacing: 0.5px;
-    transition: transform 0.15s, color 0.15s;
-    min-width: 70px;
-    display: inline-block;
-  }
+  .ticker-stat .num { font-family: 'Bagel Fat One', cursive; font-size: clamp(16px,4.5vw,22px);
+    color: var(--gold); letter-spacing: 0.5px; transition: transform 0.15s, color 0.15s;
+    min-width: 70px; display: inline-block; }
   .ticker-stat .num.flash { transform: scale(1.15); color: #fff; }
   .ticker-stat .lbl { opacity: 0.75; font-size: 10px; text-transform: uppercase; letter-spacing: 0.6px; font-weight: 800; }
   .ticker-fact { font-size: 10px; text-align: center; margin-top: 3px; opacity: 0.65;
     font-style: italic; font-weight: 500; min-height: 14px; }
 
-  /* ===== MAP ===== */
   #map { position: fixed; inset: 0; z-index: 1; }
   .leaflet-container { background: var(--cream); font-family: inherit; }
-  .leaflet-popup-content-wrapper { border-radius: 16px; border: 2px solid var(--brown-1); box-shadow: var(--shadow); background: var(--cream); padding: 0; overflow: hidden; }
+  .leaflet-popup-content-wrapper { border-radius: 16px; border: 2px solid var(--brown-1);
+    box-shadow: var(--shadow); background: var(--cream); padding: 0; overflow: hidden; }
   .leaflet-popup-content { margin: 0; min-width: 200px; }
   .leaflet-popup-tip { background: var(--cream); border: 2px solid var(--brown-1); }
   .leaflet-control-attribution { font-size: 10px; opacity: 0.7; }
-  .leaflet-control-zoom { border: 2px solid var(--brown-1) !important; border-radius: 12px !important; overflow: hidden; box-shadow: 2px 2px 0 var(--brown-1); margin-bottom: 110px !important; }
-  .leaflet-control-zoom a { background: var(--cream) !important; color: var(--brown-1) !important; font-weight: 700; }
+  .leaflet-control-zoom { border: 2px solid var(--brown-1)!important; border-radius: 12px!important;
+    overflow: hidden; box-shadow: 2px 2px 0 var(--brown-1); margin-bottom: 110px!important; }
+  .leaflet-control-zoom a { background: var(--cream)!important; color: var(--brown-1)!important; font-weight: 700; }
 
-  /* User location pulse */
   .user-loc { width: 24px; height: 24px; }
   .user-loc-inner { width: 16px; height: 16px; background: var(--blue); border: 3px solid white;
     border-radius: 50%; box-shadow: 0 0 0 2px rgba(33,150,243,0.4), 0 2px 6px rgba(0,0,0,0.3); position: relative; }
-  .user-loc-inner::before { content: ''; position: absolute; inset: -8px; border-radius: 50%;
+  .user-loc-inner::before { content:''; position: absolute; inset: -8px; border-radius: 50%;
     background: var(--blue); opacity: 0.3; animation: loc-pulse 2s ease-out infinite; }
-  @keyframes loc-pulse { 0% { transform: scale(0.8); opacity: 0.5; } 100% { transform: scale(2.5); opacity: 0; } }
+  @keyframes loc-pulse { 0%{transform:scale(0.8);opacity:0.5} 100%{transform:scale(2.5);opacity:0} }
 
-  /* Pin marker */
   .poo-marker { font-size: 32px; text-align: center; line-height: 1;
     filter: drop-shadow(0 3px 4px rgba(0,0,0,0.3));
-    animation: drop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); cursor: pointer; position: relative; }
-  .poo-marker.me { animation: drop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), pulse 2s ease-in-out 0.5s infinite; }
+    animation: drop 0.5s cubic-bezier(0.34,1.56,0.64,1); cursor: pointer; position: relative; }
+  .poo-marker.me { animation: drop 0.5s cubic-bezier(0.34,1.56,0.64,1), pulse 2s ease-in-out 0.5s infinite; }
   .poo-marker .badge { position: absolute; top: -6px; right: -10px; font-size: 16px;
-    background: var(--gold); border: 2px solid var(--brown-1); border-radius: 50%; width: 22px; height: 22px;
-    display: flex; align-items: center; justify-content: center; line-height: 1; }
-  @keyframes drop { 0% { transform: translateY(-30px) scale(0.5); opacity: 0; } 100% { transform: translateY(0) scale(1); opacity: 1; } }
-  @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.15); } }
+    background: var(--gold); border: 2px solid var(--brown-1); border-radius: 50%;
+    width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; line-height: 1; }
+  @keyframes drop { 0%{transform:translateY(-30px) scale(0.5);opacity:0} 100%{transform:translateY(0) scale(1);opacity:1} }
+  @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
 
   .popup-card { width: 200px; }
   .popup-photo { width: 100%; height: 130px; object-fit: cover; display: block; background: var(--brown-3); }
@@ -108,7 +100,6 @@
   .popup-title { font-weight: 800; font-size: 13px; display: flex; align-items: center; gap: 5px; margin-bottom: 3px; }
   .popup-meta { font-size: 11px; color: var(--brown-2); opacity: 0.8; }
 
-  /* ===== MY STATS CARD ===== */
   .stats { position: fixed; top: 110px; left: 14px; z-index: 998; background: var(--cream);
     border: 2px solid var(--brown-1); border-radius: 14px; padding: 8px 12px;
     box-shadow: 3px 3px 0 var(--brown-1); font-weight: 700; line-height: 1.3; }
@@ -120,7 +111,6 @@
   .stats .me-tag { font-size: 9px; font-weight: 800; opacity: 0.6; text-transform: uppercase;
     letter-spacing: 0.6px; margin-bottom: 2px; display: block; }
 
-  /* ===== FLOATING BUTTONS ===== */
   .locate-fab { position: fixed; right: 14px; top: 110px; z-index: 998;
     background: var(--cream); border: 2px solid var(--brown-1); border-radius: 50%;
     width: 44px; height: 44px; font-size: 20px; cursor: pointer;
@@ -130,7 +120,6 @@
   .locate-fab.locating { animation: spin 1s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* ===== MAP STYLE FAB + PICKER ===== */
   .style-fab { position: fixed; right: 14px; top: 164px; z-index: 998;
     background: var(--cream); border: 2px solid var(--brown-1); border-radius: 50%;
     width: 44px; height: 44px; font-size: 20px; cursor: pointer;
@@ -138,19 +127,17 @@
     transition: transform .1s, box-shadow .1s; }
   .style-fab:active { transform: translate(3px,3px); box-shadow: 0 0 0 var(--brown-1); }
   .style-fab.active { background: var(--gold); }
-
   .style-picker { position: fixed; right: 68px; top: 110px; z-index: 999;
     background: var(--cream); border: 2px solid var(--brown-1); border-radius: 16px;
     padding: 8px; display: none; flex-direction: column; gap: 4px;
-    box-shadow: 4px 4px 0 var(--brown-1); min-width: 160px; }
+    box-shadow: 4px 4px 0 var(--brown-1); min-width: 170px; }
   .style-picker.open { display: flex; }
   .style-picker-title { font-size: 9px; font-weight: 800; text-transform: uppercase;
-    letter-spacing: 0.8px; opacity: 0.5; padding: 2px 8px 6px; border-bottom: 1px solid rgba(61,40,23,0.15);
-    margin-bottom: 2px; }
+    letter-spacing: 0.8px; opacity: 0.5; padding: 2px 8px 6px;
+    border-bottom: 1px solid rgba(61,40,23,0.15); margin-bottom: 2px; }
   .style-opt { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 10px;
     cursor: pointer; font-weight: 700; font-size: 12px; white-space: nowrap;
     border: 2px solid transparent; transition: background .12s, border-color .12s; }
-  .style-opt:active { background: var(--bg); }
   .style-opt.active { background: var(--gold); border-color: var(--brown-1); }
   .style-opt .s-em { font-size: 18px; line-height: 1; }
   .style-opt .s-info { display: flex; flex-direction: column; gap: 1px; }
@@ -163,10 +150,10 @@
     box-shadow: 3px 3px 0 var(--brown-1); display: flex; align-items: center; justify-content: center;
     transition: transform .1s, box-shadow .1s; }
   .challenge-fab:active { transform: translate(3px,3px); box-shadow: 0 0 0 var(--brown-1); }
-  .challenge-fab .count { position: absolute; top: -4px; right: -4px; background: var(--brown-1); color: var(--cream);
-    font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 999px; border: 2px solid var(--cream); }
+  .challenge-fab .count { position: absolute; top: -4px; right: -4px; background: var(--brown-1);
+    color: var(--cream); font-size: 10px; font-weight: 800; padding: 2px 6px;
+    border-radius: 999px; border: 2px solid var(--cream); }
 
-  /* ===== MAIN BUTTON ===== */
   .fab-wrap { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 999;
     display: flex; flex-direction: column; align-items: center; gap: 6px; }
   .fab-label { background: var(--brown-1); color: var(--cream); padding: 4px 12px; border-radius: 999px;
@@ -176,32 +163,30 @@
     color: var(--brown-1); font-size: 42px; cursor: pointer;
     box-shadow: 0 6px 0 var(--brown-1), var(--shadow-lg); transition: transform 0.1s, box-shadow 0.1s;
     display: flex; align-items: center; justify-content: center; position: relative; }
-  .fab::before { content: ''; position: absolute; inset: -8px; border-radius: 50%; background: var(--gold);
-    opacity: 0.3; animation: ripple 2s ease-out infinite; z-index: -1; }
-  @keyframes ripple { 0% { transform: scale(1); opacity: 0.4; } 100% { transform: scale(1.4); opacity: 0; } }
+  .fab::before { content:''; position: absolute; inset: -8px; border-radius: 50%;
+    background: var(--gold); opacity: 0.3; animation: ripple 2s ease-out infinite; z-index: -1; }
+  @keyframes ripple { 0%{transform:scale(1);opacity:0.4} 100%{transform:scale(1.4);opacity:0} }
   .fab:active { transform: translateY(6px); box-shadow: 0 0 0 var(--brown-1), var(--shadow); }
 
-  /* CONFETTI / TOAST */
-  .confetti { position: fixed; pointer-events: none; z-index: 9999; font-size: 28px; animation: confetti-fall 1.4s ease-out forwards; }
-  @keyframes confetti-fall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(160px) rotate(540deg); opacity: 0; } }
-
+  .confetti { position: fixed; pointer-events: none; z-index: 9999; font-size: 28px;
+    animation: confetti-fall 1.4s ease-out forwards; }
+  @keyframes confetti-fall { 0%{transform:translateY(0) rotate(0deg);opacity:1} 100%{transform:translateY(160px) rotate(540deg);opacity:0} }
   .toast { position: fixed; bottom: 150px; left: 50%; transform: translateX(-50%);
     background: var(--brown-1); color: var(--cream); padding: 10px 18px; border-radius: 999px;
     font-weight: 700; font-size: 13px; z-index: 9998; box-shadow: var(--shadow);
-    animation: toast-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), toast-out 0.3s ease-in 1.9s forwards;
+    animation: toast-in 0.3s cubic-bezier(0.34,1.56,0.64,1), toast-out 0.3s ease-in 1.9s forwards;
     white-space: nowrap; max-width: 90vw; }
   .toast.warn { background: var(--pink); color: var(--brown-1); }
   .toast.win { background: var(--green); color: white; }
-  @keyframes toast-in { from { transform: translate(-50%, 30px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
-  @keyframes toast-out { to { transform: translate(-50%, 30px); opacity: 0; } }
+  @keyframes toast-in { from{transform:translate(-50%,30px);opacity:0} to{transform:translate(-50%,0);opacity:1} }
+  @keyframes toast-out { to{transform:translate(-50%,30px);opacity:0} }
 
-  /* BOTTOM SHEET */
   .sheet-bg { position: fixed; inset: 0; background: rgba(61,40,23,0.5); backdrop-filter: blur(4px);
     z-index: 9000; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
   .sheet-bg.open { opacity: 1; pointer-events: auto; }
   .sheet { position: fixed; left: 0; right: 0; bottom: 0; background: var(--cream);
     border-radius: 24px 24px 0 0; border-top: 3px solid var(--brown-1);
-    transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.34, 1.4, 0.64, 1);
+    transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.34,1.4,0.64,1);
     z-index: 9100; max-height: 85vh; overflow-y: auto; padding: 8px 18px 24px; }
   .sheet.open { transform: translateY(0); }
   .sheet-handle { width: 44px; height: 5px; background: var(--brown-3); opacity: 0.4;
@@ -209,52 +194,109 @@
   .sheet h2 { font-family: 'Bagel Fat One', cursive; font-size: 26px; margin-bottom: 4px; }
   .sheet .sub { font-size: 13px; color: var(--brown-2); opacity: 0.85; margin-bottom: 16px; }
 
-  .ch-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+  .ch-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 16px; }
   .ch-card { background: var(--bg); border: 2px solid var(--brown-1); border-radius: 14px;
     padding: 10px 6px; text-align: center; cursor: pointer; transition: transform .15s, background .15s;
     position: relative; overflow: hidden; }
   .ch-card:active { transform: scale(0.95); }
   .ch-card.selected { background: var(--gold); transform: scale(1.05); }
   .ch-card.locked { opacity: 0.45; cursor: not-allowed; }
-  .ch-card.done::after { content: '✓'; position: absolute; top: 4px; right: 6px;
+  .ch-card.done::after { content:'✓'; position: absolute; top: 4px; right: 6px;
     background: var(--green); color: white; width: 18px; height: 18px; border-radius: 50%;
     font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
-  .ch-card.locked::after { content: '🔒'; position: absolute; top: 4px; right: 4px; font-size: 12px; }
+  .ch-card.locked::after { content:'🔒'; position: absolute; top: 4px; right: 4px; font-size: 12px; }
   .ch-emoji { font-size: 28px; line-height: 1; margin-bottom: 4px; display: block; }
   .ch-name { font-size: 10px; font-weight: 700; line-height: 1.15; }
   .ch-xp { font-size: 9px; color: var(--brown-2); margin-top: 2px; opacity: 0.8; }
 
-  /* ===== PHOTO ROW — Android-safe ===== */
-  .photo-row { display: flex; gap: 10px; margin-bottom: 16px; align-items: center; }
-  .photo-btn {
-    flex: 1; background: var(--cream); border: 2px dashed var(--brown-1); border-radius: 14px;
-    padding: 18px; text-align: center; cursor: pointer; font-weight: 700; font-size: 13px;
-    color: var(--brown-2); transition: background .15s;
-    /* Use button instead of label — more reliable on Android */
-    font-family: inherit;
+  /* ===== PHOTO AREA ===== */
+  .photo-row { margin-bottom: 16px; }
+
+  /*
+   * Hidden file inputs — CRITICAL: use position:fixed offscreen, NOT display:none.
+   * display:none blocks programmatic .click() on many Android browsers.
+   * capture="environment" on cameraInput tells Android to open the rear camera app directly.
+   */
+  #cameraInput, #galleryInput {
+    position: fixed; top: -9999px; left: -9999px;
+    width: 1px; height: 1px; opacity: 0; pointer-events: none;
   }
+
+  /* Mobile: two side-by-side option buttons */
+  .photo-opts { display: flex; gap: 8px; }
+  .photo-opt-btn { flex: 1; background: var(--cream); border: 2px solid var(--brown-1);
+    border-radius: 14px; padding: 14px 8px; text-align: center; cursor: pointer;
+    font-weight: 700; font-size: 12px; color: var(--brown-1);
+    transition: background .15s, transform .1s; font-family: inherit;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    box-shadow: 2px 2px 0 var(--brown-1); }
+  .photo-opt-btn:active { transform: translate(2px,2px); box-shadow: 0 0 0 var(--brown-1); }
+  .photo-opt-btn .opt-em { font-size: 26px; line-height: 1; }
+  .photo-opt-btn .opt-lbl { font-size: 11px; }
+
+  /* Desktop: single open-webcam button */
+  .photo-btn { width: 100%; background: var(--cream); border: 2px dashed var(--brown-1);
+    border-radius: 14px; padding: 18px; text-align: center; cursor: pointer;
+    font-weight: 700; font-size: 13px; color: var(--brown-2);
+    transition: background .15s; font-family: inherit; }
   .photo-btn:active { background: var(--bg); }
-  .photo-preview { position: relative; width: 90px; height: 90px; border-radius: 14px;
-    border: 2px solid var(--brown-1); overflow: hidden; box-shadow: 2px 2px 0 var(--brown-1); }
-  .photo-preview img { width: 100%; height: 100%; object-fit: cover; }
+
+  /* Preview */
+  .photo-preview-wrap { display: flex; align-items: center; gap: 10px; }
+  .photo-preview { position: relative; width: 80px; height: 80px; border-radius: 12px;
+    border: 2px solid var(--brown-1); overflow: hidden; box-shadow: 2px 2px 0 var(--brown-1); flex-shrink: 0; }
+  .photo-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .photo-preview .x { position: absolute; top: 2px; right: 2px; background: var(--brown-1);
     color: var(--cream); width: 22px; height: 22px; border-radius: 50%; font-size: 14px;
-    font-weight: 800; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; }
-  /* Hidden file input — NOT display:none on Android, use opacity+position trick */
-  #fileInput {
-    position: absolute;
-    width: 1px; height: 1px;
-    opacity: 0;
-    overflow: hidden;
-    pointer-events: none;
-  }
+    font-weight: 800; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; border: none; font-family: inherit; }
+  .photo-retake { flex: 1; background: var(--cream); border: 2px dashed var(--brown-3);
+    border-radius: 12px; padding: 12px 8px; text-align: center; cursor: pointer;
+    font-weight: 700; font-size: 11px; color: var(--brown-2); font-family: inherit; }
+
+  /* ===== WEBCAM MODAL ===== */
+  .webcam-overlay { position: fixed; inset: 0; z-index: 10500;
+    background: rgba(61,40,23,0.88); backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px; animation: fade-in 0.2s ease; }
+  .webcam-overlay.hidden { display: none; }
+  @keyframes fade-in { from{opacity:0} to{opacity:1} }
+  .webcam-card { background: var(--cream); border: 3px solid var(--brown-1); border-radius: 24px;
+    padding: 16px; width: 100%; max-width: 480px;
+    box-shadow: 6px 6px 0 var(--brown-1);
+    animation: slide-up 0.3s cubic-bezier(0.34,1.4,0.64,1); }
+  @keyframes slide-up { from{transform:translateY(30px);opacity:0} to{transform:translateY(0);opacity:1} }
+  .webcam-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .webcam-header span { font-family: 'Bagel Fat One', cursive; font-size: 20px; }
+  .webcam-close { background: var(--brown-1); color: var(--cream); border: none; border-radius: 50%;
+    width: 32px; height: 32px; font-size: 18px; font-weight: 800; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; font-family: inherit; }
+  .webcam-close:active { opacity: 0.8; }
+  /* The live video feed */
+  .webcam-video { width: 100%; aspect-ratio: 4/3; border-radius: 14px; border: 2px solid var(--brown-1);
+    background: #111; display: block; object-fit: cover; transform: scaleX(-1); /* mirror front cam */ }
+  .webcam-canvas { display: none; }
+  /* Snapshot preview after capture */
+  .webcam-snapshot { width: 100%; aspect-ratio: 4/3; border-radius: 14px;
+    border: 2px solid var(--brown-1); background: #111; object-fit: cover; display: none; }
+  /* Error state */
+  .webcam-error { text-align: center; padding: 28px; font-weight: 700;
+    color: var(--brown-2); font-size: 14px; display: none; }
+  .webcam-error .err-em { font-size: 40px; display: block; margin-bottom: 8px; }
+  .webcam-actions { display: flex; gap: 10px; margin-top: 12px; }
+  .webcam-btn { flex: 1; padding: 12px; border: 2px solid var(--brown-1); border-radius: 14px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-deep)); color: var(--brown-1);
+    font-family: inherit; font-size: 14px; font-weight: 800; cursor: pointer;
+    box-shadow: 3px 3px 0 var(--brown-1); transition: transform .1s, box-shadow .1s; }
+  .webcam-btn:active { transform: translate(3px,3px); box-shadow: 0 0 0 var(--brown-1); }
+  .webcam-btn.secondary { background: var(--cream); }
 
   .cta { width: 100%; padding: 14px; border: 3px solid var(--brown-1); border-radius: 16px;
     background: linear-gradient(135deg, var(--gold), var(--gold-deep)); color: var(--brown-1);
     font-family: inherit; font-size: 16px; font-weight: 800; cursor: pointer;
     box-shadow: 4px 4px 0 var(--brown-1); transition: transform .1s, box-shadow .1s; }
   .cta:active { transform: translate(4px,4px); box-shadow: 0 0 0 var(--brown-1); }
-  .cta:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important; box-shadow: 4px 4px 0 var(--brown-1) !important; }
+  .cta:disabled { opacity: 0.45; cursor: not-allowed; transform: none!important; box-shadow: 4px 4px 0 var(--brown-1)!important; }
 
   .ch-panel-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
   .ch-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px;
@@ -270,34 +312,30 @@
   .xp-bar { background: var(--bg); border: 2px solid var(--brown-1); border-radius: 999px;
     padding: 4px; height: 26px; position: relative; margin-bottom: 14px; }
   .xp-fill { background: linear-gradient(90deg, var(--gold), var(--gold-deep)); height: 100%;
-    border-radius: 999px; transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    border-radius: 999px; transition: width 0.5s cubic-bezier(0.34,1.56,0.64,1); }
   .xp-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
     font-size: 11px; font-weight: 800; }
 
-  .ach { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
+  .ach { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0);
     background: var(--cream); border: 4px solid var(--brown-1); border-radius: 24px;
     padding: 20px 28px; text-align: center; z-index: 10000;
     box-shadow: 6px 6px 0 var(--brown-1), var(--shadow-lg); pointer-events: none; }
-  .ach.show { animation: ach-pop 2.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+  .ach.show { animation: ach-pop 2.4s cubic-bezier(0.34,1.56,0.64,1) forwards; }
   @keyframes ach-pop {
-    0% { transform: translate(-50%, -50%) scale(0) rotate(-15deg); }
-    15% { transform: translate(-50%, -50%) scale(1.1) rotate(5deg); }
-    25% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
-    85% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
-    100% { transform: translate(-50%, -50%) scale(0.7) rotate(0deg); opacity: 0; }
+    0%{transform:translate(-50%,-50%) scale(0) rotate(-15deg)}
+    15%{transform:translate(-50%,-50%) scale(1.1) rotate(5deg)}
+    25%{transform:translate(-50%,-50%) scale(1) rotate(0deg)}
+    85%{transform:translate(-50%,-50%) scale(1) rotate(0deg);opacity:1}
+    100%{transform:translate(-50%,-50%) scale(0.7) rotate(0deg);opacity:0}
   }
   .ach .em { font-size: 56px; line-height: 1; margin-bottom: 6px; display: block; }
   .ach .ttl { font-family: 'Bagel Fat One', cursive; font-size: 20px; }
   .ach .nm { font-size: 14px; font-weight: 700; color: var(--brown-2); }
 
   @media (max-width: 380px) {
-    .logo { font-size: 16px; }
-    .pill { font-size: 11px; padding: 5px 8px; }
-    .ticker-row { gap: 12px; }
-    .ticker-stat .num { font-size: 16px; min-width: 60px; }
-    .ticker-fact { font-size: 9px; }
-    .stats { padding: 6px 10px; }
-    .stats-row { gap: 10px; }
+    .logo{font-size:16px} .pill{font-size:11px;padding:5px 8px}
+    .ticker-row{gap:12px} .ticker-stat .num{font-size:16px;min-width:60px}
+    .ticker-fact{font-size:9px} .stats{padding:6px 10px} .stats-row{gap:10px}
   }
 </style>
 </head>
@@ -310,24 +348,20 @@
   <div class="pill premium" id="planBtn">🆓 <span data-i18n="free">Gratuit</span></div>
 </div>
 
-<!-- GLOBAL LIVE TICKER -->
 <div class="ticker">
   <div class="ticker-row">
     <div class="ticker-stat">
-      <span class="em">💩</span>
-      <span class="num" id="globalTotal">0</span>
+      <span class="em">💩</span><span class="num" id="globalTotal">0</span>
       <span class="lbl" data-i18n="worldwide">Mondial</span>
     </div>
     <div class="ticker-stat">
-      <span class="em">🔥</span>
-      <span class="num" id="globalToday">0</span>
+      <span class="em">🔥</span><span class="num" id="globalToday">0</span>
       <span class="lbl" data-i18n="todayLbl">Aujourd'hui</span>
     </div>
   </div>
   <div class="ticker-fact" id="funFact">—</div>
 </div>
 
-<!-- MY STATS -->
 <div class="stats">
   <span class="me-tag" data-i18n="meTag">Mes stats</span>
   <div class="stats-row">
@@ -338,20 +372,23 @@
 </div>
 
 <button class="locate-fab" id="locateBtn" aria-label="Me localiser">📍</button>
-
-<!-- MAP STYLE FAB + PICKER -->
-<button class="style-fab" id="styleFab" aria-label="Changer le style de carte">🗺️</button>
+<button class="style-fab" id="styleFab" aria-label="Style de carte">🗺️</button>
 <div class="style-picker" id="stylePicker">
   <div class="style-picker-title" data-i18n="mapStyle">Style de carte</div>
-  <!-- Options injected by JS -->
 </div>
 
 <div id="map"></div>
 
-<!-- Hidden file input: NOT display:none — Android requires it to be in the DOM flow -->
-<input type="file" id="fileInput" accept="image/*" />
+<!--
+  Two file inputs, positioned offscreen (NOT display:none).
+  - cameraInput: capture="environment" → opens rear camera app directly on Android/iOS
+  - galleryInput: no capture → shows file/gallery picker
+  Both must be reachable in the DOM for .click() to work on Android.
+-->
+<input type="file" id="cameraInput" accept="image/*" capture="environment" />
+<input type="file" id="galleryInput" accept="image/*" />
 
-<button class="challenge-fab" id="trophyBtn" aria-label="Défis" style="position:fixed;">
+<button class="challenge-fab" id="trophyBtn" style="position:fixed;" aria-label="Défis">
   🏆<span class="count" id="challengeCount">0</span>
 </button>
 
@@ -367,11 +404,7 @@
   <h2 data-i18n="dropTitle">Déposer un Pin 💩</h2>
   <p class="sub" data-i18n="dropSub">Choisis un défi et prends une photo !</p>
   <div class="ch-grid" id="dropChGrid"></div>
-  <div class="photo-row" id="photoRow">
-    <button class="photo-btn" id="photoBtn" type="button">
-      📸 <span data-i18n="addPhoto">Ajouter une photo (optionnel)</span>
-    </button>
-  </div>
+  <div class="photo-row" id="photoRow"></div>
   <button class="cta" id="confirmDrop" disabled data-i18n="dropIt">Déposer ! 💩</button>
 </div>
 
@@ -392,6 +425,24 @@
   <button class="cta" id="upgradeBtn" data-i18n="upgrade">Passer Premium</button>
 </div>
 
+<!-- Desktop webcam modal -->
+<div class="webcam-overlay hidden" id="webcamOverlay">
+  <div class="webcam-card">
+    <div class="webcam-header">
+      <span id="webcamTitle">📸 Webcam</span>
+      <button class="webcam-close" id="webcamClose" type="button">×</button>
+    </div>
+    <video class="webcam-video" id="webcamVideo" autoplay playsinline muted></video>
+    <img class="webcam-snapshot" id="webcamSnapshot" alt="" />
+    <div class="webcam-error" id="webcamError">
+      <span class="err-em">📷</span>
+      <span id="webcamErrMsg">Webcam non disponible</span>
+    </div>
+    <canvas id="webcamCanvas" class="webcam-canvas"></canvas>
+    <div class="webcam-actions" id="webcamActions"></div>
+  </div>
+</div>
+
 <div class="ach" id="ach">
   <span class="em" id="achEmoji">🏆</span>
   <div class="ttl" data-i18n="achievement">Défi Réussi !</div>
@@ -400,684 +451,550 @@
 
 <script>
 /* ================================================================
- * DROP A DEUCE / POSE TA PÊCHE v2
- * Fixes: French default, fun map styles selector, Android photo
+ * DROP A DEUCE / POSE TA PÊCHE v3
+ * Photo: mobile → 📷 Camera + 🖼️ Gallery | desktop → Webcam + File
  * ================================================================ */
+
+// ---------- DEVICE DETECTION ----------
+const isMobile = /Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent)
+  || (navigator.maxTouchPoints > 1 && !/Macintosh/.test(navigator.userAgent));
 
 // ---------- MAP STYLES ----------
 const MAP_STYLES = [
-  {
-    id: 'voyager',
-    em: '🎨',
-    en: ['Colorful', 'Bright & vivid'],
-    fr: ['Colorée', 'Vive et joyeuse'],
-    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-    attr: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/">CARTO</a>',
-    maxZoom: 19
-  },
-  {
-    id: 'osm',
-    em: '🗺️',
-    en: ['Classic', 'Standard OSM'],
-    fr: ['Classique', 'OpenStreetMap'],
-    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-    attr: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    maxZoom: 19
-  },
-  {
-    id: 'dark',
-    em: '🌙',
-    en: ['Dark Mode', 'Night vibes'],
-    fr: ['Mode Sombre', 'Ambiance nuit'],
-    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    attr: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/">CARTO</a>',
-    maxZoom: 19
-  },
-  {
-    id: 'topo',
-    em: '🏔️',
-    en: ['Topo', 'Relief & contours'],
-    fr: ['Topo', 'Relief & courbes'],
-    url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
-    attr: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://opentopomap.org/">OpenTopoMap</a>',
-    maxZoom: 17
-  },
-  {
-    id: 'satellite',
-    em: '🛰️',
-    en: ['Satellite', 'From space 🚀'],
-    fr: ['Satellite', 'Vue du ciel 🚀'],
-    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    attr: '© <a href="https://www.esri.com/">Esri</a>',
-    maxZoom: 18
-  },
-  {
-    id: 'watercolor',
-    em: '🎭',
-    en: ['Watercolor', 'Artistic & dreamy'],
-    fr: ['Aquarelle', 'Artistique & poétique'],
-    url: 'https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg',
-    attr: '© <a href="https://stadiamaps.com/">Stadia Maps</a> © <a href="http://stamen.com/">Stamen Design</a> © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    maxZoom: 16
-  }
+  { id:'voyager',   em:'🎨', en:['Colorful','Bright & vivid'],       fr:['Colorée','Vive et joyeuse'],
+    url:'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+    attr:'© OpenStreetMap © CARTO', maxZoom:19 },
+  { id:'osm',       em:'🗺️', en:['Classic','Standard OSM'],          fr:['Classique','OpenStreetMap'],
+    url:'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attr:'© OpenStreetMap', maxZoom:19 },
+  { id:'dark',      em:'🌙', en:['Dark Mode','Night vibes'],          fr:['Sombre','Ambiance nuit'],
+    url:'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    attr:'© OpenStreetMap © CARTO', maxZoom:19 },
+  { id:'topo',      em:'🏔️', en:['Topo','Relief & contours'],        fr:['Topo','Relief & courbes'],
+    url:'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+    attr:'© OpenStreetMap © OpenTopoMap', maxZoom:17 },
+  { id:'satellite', em:'🛰️', en:['Satellite','From space 🚀'],        fr:['Satellite','Vue du ciel 🚀'],
+    url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    attr:'© Esri', maxZoom:18 },
+  { id:'watercolor',em:'🎭', en:['Watercolor','Artistic & dreamy'],   fr:['Aquarelle','Artistique & poétique'],
+    url:'https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg',
+    attr:'© Stadia © Stamen © OSM', maxZoom:16 }
 ];
 
 // ---------- CHALLENGES ----------
 const CHALLENGES = [
-  { id: 'toilet',   em: '🚽', xp: 10, premium: false, en: ['Classic Throne', 'The OG. The original. The toilet.'],     fr: ['Trône Classique', "L'original. La référence. Les toilettes."] },
-  { id: 'nature',   em: '🌲', xp: 25, premium: false, en: ['Au Naturel', 'In the great outdoors.'],                    fr: ['Au Naturel', 'En pleine nature.'] },
-  { id: 'beach',    em: '🏖️', xp: 30, premium: false, en: ['Beach Bum', 'Sand between your... toes.'],                  fr: ['Plage Privée', 'Du sable entre tes... orteils.'] },
-  { id: 'forest',   em: '🌳', xp: 25, premium: false, en: ['Woodsy Whoopsie', 'A bear does it. Now you do too.'],      fr: ['Bois Secret', "L'ours le fait. Toi aussi maintenant."] },
-  { id: 'office',   em: '🏢', xp: 15, premium: false, en: ['Office Hours', 'Productive in every way.'],                fr: ['Heures de Bureau', 'Productif sous tous les angles.'] },
-  { id: 'kitchen',  em: '🍳', xp: 50, premium: true,  en: ['Kitchen Catastrophe', 'A bold and dubious choice.'],       fr: ['Catastrophe Cuisine', 'Un choix audacieux et douteux.'] },
-  { id: 'mountain', em: '🏔️', xp: 60, premium: false, en: ['Peak Performance', 'Above the clouds.'],                   fr: ["Sommet de l'Art", 'Au-dessus des nuages.'] },
-  { id: 'plane',    em: '✈️', xp: 40, premium: false, en: ['Mile High', 'Cruising altitude.'],                          fr: ['Vol Plané', 'En altitude de croisière.'] },
-  { id: 'train',    em: '🚂', xp: 30, premium: false, en: ['Loco Locomotive', 'On the rails.'],                        fr: ['Train Express', 'Sur les rails.'] },
-  { id: 'night',    em: '🌃', xp: 20, premium: false, en: ['Midnight Run', 'Between 11pm and 4am.'],                   fr: ['Course de Minuit', 'Entre 23h et 4h.'] },
-  { id: 'sunrise',  em: '🌅', xp: 25, premium: true,  en: ['Dawn Patrol', 'First poo of the day, at sunrise.'],         fr: ['Au Lever du Soleil', "Premier dépôt du jour, à l'aube."] },
-  { id: 'hotel',    em: '🏨', xp: 20, premium: false, en: ['Five Star Stool', 'Hotel sweet hotel.'],                   fr: ['Cinq Étoiles', 'Hôtel sweet hôtel.'] },
-  { id: 'water',    em: '🌊', xp: 25, premium: false, en: ['Riverside Relief', 'By the water.'],                       fr: ["Au Bord de l'Eau", 'Près des flots.'] },
-  { id: 'abroad',   em: '🌍', xp: 75, premium: true,  en: ['Globe Trotter', 'Different country. Bonjour, hola, ciao!'], fr: ['Tour du Monde', 'Pays différent. Hello, hola, ciao !'] },
-  { id: 'public',   em: '🏛️', xp: 35, premium: true,  en: ['Public Performance', 'Public restroom on tour.'],           fr: ['Spectacle Public', 'Toilettes publiques en tournée.'] }
+  {id:'toilet',  em:'🚽',xp:10,premium:false,en:['Classic Throne','The OG. The original. The toilet.'],      fr:['Trône Classique',"L'original. La référence. Les toilettes."]},
+  {id:'nature',  em:'🌲',xp:25,premium:false,en:['Au Naturel','In the great outdoors.'],                     fr:['Au Naturel','En pleine nature.']},
+  {id:'beach',   em:'🏖️',xp:30,premium:false,en:['Beach Bum','Sand between your... toes.'],                  fr:['Plage Privée','Du sable entre tes... orteils.']},
+  {id:'forest',  em:'🌳',xp:25,premium:false,en:['Woodsy Whoopsie','A bear does it. Now you do too.'],       fr:['Bois Secret',"L'ours le fait. Toi aussi maintenant."]},
+  {id:'office',  em:'🏢',xp:15,premium:false,en:['Office Hours','Productive in every way.'],                 fr:['Heures de Bureau','Productif sous tous les angles.']},
+  {id:'kitchen', em:'🍳',xp:50,premium:true, en:['Kitchen Catastrophe','A bold and dubious choice.'],        fr:['Catastrophe Cuisine','Un choix audacieux et douteux.']},
+  {id:'mountain',em:'🏔️',xp:60,premium:false,en:['Peak Performance','Above the clouds.'],                    fr:["Sommet de l'Art",'Au-dessus des nuages.']},
+  {id:'plane',   em:'✈️',xp:40,premium:false,en:['Mile High','Cruising altitude.'],                          fr:['Vol Plané','En altitude de croisière.']},
+  {id:'train',   em:'🚂',xp:30,premium:false,en:['Loco Locomotive','On the rails.'],                         fr:['Train Express','Sur les rails.']},
+  {id:'night',   em:'🌃',xp:20,premium:false,en:['Midnight Run','Between 11pm and 4am.'],                    fr:['Course de Minuit','Entre 23h et 4h.']},
+  {id:'sunrise', em:'🌅',xp:25,premium:true, en:['Dawn Patrol','First poo of the day, at sunrise.'],         fr:['Au Lever du Soleil',"Premier dépôt du jour, à l'aube."]},
+  {id:'hotel',   em:'🏨',xp:20,premium:false,en:['Five Star Stool','Hotel sweet hotel.'],                    fr:['Cinq Étoiles','Hôtel sweet hôtel.']},
+  {id:'water',   em:'🌊',xp:25,premium:false,en:['Riverside Relief','By the water.'],                        fr:["Au Bord de l'Eau",'Près des flots.']},
+  {id:'abroad',  em:'🌍',xp:75,premium:true, en:['Globe Trotter','Different country. Bonjour, hola, ciao!'],fr:['Tour du Monde','Pays différent. Hello, hola, ciao !']},
+  {id:'public',  em:'🏛️',xp:35,premium:true, en:['Public Performance','Public restroom on tour.'],           fr:['Spectacle Public','Toilettes publiques en tournée.']}
 ];
 
 // ---------- I18N ----------
 const I18N = {
-  en: { appName: 'Drop a Deuce', tagline: 'The fun way to map your #2',
-    free: 'Free', premium: 'Premium', today: 'Today', total: 'Total', level: 'Lvl',
-    tap: "Tap when it's time", dropTitle: 'Drop a Pin 💩', dropSub: 'Pick a challenge and snap a fun photo!',
-    addPhoto: 'Add a photo (optional)', dropIt: 'Drop it! 💩',
-    challenges: 'Challenges', completed: 'completed',
-    goPremium: 'Go Premium ⭐', premiumDesc: 'Unlock the full experience — never hold back again!',
-    upgrade: 'Upgrade Now', achievement: 'Challenge Complete!',
-    locating: '📍 Finding you...', dropped: 'Dropped! 💩 +{xp} XP',
-    dailyLimit: 'Daily limit reached! Go Premium 🚀', locationDenied: 'Location denied. Tap the map to drop manually!',
-    welcome: 'Welcome! Tap 💩 to drop your first pin.', pickChallenge: 'Pick a challenge first!',
-    nowFree: 'Switched to Free 🆓', nowPremium: 'Welcome to Premium! ⭐', levelUp: 'LEVEL UP! 🎉',
-    foundYou: '📍 Found you!', worldwide: 'Worldwide', todayLbl: 'Today', meTag: 'My stats',
-    mapStyle: 'Map style',
-    facts: [
-      "That's enough drops to fill {pools} Olympic pools 🏊",
+  en: {
+    appName:'Drop a Deuce', tagline:'The fun way to map your #2',
+    free:'Free', premium:'Premium', today:'Today', total:'Total', level:'Lvl',
+    tap:"Tap when it's time", dropTitle:'Drop a Pin 💩', dropSub:'Pick a challenge and snap a fun photo!',
+    takePhoto:'Take a photo', fromGallery:'From gallery',
+    addPhoto:'Add a photo', webcamTitle:'Webcam 📸',
+    capture:'Capture', retake:'Retake', usePhoto:'Use this photo', uploadFile:'Upload file',
+    webcamError:'Webcam not available. Grant permission or upload a file.',
+    dropIt:'Drop it! 💩', challenges:'Challenges', completed:'completed',
+    goPremium:'Go Premium ⭐', premiumDesc:'Unlock the full experience!',
+    upgrade:'Upgrade Now', achievement:'Challenge Complete!',
+    locating:'📍 Finding you...', dropped:'Dropped! 💩 +{xp} XP',
+    dailyLimit:'Daily limit reached! Go Premium 🚀',
+    locationDenied:'Location denied. Tap the map to drop manually!',
+    welcome:'Welcome! Tap 💩 to drop your first pin.',
+    pickChallenge:'Pick a challenge first!',
+    nowFree:'Switched to Free 🆓', nowPremium:'Welcome to Premium! ⭐', levelUp:'LEVEL UP! 🎉',
+    foundYou:'📍 Found you!', worldwide:'Worldwide', todayLbl:'Today', meTag:'My stats',
+    mapStyle:'Map style',
+    facts:["That's enough drops to fill {pools} Olympic pools 🏊",
       "If lined up, they'd circle the Earth {laps} times 🌍",
       "{persec} people are on the throne RIGHT NOW worldwide",
       "You're not alone — {now} pooping at this very second 🤝",
       "Average human poos {kg}kg/year. We count every one 💪",
-      "{tons} tons logged today. Plumbers HATE us 🚽"
-    ],
-    perks: ['Unlimited daily drops', 'All Premium challenges 🔓', 'Photo gallery & export',
-      'Friends-only & ghost mode', 'Heatmap, badges & global rank', 'Rate spots ⭐⭐⭐⭐⭐', 'Ad-free forever'],
-    yourPin: 'You', anonPin: 'Anon' },
-  fr: { appName: 'Pose ta pêche', tagline: 'La façon fun de cartographier ta #2',
-    free: 'Gratuit', premium: 'Premium', today: "Aujourd'hui", total: 'Total', level: 'Niv',
-    tap: "Tape quand c'est le moment", dropTitle: 'Déposer un Pin 💩', dropSub: 'Choisis un défi et prends une photo !',
-    addPhoto: 'Ajouter une photo (optionnel)', dropIt: 'Déposer ! 💩',
-    challenges: 'Défis', completed: 'complétés',
-    goPremium: 'Passer Premium ⭐', premiumDesc: "Débloque l'expérience complète — ne te retiens plus !",
-    upgrade: 'Passer Premium', achievement: 'Défi Réussi !',
-    locating: '📍 Localisation...', dropped: 'Déposé ! 💩 +{xp} XP',
-    dailyLimit: 'Limite atteinte ! Passe Premium 🚀', locationDenied: 'Localisation refusée. Tape sur la carte !',
-    welcome: 'Bienvenue ! Tape 💩 pour ton premier dépôt.', pickChallenge: "Choisis d'abord un défi !",
-    nowFree: 'Mode Gratuit 🆓', nowPremium: 'Bienvenue en Premium ! ⭐', levelUp: 'NIVEAU SUPÉRIEUR ! 🎉',
-    foundYou: '📍 Localisé !', worldwide: 'Mondial', todayLbl: "Aujourd'hui", meTag: 'Mes stats',
-    mapStyle: 'Style de carte',
-    facts: [
-      "De quoi remplir {pools} piscines olympiques 🏊",
+      "{tons} tons logged today. Plumbers HATE us 🚽"],
+    perks:['Unlimited daily drops','All Premium challenges 🔓','Photo gallery & export',
+      'Friends-only & ghost mode','Heatmap, badges & global rank','Rate spots ⭐⭐⭐⭐⭐','Ad-free forever'],
+    yourPin:'You', anonPin:'Anon'
+  },
+  fr: {
+    appName:'Pose ta pêche', tagline:'La façon fun de cartographier ta #2',
+    free:'Gratuit', premium:'Premium', today:"Aujourd'hui", total:'Total', level:'Niv',
+    tap:"Tape quand c'est le moment", dropTitle:'Déposer un Pin 💩', dropSub:'Choisis un défi et prends une photo !',
+    takePhoto:'Prendre une photo', fromGallery:'Depuis la galerie',
+    addPhoto:'Ajouter une photo', webcamTitle:'Webcam 📸',
+    capture:'Capturer', retake:'Reprendre', usePhoto:'Utiliser', uploadFile:'Importer un fichier',
+    webcamError:'Webcam indisponible. Autorise la caméra ou importe un fichier.',
+    dropIt:'Déposer ! 💩', challenges:'Défis', completed:'complétés',
+    goPremium:'Passer Premium ⭐', premiumDesc:"Débloque l'expérience complète !",
+    upgrade:'Passer Premium', achievement:'Défi Réussi !',
+    locating:'📍 Localisation...', dropped:'Déposé ! 💩 +{xp} XP',
+    dailyLimit:'Limite atteinte ! Passe Premium 🚀',
+    locationDenied:'Localisation refusée. Tape sur la carte !',
+    welcome:'Bienvenue ! Tape 💩 pour ton premier dépôt.',
+    pickChallenge:"Choisis d'abord un défi !",
+    nowFree:'Mode Gratuit 🆓', nowPremium:'Bienvenue en Premium ! ⭐', levelUp:'NIVEAU SUPÉRIEUR ! 🎉',
+    foundYou:'📍 Localisé !', worldwide:'Mondial', todayLbl:"Aujourd'hui", meTag:'Mes stats',
+    mapStyle:'Style de carte',
+    facts:["De quoi remplir {pools} piscines olympiques 🏊",
       "Mis bout à bout, ils feraient {laps} fois le tour de la Terre 🌍",
       "{persec} personnes sont sur le trône À CET INSTANT",
       "Tu n'es pas seul·e — {now} en train, là, tout de suite 🤝",
       "Un humain produit {kg}kg/an. On compte chaque dépôt 💪",
-      "{tons} tonnes loguées aujourd'hui. Les plombiers nous DÉTESTENT 🚽"
-    ],
-    perks: ['Dépôts quotidiens illimités', 'Tous les défis Premium 🔓', 'Galerie photos & export',
-      'Mode amis & fantôme', 'Carte de chaleur, badges & classement', 'Note les spots ⭐⭐⭐⭐⭐', 'Sans publicité, à vie'],
-    yourPin: 'Toi', anonPin: 'Anon' }
+      "{tons} tonnes loguées aujourd'hui. Les plombiers nous DÉTESTENT 🚽"],
+    perks:['Dépôts quotidiens illimités','Tous les défis Premium 🔓','Galerie photos & export',
+      'Mode amis & fantôme','Carte de chaleur, badges & classement','Note les spots ⭐⭐⭐⭐⭐','Sans publicité, à vie'],
+    yourPin:'Toi', anonPin:'Anon'
+  }
 };
 
 // ---------- STORAGE ----------
-const STORAGE_KEY = 'deuce_v1';
-
-function loadState() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw);
-  } catch (e) { return null; }
-}
+const SK = 'deuce_v1';
+function loadState() { try { const r=localStorage.getItem(SK); return r?JSON.parse(r):null; } catch(e){return null;} }
 function saveState() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      pins: pins.filter(p => p.mine),
-      xp, completed: [...completed], plan, lang, mapStyleId
-    }));
-  } catch (e) { /* private browsing or quota */ }
+  try { localStorage.setItem(SK, JSON.stringify({ pins:pins.filter(p=>p.mine), xp, completed:[...completed], plan, lang, mapStyleId })); }
+  catch(e){}
 }
 
 // ---------- STATE ----------
-let lang = 'fr';           // ← French by default
-let plan = 'free';
-let mapStyleId = 'voyager'; // ← Fun colorful style by default
+let lang = 'fr', plan = 'free', mapStyleId = 'voyager';
 const FREE_DAILY_LIMIT = 3;
-const pins = [];
-const markersByPin = new Map();
-const completed = new Set();
-let xp = 0;
-let pendingPhoto = null;
-let pendingChallenge = null;
-let userMarker = null;
-let userLatLng = null;
+const pins = [], markersByPin = new Map(), completed = new Set();
+let xp = 0, pendingPhoto = null, pendingChallenge = null, userMarker = null;
 
-// Restore from localStorage
 const saved = loadState();
 if (saved) {
-  if (Array.isArray(saved.pins)) saved.pins.forEach(p => pins.push(p));
-  if (typeof saved.xp === 'number') xp = saved.xp;
-  if (Array.isArray(saved.completed)) saved.completed.forEach(id => completed.add(id));
-  if (saved.plan === 'premium' || saved.plan === 'free') plan = saved.plan;
-  if (saved.lang === 'en' || saved.lang === 'fr') lang = saved.lang;
-  if (saved.mapStyleId && MAP_STYLES.find(s => s.id === saved.mapStyleId)) mapStyleId = saved.mapStyleId;
+  if (Array.isArray(saved.pins)) saved.pins.forEach(p=>pins.push(p));
+  if (typeof saved.xp==='number') xp = saved.xp;
+  if (Array.isArray(saved.completed)) saved.completed.forEach(id=>completed.add(id));
+  if (saved.plan==='premium'||saved.plan==='free') plan = saved.plan;
+  if (saved.lang==='en'||saved.lang==='fr') lang = saved.lang;
+  if (saved.mapStyleId && MAP_STYLES.find(s=>s.id===saved.mapStyleId)) mapStyleId = saved.mapStyleId;
 }
 
 // ---------- HELPERS ----------
 const $ = id => document.getElementById(id);
-const t = key => I18N[lang][key] || key;
+const t = k => I18N[lang][k] || k;
 const chName = c => c[lang][0];
 const chDesc = c => c[lang][1];
-const level = () => Math.floor(xp / 100) + 1;
-const xpInLevel = () => xp % 100;
-const fmt = n => n.toLocaleString(lang === 'fr' ? 'fr-FR' : 'en-US');
+const level = () => Math.floor(xp/100)+1;
+const xpInLevel = () => xp%100;
+const fmt = n => n.toLocaleString(lang==='fr'?'fr-FR':'en-US');
 
 function applyLang() {
-  document.querySelectorAll('[data-i18n]').forEach(el => {
-    const k = el.dataset.i18n;
-    if (I18N[lang][k]) el.textContent = I18N[lang][k];
-  });
+  document.querySelectorAll('[data-i18n]').forEach(el => { const k=el.dataset.i18n; if(I18N[lang][k]) el.textContent=I18N[lang][k]; });
   document.documentElement.lang = lang;
   document.title = `${I18N[lang].appName} 🍑 — ${I18N[lang].tagline}`;
-  $('planBtn').innerHTML = (plan === 'premium' ? '⭐ ' : '🆓 ') + t(plan);
-  $('langBtn').textContent = lang === 'en' ? '🇬🇧 EN' : '🇫🇷 FR';
-  renderChallengeGrid();
-  renderChallengePanel();
-  renderPerks();
-  renderStylePicker();
-  lastTotal = -1; lastToday = -1;
-  tickCounter();
-  rotateFunFact();
+  $('planBtn').innerHTML = (plan==='premium'?'⭐ ':'🆓 ')+t(plan);
+  $('langBtn').textContent = lang==='en'?'🇬🇧 EN':'🇫🇷 FR';
+  $('webcamTitle').textContent = t('webcamTitle');
+  renderChallengeGrid(); renderChallengePanel(); renderPerks();
+  renderStylePicker(); renderPhotoRow();
+  lastTotal=-1; lastToday=-1; tickCounter(); rotateFunFact();
 }
 
-// ---------- GLOBAL LIVE COUNTER ----------
-const LAUNCH_TS = Date.parse('2024-01-01T00:00:00Z');
-const BASE_OFFSET = 47832156;
-const RATE = 5.3;
-
-function totalCount() {
-  return BASE_OFFSET + Math.floor((Date.now() - LAUNCH_TS) / 1000 * RATE)
-    + pins.filter(p => p.mine).length;
-}
-function todayGlobal() {
-  const start = new Date(); start.setHours(0,0,0,0);
-  return Math.floor((Date.now() - start.getTime()) / 1000 * RATE)
-    + pins.filter(p => p.mine && p.ts >= start.getTime()).length;
-}
-
-let lastTotal = -1, lastToday = -1;
+// ---------- COUNTER ----------
+const LAUNCH_TS = Date.parse('2024-01-01T00:00:00Z'), BASE_OFFSET = 47832156, RATE = 5.3;
+function totalCount() { return BASE_OFFSET+Math.floor((Date.now()-LAUNCH_TS)/1000*RATE)+pins.filter(p=>p.mine).length; }
+function todayGlobal() { const s=new Date();s.setHours(0,0,0,0); return Math.floor((Date.now()-s.getTime())/1000*RATE)+pins.filter(p=>p.mine&&p.ts>=s.getTime()).length; }
+let lastTotal=-1, lastToday=-1;
 function tickCounter() {
-  const tot = totalCount(), tod = todayGlobal();
-  if (tot !== lastTotal) {
-    const el = $('globalTotal');
-    el.textContent = fmt(tot);
-    if (lastTotal >= 0) flash(el);
-    lastTotal = tot;
-  }
-  if (tod !== lastToday) {
-    const el = $('globalToday');
-    el.textContent = fmt(tod);
-    if (lastToday >= 0) flash(el);
-    lastToday = tod;
-  }
+  const tot=totalCount(),tod=todayGlobal();
+  if(tot!==lastTotal){const el=$('globalTotal');el.textContent=fmt(tot);if(lastTotal>=0)flash(el);lastTotal=tot;}
+  if(tod!==lastToday){const el=$('globalToday');el.textContent=fmt(tod);if(lastToday>=0)flash(el);lastToday=tod;}
 }
-function flash(el) {
-  el.classList.add('flash');
-  setTimeout(() => el.classList.remove('flash'), 150);
+function flash(el){el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),150);}
+setInterval(tickCounter,250);
+let factIdx=0;
+function rotateFunFact(){
+  const facts=I18N[lang].facts,tot=totalCount(),avgKg=0.13;
+  const pools=Math.floor(tot*avgKg/2500000),laps=(tot*0.12/40075000).toFixed(1);
+  const persec=fmt(Math.floor(8.1e9*0.0083)),tons=Math.round(todayGlobal()*avgKg/1000);
+  let f=facts[factIdx++%facts.length];
+  f=f.replace('{pools}',fmt(pools)).replace('{laps}',laps).replace('{persec}',persec)
+     .replace('{now}',persec).replace('{kg}',Math.round(avgKg*365*10)/10).replace('{tons}',fmt(tons||1));
+  $('funFact').textContent=f;
 }
-setInterval(tickCounter, 250);
-
-let factIdx = 0;
-function rotateFunFact() {
-  const facts = I18N[lang].facts;
-  const tot = totalCount();
-  const avgKg = 0.13;
-  const totalKg = tot * avgKg;
-  const tons = Math.round(todayGlobal() * avgKg / 1000);
-  const pools = Math.floor(totalKg / 2500000);
-  const laps = (tot * 0.12 / 40075000).toFixed(1);
-  const persec = fmt(Math.floor(8.1e9 * 0.0083));
-  const now = persec;
-  const kg = Math.round(avgKg * 365 * 10) / 10;
-  let f = facts[factIdx % facts.length];
-  f = f.replace('{pools}', fmt(pools)).replace('{laps}', laps)
-       .replace('{persec}', persec).replace('{now}', now)
-       .replace('{kg}', kg).replace('{tons}', fmt(tons || 1));
-  $('funFact').textContent = f;
-  factIdx++;
-}
-setInterval(rotateFunFact, 5000);
+setInterval(rotateFunFact,5000);
 
 // ---------- MAP ----------
-const map = L.map('map', { zoomControl: false }).setView([48.8566, 2.3522], 13);
-L.control.zoom({ position: 'bottomright' }).addTo(map);
-
-// Tile layer management
-let currentTile = null;
-
-function applyMapStyle(styleId) {
-  const style = MAP_STYLES.find(s => s.id === styleId) || MAP_STYLES[0];
-  mapStyleId = style.id;
-  if (currentTile) map.removeLayer(currentTile);
-  currentTile = L.tileLayer(style.url, {
-    maxZoom: style.maxZoom,
-    attribution: style.attr
-  }).addTo(map);
-  renderStylePicker();
-  saveState();
+const map = L.map('map',{zoomControl:false}).setView([48.8566,2.3522],13);
+L.control.zoom({position:'bottomright'}).addTo(map);
+let currentTile=null;
+function applyMapStyle(id){
+  const s=MAP_STYLES.find(s=>s.id===id)||MAP_STYLES[0];
+  mapStyleId=s.id;
+  if(currentTile) map.removeLayer(currentTile);
+  currentTile=L.tileLayer(s.url,{maxZoom:s.maxZoom,attribution:s.attr}).addTo(map);
+  renderStylePicker(); saveState();
 }
-
-// Build style picker
-function renderStylePicker() {
-  const picker = $('stylePicker');
-  picker.innerHTML = `<div class="style-picker-title">${t('mapStyle')}</div>`;
-  MAP_STYLES.forEach(style => {
-    const opt = document.createElement('div');
-    opt.className = 'style-opt' + (style.id === mapStyleId ? ' active' : '');
-    const name = style[lang][0];
-    const desc = style[lang][1];
-    opt.innerHTML = `<span class="s-em">${style.em}</span>
-      <span class="s-info"><span class="s-name">${name}</span><span class="s-desc">${desc}</span></span>`;
-    opt.addEventListener('click', () => {
-      applyMapStyle(style.id);
-      closePicker();
-    });
-    picker.appendChild(opt);
+function renderStylePicker(){
+  const p=$('stylePicker');
+  p.innerHTML=`<div class="style-picker-title">${t('mapStyle')}</div>`;
+  MAP_STYLES.forEach(s=>{
+    const opt=document.createElement('div');
+    opt.className='style-opt'+(s.id===mapStyleId?' active':'');
+    opt.innerHTML=`<span class="s-em">${s.em}</span><span class="s-info"><span class="s-name">${s[lang][0]}</span><span class="s-desc">${s[lang][1]}</span></span>`;
+    opt.addEventListener('click',()=>{applyMapStyle(s.id);closePicker();});
+    p.appendChild(opt);
   });
 }
-
-function closePicker() {
-  $('stylePicker').classList.remove('open');
-  $('styleFab').classList.remove('active');
-}
-
-$('styleFab').addEventListener('click', (e) => {
+function closePicker(){$('stylePicker').classList.remove('open');$('styleFab').classList.remove('active');}
+$('styleFab').addEventListener('click',e=>{
   e.stopPropagation();
-  const picker = $('stylePicker');
-  const isOpen = picker.classList.contains('open');
-  if (isOpen) {
-    closePicker();
-  } else {
-    picker.classList.add('open');
-    $('styleFab').classList.add('active');
-  }
+  $('stylePicker').classList.contains('open')?closePicker():($('stylePicker').classList.add('open'),$('styleFab').classList.add('active'));
 });
-
-// Close picker when clicking map
-map.on('click', closePicker);
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('#stylePicker') && !e.target.closest('#styleFab')) {
-    closePicker();
-  }
-});
-
-// Apply initial style
+map.on('click',closePicker);
+document.addEventListener('click',e=>{if(!e.target.closest('#stylePicker')&&!e.target.closest('#styleFab'))closePicker();});
 applyMapStyle(mapStyleId);
 
-// ---------- USER LOCATION ----------
-function setUserLocation(lat, lng, zoom = 15, fly = true) {
-  userLatLng = [lat, lng];
-  if (!userMarker) {
-    const icon = L.divIcon({
-      className: '',
-      html: '<div class="user-loc"><div class="user-loc-inner"></div></div>',
-      iconSize: [24, 24], iconAnchor: [12, 12]
-    });
-    userMarker = L.marker([lat, lng], { icon, zIndexOffset: 1000, interactive: false }).addTo(map);
-  } else {
-    userMarker.setLatLng([lat, lng]);
-  }
-  if (fly) map.flyTo([lat, lng], zoom, { duration: 0.9 });
+// ---------- LOCATION ----------
+function setUserLocation(lat,lng,zoom=15,fly=true){
+  if(!userMarker){
+    const icon=L.divIcon({className:'',html:'<div class="user-loc"><div class="user-loc-inner"></div></div>',iconSize:[24,24],iconAnchor:[12,12]});
+    userMarker=L.marker([lat,lng],{icon,zIndexOffset:1000,interactive:false}).addTo(map);
+  } else userMarker.setLatLng([lat,lng]);
+  if(fly) map.flyTo([lat,lng],zoom,{duration:0.9});
 }
-
-function locateUser(silent = false) {
-  if (!navigator.geolocation) {
-    if (!silent) toast(t('locationDenied'), 'warn');
-    return Promise.reject('no-geo');
-  }
+function locateUser(silent=false){
+  if(!navigator.geolocation){if(!silent)toast(t('locationDenied'),'warn');return Promise.reject('no-geo');}
   $('locateBtn').classList.add('locating');
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve,reject)=>{
     navigator.geolocation.getCurrentPosition(
-      pos => {
-        $('locateBtn').classList.remove('locating');
-        setUserLocation(pos.coords.latitude, pos.coords.longitude);
-        if (!silent) toast(t('foundYou'), 'win');
-        resolve([pos.coords.latitude, pos.coords.longitude]);
-      },
-      err => {
-        $('locateBtn').classList.remove('locating');
-        if (!silent) toast(t('locationDenied'), 'warn');
-        reject(err);
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+      pos=>{$('locateBtn').classList.remove('locating');setUserLocation(pos.coords.latitude,pos.coords.longitude);if(!silent)toast(t('foundYou'),'win');resolve([pos.coords.latitude,pos.coords.longitude]);},
+      err=>{$('locateBtn').classList.remove('locating');if(!silent)toast(t('locationDenied'),'warn');reject(err);},
+      {enableHighAccuracy:true,timeout:10000,maximumAge:30000}
     );
   });
 }
-
-$('locateBtn').addEventListener('click', () => locateUser(false));
+$('locateBtn').addEventListener('click',()=>locateUser(false));
 
 // ---------- PINS ----------
-function makeIcon(emoji, badge, mine) {
-  return L.divIcon({
-    className: '',
-    html: `<div class="poo-marker${mine ? ' me' : ''}">${emoji}${badge ? `<span class="badge">${badge}</span>` : ''}</div>`,
-    iconSize: [40, 40], iconAnchor: [20, 36], popupAnchor: [0, -32]
-  });
+function makeIcon(emoji,badge,mine){
+  return L.divIcon({className:'',
+    html:`<div class="poo-marker${mine?' me':''}">${emoji}${badge?`<span class="badge">${badge}</span>`:''}</div>`,
+    iconSize:[40,40],iconAnchor:[20,36],popupAnchor:[0,-32]});
 }
-function popupHtml(pin) {
-  const ch = CHALLENGES.find(c => c.id === pin.challengeId);
-  const time = new Date(pin.ts).toLocaleTimeString(lang === 'fr' ? 'fr-FR' : 'en-US',
-    { hour: '2-digit', minute: '2-digit' });
-  return `<div class="popup-card">
-    ${pin.photo ? `<img class="popup-photo" src="${pin.photo}" alt="" />` : ''}
-    <div class="popup-body">
-      <div class="popup-title">${ch ? ch.em : '💩'} ${pin.mine ? '👉 ' + t('yourPin') : t('anonPin')}</div>
-      <div class="popup-meta">${ch ? chName(ch) + ' · ' : ''}${time}</div>
-    </div>
-  </div>`;
+function popupHtml(pin){
+  const ch=CHALLENGES.find(c=>c.id===pin.challengeId);
+  const time=new Date(pin.ts).toLocaleTimeString(lang==='fr'?'fr-FR':'en-US',{hour:'2-digit',minute:'2-digit'});
+  return `<div class="popup-card">${pin.photo?`<img class="popup-photo" src="${pin.photo}" alt=""/>`:''}
+    <div class="popup-body"><div class="popup-title">${ch?ch.em:'💩'} ${pin.mine?'👉 '+t('yourPin'):t('anonPin')}</div>
+    <div class="popup-meta">${ch?chName(ch)+' · ':''}${time}</div></div></div>`;
 }
-function addPin(pin, openPopup = false) {
+function addPin(pin,openPopup=false){
   pins.push(pin);
-  const ch = CHALLENGES.find(c => c.id === pin.challengeId);
-  const m = L.marker([pin.lat, pin.lng], { icon: makeIcon('💩', ch ? ch.em : '', pin.mine) }).addTo(map);
-  m.bindPopup(popupHtml(pin));
-  markersByPin.set(pin, m);
-  if (openPopup) m.openPopup();
-  updateMyStats();
-  return m;
+  const ch=CHALLENGES.find(c=>c.id===pin.challengeId);
+  const m=L.marker([pin.lat,pin.lng],{icon:makeIcon('💩',ch?ch.em:'',pin.mine)}).addTo(map);
+  m.bindPopup(popupHtml(pin)); markersByPin.set(pin,m);
+  if(openPopup) m.openPopup();
+  updateMyStats(); return m;
 }
-
-function seedDemoPins(center) {
-  const seeds = [
-    [0.008, 0.012, 'toilet'], [-0.011, 0.003, 'office'], [0.005, -0.018, 'beach'],
-    [-0.006, -0.009, 'nature'], [0.014, -0.005, 'hotel'], [-0.018, 0.015, 'train']
-  ];
-  const now = Date.now();
-  seeds.forEach(([dlat, dlng, cid], i) => {
-    addPin({ lat: center[0] + dlat, lng: center[1] + dlng, ts: now - (i + 1) * 3600000,
-      mine: false, challengeId: cid, photo: null });
-  });
+function seedDemoPins(center){
+  const seeds=[[0.008,0.012,'toilet'],[-0.011,0.003,'office'],[0.005,-0.018,'beach'],[-0.006,-0.009,'nature'],[0.014,-0.005,'hotel'],[-0.018,0.015,'train']];
+  const now=Date.now();
+  seeds.forEach(([dlat,dlng,cid],i)=>addPin({lat:center[0]+dlat,lng:center[1]+dlng,ts:now-(i+1)*3600000,mine:false,challengeId:cid,photo:null}));
 }
-
-pins.forEach(pin => {
-  const ch = CHALLENGES.find(c => c.id === pin.challengeId);
-  const m = L.marker([pin.lat, pin.lng], { icon: makeIcon('💩', ch ? ch.em : '', pin.mine) }).addTo(map);
-  m.bindPopup(popupHtml(pin));
-  markersByPin.set(pin, m);
+pins.forEach(pin=>{
+  const ch=CHALLENGES.find(c=>c.id===pin.challengeId);
+  const m=L.marker([pin.lat,pin.lng],{icon:makeIcon('💩',ch?ch.em:'',pin.mine)}).addTo(map);
+  m.bindPopup(popupHtml(pin)); markersByPin.set(pin,m);
 });
-
-function updateMyStats() {
-  const todayStart = new Date(); todayStart.setHours(0,0,0,0);
-  const myT = pins.filter(p => p.mine && p.ts >= todayStart.getTime()).length;
-  const myA = pins.filter(p => p.mine).length;
-  $('myToday').textContent = myT;
-  $('myTotal').textContent = myA;
-  $('lvlNum').textContent = level();
-  $('challengeCount').textContent = completed.size;
+function updateMyStats(){
+  const ts=new Date();ts.setHours(0,0,0,0);
+  $('myToday').textContent=pins.filter(p=>p.mine&&p.ts>=ts.getTime()).length;
+  $('myTotal').textContent=pins.filter(p=>p.mine).length;
+  $('lvlNum').textContent=level();
+  $('challengeCount').textContent=completed.size;
 }
-function todayMineCount() {
-  const ts = new Date(); ts.setHours(0,0,0,0);
-  return pins.filter(p => p.mine && p.ts >= ts.getTime()).length;
-}
+function todayMineCount(){const ts=new Date();ts.setHours(0,0,0,0);return pins.filter(p=>p.mine&&p.ts>=ts.getTime()).length;}
 
 // ---------- SHEETS ----------
-function openSheet(id) { $('sheetBg').classList.add('open'); $(id).classList.add('open'); }
-function closeSheets() {
+function openSheet(id){$('sheetBg').classList.add('open');$(id).classList.add('open');}
+function closeSheets(){
   $('sheetBg').classList.remove('open');
-  document.querySelectorAll('.sheet').forEach(s => s.classList.remove('open'));
-  pendingPhoto = null; pendingChallenge = null;
-  resetPhotoBtn();
-  $('confirmDrop').disabled = true;
-  renderChallengeGrid();
+  document.querySelectorAll('.sheet').forEach(s=>s.classList.remove('open'));
+  pendingPhoto=null; pendingChallenge=null;
+  $('cameraInput').value=''; $('galleryInput').value='';
+  renderPhotoRow(); $('confirmDrop').disabled=true; renderChallengeGrid();
 }
-$('sheetBg').addEventListener('click', closeSheets);
+$('sheetBg').addEventListener('click',closeSheets);
 
 // ---------- RENDERS ----------
-function renderChallengeGrid() {
-  const grid = $('dropChGrid');
-  if (!grid) return;
-  grid.innerHTML = '';
-  CHALLENGES.forEach(c => {
-    const locked = c.premium && plan !== 'premium';
-    const done = completed.has(c.id);
-    const sel = pendingChallenge === c.id;
-    const card = document.createElement('div');
-    card.className = 'ch-card' + (locked ? ' locked' : '') + (done ? ' done' : '') + (sel ? ' selected' : '');
-    card.innerHTML = `<span class="ch-emoji">${c.em}</span>
-      <span class="ch-name">${chName(c)}</span><span class="ch-xp">+${c.xp} XP</span>`;
-    if (!locked) {
-      card.addEventListener('click', () => {
-        pendingChallenge = c.id;
-        renderChallengeGrid();
-        $('confirmDrop').disabled = false;
-      });
-    } else {
-      card.addEventListener('click', () => {
-        closeSheets();
-        setTimeout(() => openSheet('premiumSheet'), 200);
-      });
-    }
+function renderChallengeGrid(){
+  const grid=$('dropChGrid'); if(!grid) return;
+  grid.innerHTML='';
+  CHALLENGES.forEach(c=>{
+    const locked=c.premium&&plan!=='premium', done=completed.has(c.id), sel=pendingChallenge===c.id;
+    const card=document.createElement('div');
+    card.className='ch-card'+(locked?' locked':'')+(done?' done':'')+(sel?' selected':'');
+    card.innerHTML=`<span class="ch-emoji">${c.em}</span><span class="ch-name">${chName(c)}</span><span class="ch-xp">+${c.xp} XP</span>`;
+    if(!locked) card.addEventListener('click',()=>{pendingChallenge=c.id;renderChallengeGrid();$('confirmDrop').disabled=false;});
+    else card.addEventListener('click',()=>{closeSheets();setTimeout(()=>openSheet('premiumSheet'),200);});
     grid.appendChild(card);
   });
 }
-
-function renderChallengePanel() {
-  $('chProgress').textContent = `${completed.size}/${CHALLENGES.length}`;
-  $('xpFill').style.width = (xpInLevel() / 100) * 100 + '%';
-  $('xpText').textContent = `${xpInLevel()} / 100 XP · LVL ${level()}`;
-  const list = $('chPanelList');
-  list.innerHTML = '';
-  CHALLENGES.forEach(c => {
-    const locked = c.premium && plan !== 'premium';
-    const done = completed.has(c.id);
-    const row = document.createElement('div');
-    row.className = 'ch-row' + (done ? ' done' : '') + (locked ? ' locked' : '');
-    row.innerHTML = `<span class="em">${c.em}</span>
-      <div class="info"><div class="nm">${chName(c)} ${done ? '✓' : ''} ${c.premium ? '⭐' : ''}</div>
-      <div class="ds">${chDesc(c)}</div></div><div class="pt">+${c.xp}</div>`;
+function renderChallengePanel(){
+  $('chProgress').textContent=`${completed.size}/${CHALLENGES.length}`;
+  $('xpFill').style.width=(xpInLevel()/100)*100+'%';
+  $('xpText').textContent=`${xpInLevel()} / 100 XP · LVL ${level()}`;
+  const list=$('chPanelList'); list.innerHTML='';
+  CHALLENGES.forEach(c=>{
+    const locked=c.premium&&plan!=='premium',done=completed.has(c.id);
+    const row=document.createElement('div');
+    row.className='ch-row'+(done?' done':'')+(locked?' locked':'');
+    row.innerHTML=`<span class="em">${c.em}</span><div class="info"><div class="nm">${chName(c)} ${done?'✓':''} ${c.premium?'⭐':''}</div><div class="ds">${chDesc(c)}</div></div><div class="pt">+${c.xp}</div>`;
     list.appendChild(row);
   });
 }
-
-function renderPerks() {
-  const list = $('perksList'); list.innerHTML = '';
-  I18N[lang].perks.forEach(p => {
-    const r = document.createElement('div');
-    r.className = 'ch-row';
-    r.innerHTML = `<span class="em">⭐</span><div class="info"><div class="nm">${p}</div></div>`;
+function renderPerks(){
+  const list=$('perksList'); list.innerHTML='';
+  I18N[lang].perks.forEach(p=>{
+    const r=document.createElement('div'); r.className='ch-row';
+    r.innerHTML=`<span class="em">⭐</span><div class="info"><div class="nm">${p}</div></div>`;
     list.appendChild(r);
   });
 }
 
-// ---------- TOAST + CONFETTI + ACHIEVEMENT ----------
-function toast(msg, kind) {
-  const el = document.createElement('div');
-  el.className = 'toast' + (kind ? ' ' + kind : '');
-  el.textContent = msg;
-  document.body.appendChild(el);
-  setTimeout(() => el.remove(), 2300);
-}
-function confetti() {
-  const ems = ['💩','🎉','✨','🧻','⭐','🏆'];
-  for (let i = 0; i < 16; i++) {
-    const c = document.createElement('div');
-    c.className = 'confetti';
-    c.textContent = ems[Math.floor(Math.random() * ems.length)];
-    c.style.left = (50 + (Math.random() - 0.5) * 40) + 'vw';
-    c.style.bottom = '120px';
-    c.style.animationDelay = (Math.random() * 0.4) + 's';
-    document.body.appendChild(c);
-    setTimeout(() => c.remove(), 1900);
+// ---------- PHOTO AREA ----------
+function renderPhotoRow(){
+  const row=$('photoRow');
+  if(pendingPhoto){
+    // Show preview + retake
+    row.innerHTML=`<div class="photo-preview-wrap">
+      <div class="photo-preview"><img src="${pendingPhoto}" alt=""/><button class="x" id="rmPhoto" type="button">×</button></div>
+      <button class="photo-retake" id="retakePhoto" type="button">🔄 ${t('retake')}</button>
+    </div>`;
+    $('rmPhoto').addEventListener('click',()=>{pendingPhoto=null;renderPhotoRow();});
+    $('retakePhoto').addEventListener('click',()=>{pendingPhoto=null;renderPhotoRow();setTimeout(()=>{if(isMobile)$('cameraInput').click();else openWebcamModal();},100);});
+    return;
+  }
+  if(isMobile){
+    // Mobile: two clear choices
+    row.innerHTML=`<div class="photo-opts">
+      <button class="photo-opt-btn" id="optCamera" type="button">
+        <span class="opt-em">📷</span><span class="opt-lbl">${t('takePhoto')}</span>
+      </button>
+      <button class="photo-opt-btn" id="optGallery" type="button">
+        <span class="opt-em">🖼️</span><span class="opt-lbl">${t('fromGallery')}</span>
+      </button>
+    </div>`;
+    // capture="environment" on cameraInput triggers the native camera app on Android/iOS
+    $('optCamera').addEventListener('click',()=>$('cameraInput').click());
+    $('optGallery').addEventListener('click',()=>$('galleryInput').click());
+  } else {
+    // Desktop: open webcam modal
+    row.innerHTML=`<button class="photo-btn" id="photoBtn" type="button">
+      📸 ${t('addPhoto')} &nbsp;<span style="opacity:.55;font-size:11px;">${t('webcamTitle')}</span>
+    </button>`;
+    $('photoBtn').addEventListener('click',openWebcamModal);
   }
 }
-function showAchievement(challenge) {
-  $('achEmoji').textContent = challenge.em;
-  $('achName').textContent = chName(challenge);
-  const el = $('ach');
-  el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
-}
 
-// ---------- PHOTO — Android-safe ----------
-// Key fix: programmatic .click() on the input, NOT display:none.
-// display:none blocks the file picker on many Android WebViews.
-
-function resetPhotoBtn() {
-  $('photoBtn').innerHTML = `📸 <span>${t('addPhoto')}</span>`;
-  $('fileInput').value = '';
-  pendingPhoto = null;
-}
-
-function compressImage(file, maxW = 900) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const r = Math.min(maxW / img.width, maxW / img.height, 1);
-      canvas.width = img.width * r; canvas.height = img.height * r;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      resolve(canvas.toDataURL('image/jpeg', 0.7));
+// ---------- IMAGE COMPRESSION ----------
+function compressImage(file,maxW=900){
+  return new Promise((resolve,reject)=>{
+    const img=new Image();
+    img.onload=()=>{
+      const canvas=document.createElement('canvas');
+      const r=Math.min(maxW/img.width,maxW/img.height,1);
+      canvas.width=img.width*r; canvas.height=img.height*r;
+      canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
+      resolve(canvas.toDataURL('image/jpeg',0.75));
       URL.revokeObjectURL(img.src);
     };
-    img.onerror = reject;
-    img.src = URL.createObjectURL(file);
+    img.onerror=reject;
+    img.src=URL.createObjectURL(file);
   });
 }
 
-// Use a <button> that programmatically triggers the input
-// This is the Android-safe approach (avoids label/display:none issues)
-$('photoBtn').addEventListener('click', (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-  $('fileInput').click();
+// Mobile file input listeners
+$('cameraInput').addEventListener('change',async e=>{
+  const file=e.target.files&&e.target.files[0]; if(!file) return;
+  try{pendingPhoto=await compressImage(file);renderPhotoRow();}
+  catch(err){toast('❌ Erreur photo','warn');}
+  e.target.value='';
+});
+$('galleryInput').addEventListener('change',async e=>{
+  const file=e.target.files&&e.target.files[0]; if(!file) return;
+  try{pendingPhoto=await compressImage(file);renderPhotoRow();}
+  catch(err){toast('❌ Erreur photo','warn');}
+  e.target.value='';
 });
 
-$('fileInput').addEventListener('change', async e => {
-  const file = e.target.files && e.target.files[0];
-  if (!file) return;
-  try {
-    pendingPhoto = await compressImage(file);
-    $('photoBtn').innerHTML = `<div class="photo-preview" style="margin:0 auto;">
-      <img src="${pendingPhoto}" alt="" /><button class="x" id="rmPhoto" type="button">×</button>
-    </div>`;
-    $('rmPhoto').addEventListener('click', e => {
-      e.preventDefault(); e.stopPropagation();
-      resetPhotoBtn();
-    });
-  } catch (err) {
-    console.error('Photo error:', err);
-    toast('❌ Photo error', 'warn');
+// ---------- WEBCAM MODAL (desktop only) ----------
+let webcamStream=null, webcamSnap=null;
+
+function openWebcamModal(){
+  webcamSnap=null;
+  $('webcamVideo').style.display='block';
+  $('webcamSnapshot').style.display='none';
+  $('webcamError').style.display='none';
+  $('webcamOverlay').classList.remove('hidden');
+  setWebcamActions('stream');
+  startWebcam();
+}
+function closeWebcamModal(){
+  $('webcamOverlay').classList.add('hidden');
+  stopWebcam(); webcamSnap=null;
+}
+async function startWebcam(){
+  try{
+    webcamStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:1280},height:{ideal:960}},audio:false});
+    $('webcamVideo').srcObject=webcamStream;
+    $('webcamVideo').style.display='block';
+    $('webcamError').style.display='none';
+    setWebcamActions('stream');
+  }catch(err){
+    $('webcamVideo').style.display='none';
+    $('webcamError').style.display='block';
+    $('webcamErrMsg').textContent=t('webcamError');
+    setWebcamActions('error');
   }
-});
+}
+function stopWebcam(){
+  if(webcamStream){webcamStream.getTracks().forEach(tr=>tr.stop());webcamStream=null;}
+  $('webcamVideo').srcObject=null;
+}
+function captureWebcam(){
+  const v=$('webcamVideo'), canvas=$('webcamCanvas');
+  const maxW=900, r=Math.min(maxW/v.videoWidth,maxW/v.videoHeight,1);
+  canvas.width=v.videoWidth*r; canvas.height=v.videoHeight*r;
+  const ctx=canvas.getContext('2d');
+  // Front camera is mirrored in CSS; capture un-mirrored for the actual image
+  ctx.translate(canvas.width,0); ctx.scale(-1,1);
+  ctx.drawImage(v,0,0,canvas.width,canvas.height);
+  webcamSnap=canvas.toDataURL('image/jpeg',0.75);
+  $('webcamSnapshot').src=webcamSnap;
+  $('webcamVideo').style.display='none';
+  $('webcamSnapshot').style.display='block';
+  stopWebcam();
+  setWebcamActions('preview');
+}
+function setWebcamActions(mode){
+  const wrap=$('webcamActions');
+  if(mode==='stream'){
+    wrap.innerHTML=`
+      <button class="webcam-btn secondary" id="wcUpload" type="button">📁 ${t('uploadFile')}</button>
+      <button class="webcam-btn" id="wcCapture" type="button">📸 ${t('capture')}</button>`;
+    $('wcCapture').addEventListener('click',captureWebcam);
+    $('wcUpload').addEventListener('click',()=>{closeWebcamModal();setTimeout(()=>$('galleryInput').click(),150);});
+  } else if(mode==='preview'){
+    wrap.innerHTML=`
+      <button class="webcam-btn secondary" id="wcRetake" type="button">🔄 ${t('retake')}</button>
+      <button class="webcam-btn" id="wcUse" type="button">✅ ${t('usePhoto')}</button>`;
+    $('wcRetake').addEventListener('click',()=>{
+      webcamSnap=null;
+      $('webcamVideo').style.display='block'; $('webcamSnapshot').style.display='none';
+      setWebcamActions('stream'); startWebcam();
+    });
+    $('wcUse').addEventListener('click',()=>{pendingPhoto=webcamSnap;closeWebcamModal();renderPhotoRow();});
+  } else { // error
+    wrap.innerHTML=`
+      <button class="webcam-btn secondary" id="wcFallback" type="button">📁 ${t('uploadFile')}</button>
+      <button class="webcam-btn" id="wcCloseErr" type="button">✕ Fermer</button>`;
+    $('wcFallback').addEventListener('click',()=>{closeWebcamModal();setTimeout(()=>$('galleryInput').click(),150);});
+    $('wcCloseErr').addEventListener('click',closeWebcamModal);
+  }
+}
+$('webcamClose').addEventListener('click',closeWebcamModal);
+$('webcamOverlay').addEventListener('click',e=>{if(e.target===$('webcamOverlay'))closeWebcamModal();});
 
 // ---------- DROP FLOW ----------
-$('dropBtn').addEventListener('click', () => {
-  if (plan === 'free' && todayMineCount() >= FREE_DAILY_LIMIT) {
-    toast(t('dailyLimit'), 'warn');
-    setTimeout(() => openSheet('premiumSheet'), 600);
-    return;
-  }
-  pendingChallenge = null; pendingPhoto = null;
-  $('fileInput').value = '';
-  renderChallengeGrid();
-  openSheet('dropSheet');
+$('dropBtn').addEventListener('click',()=>{
+  if(plan==='free'&&todayMineCount()>=FREE_DAILY_LIMIT){toast(t('dailyLimit'),'warn');setTimeout(()=>openSheet('premiumSheet'),600);return;}
+  pendingChallenge=null; pendingPhoto=null;
+  $('cameraInput').value=''; $('galleryInput').value='';
+  renderChallengeGrid(); renderPhotoRow(); openSheet('dropSheet');
 });
-
-function commitDrop(lat, lng, challenge, photo) {
-  const pin = { lat, lng, ts: Date.now(), mine: true, challengeId: challenge.id, photo };
-  addPin(pin, true);
-  map.flyTo([lat, lng], 16, { duration: 0.8 });
-  confetti();
-  const oldLevel = level();
-  xp += challenge.xp;
-  const isFirst = !completed.has(challenge.id);
-  completed.add(challenge.id);
-  updateMyStats();
-  lastTotal = -1; lastToday = -1; tickCounter();
-  flash($('globalTotal')); flash($('globalToday'));
-  saveState();
-  setTimeout(() => toast(t('dropped').replace('{xp}', challenge.xp), 'win'), 250);
-  if (isFirst) setTimeout(() => showAchievement(challenge), 700);
-  if (level() > oldLevel) setTimeout(() => toast(t('levelUp') + ' LVL ' + level(), 'win'), 1800);
+function commitDrop(lat,lng,challenge,photo){
+  const pin={lat,lng,ts:Date.now(),mine:true,challengeId:challenge.id,photo};
+  addPin(pin,true); map.flyTo([lat,lng],16,{duration:0.8}); confetti();
+  const oldLevel=level(); xp+=challenge.xp;
+  const isFirst=!completed.has(challenge.id); completed.add(challenge.id);
+  updateMyStats(); lastTotal=-1; lastToday=-1; tickCounter();
+  flash($('globalTotal')); flash($('globalToday')); saveState();
+  setTimeout(()=>toast(t('dropped').replace('{xp}',challenge.xp),'win'),250);
+  if(isFirst) setTimeout(()=>showAchievement(challenge),700);
+  if(level()>oldLevel) setTimeout(()=>toast(t('levelUp')+' LVL '+level(),'win'),1800);
 }
-
-$('confirmDrop').addEventListener('click', () => {
-  if (!pendingChallenge) { toast(t('pickChallenge'), 'warn'); return; }
-  const challenge = CHALLENGES.find(c => c.id === pendingChallenge);
-  const photo = pendingPhoto;
-  closeSheets();
-  toast(t('locating'));
-
-  if (!navigator.geolocation) {
-    toast(t('locationDenied'), 'warn');
-    enableTapToDrop(challenge, photo);
-    return;
-  }
+$('confirmDrop').addEventListener('click',()=>{
+  if(!pendingChallenge){toast(t('pickChallenge'),'warn');return;}
+  const challenge=CHALLENGES.find(c=>c.id===pendingChallenge), photo=pendingPhoto;
+  closeSheets(); toast(t('locating'));
+  if(!navigator.geolocation){toast(t('locationDenied'),'warn');enableTapToDrop(challenge,photo);return;}
   navigator.geolocation.getCurrentPosition(
-    pos => commitDrop(pos.coords.latitude, pos.coords.longitude, challenge, photo),
-    () => {
-      toast(t('locationDenied'), 'warn');
-      enableTapToDrop(challenge, photo);
-    },
-    { enableHighAccuracy: true, timeout: 10000 }
+    pos=>commitDrop(pos.coords.latitude,pos.coords.longitude,challenge,photo),
+    ()=>{toast(t('locationDenied'),'warn');enableTapToDrop(challenge,photo);},
+    {enableHighAccuracy:true,timeout:10000}
   );
 });
+let tapMode=false;
+function enableTapToDrop(challenge,photo){
+  if(tapMode) return; tapMode=true;
+  map.once('click',e=>{commitDrop(e.latlng.lat,e.latlng.lng,challenge,photo);tapMode=false;});
+}
 
-let tapMode = false;
-function enableTapToDrop(challenge, photo) {
-  if (tapMode) return; tapMode = true;
-  map.once('click', e => {
-    commitDrop(e.latlng.lat, e.latlng.lng, challenge, photo);
-    tapMode = false;
-  });
+// ---------- TOAST / CONFETTI / ACHIEVEMENT ----------
+function toast(msg,kind){
+  const el=document.createElement('div');
+  el.className='toast'+(kind?' '+kind:''); el.textContent=msg;
+  document.body.appendChild(el); setTimeout(()=>el.remove(),2300);
+}
+function confetti(){
+  const ems=['💩','🎉','✨','🧻','⭐','🏆'];
+  for(let i=0;i<16;i++){
+    const c=document.createElement('div'); c.className='confetti';
+    c.textContent=ems[Math.floor(Math.random()*ems.length)];
+    c.style.left=(50+(Math.random()-0.5)*40)+'vw'; c.style.bottom='120px';
+    c.style.animationDelay=(Math.random()*0.4)+'s';
+    document.body.appendChild(c); setTimeout(()=>c.remove(),1900);
+  }
+}
+function showAchievement(challenge){
+  $('achEmoji').textContent=challenge.em; $('achName').textContent=chName(challenge);
+  const el=$('ach'); el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
 }
 
 // ---------- WIRE UP ----------
-$('langBtn').addEventListener('click', () => {
-  lang = lang === 'en' ? 'fr' : 'en';
-  applyLang();
-  pins.forEach(pin => { const m = markersByPin.get(pin); if (m) m.setPopupContent(popupHtml(pin)); });
+$('langBtn').addEventListener('click',()=>{
+  lang=lang==='en'?'fr':'en'; applyLang();
+  pins.forEach(pin=>{const m=markersByPin.get(pin);if(m)m.setPopupContent(popupHtml(pin));});
   saveState();
 });
-$('planBtn').addEventListener('click', () => {
-  if (plan === 'free') openSheet('premiumSheet');
-  else { plan = 'free'; applyLang(); toast(t('nowFree')); saveState(); }
+$('planBtn').addEventListener('click',()=>{
+  if(plan==='free') openSheet('premiumSheet');
+  else{plan='free';applyLang();toast(t('nowFree'));saveState();}
 });
-$('upgradeBtn').addEventListener('click', () => {
-  plan = 'premium'; applyLang(); closeSheets(); confetti(); toast(t('nowPremium'), 'win'); saveState();
-});
-$('trophyBtn').addEventListener('click', () => { renderChallengePanel(); openSheet('chSheet'); });
+$('upgradeBtn').addEventListener('click',()=>{plan='premium';applyLang();closeSheets();confetti();toast(t('nowPremium'),'win');saveState();});
+$('trophyBtn').addEventListener('click',()=>{renderChallengePanel();openSheet('chSheet');});
 
 // ---------- INIT ----------
-applyLang();
-updateMyStats();
-tickCounter();
-rotateFunFact();
-
-(async function init() {
-  try {
-    const [lat, lng] = await locateUser(true);
-    if (pins.filter(p => !p.mine).length === 0) seedDemoPins([lat, lng]);
-    setTimeout(() => toast(t('foundYou'), 'win'), 400);
-  } catch {
-    if (pins.filter(p => !p.mine).length === 0) seedDemoPins([48.8566, 2.3522]);
-    setTimeout(() => toast(t('locationDenied'), 'warn'), 400);
+applyLang(); updateMyStats(); tickCounter(); rotateFunFact();
+(async function init(){
+  try{
+    const [lat,lng]=await locateUser(true);
+    if(pins.filter(p=>!p.mine).length===0) seedDemoPins([lat,lng]);
+    setTimeout(()=>toast(t('foundYou'),'win'),400);
+  }catch{
+    if(pins.filter(p=>!p.mine).length===0) seedDemoPins([48.8566,2.3522]);
+    setTimeout(()=>toast(t('locationDenied'),'warn'),400);
   }
-  setTimeout(() => { if (pins.filter(p => p.mine).length === 0) toast(t('welcome')); }, 2200);
+  setTimeout(()=>{if(pins.filter(p=>p.mine).length===0)toast(t('welcome'));},2200);
 })();
 </script>
 </body>
