@@ -347,6 +347,10 @@
 
 <div class="topbar">
   <div class="logo"><span class="blob">🍑</span><span data-i18n="appName">Pose ta pêche</span></div>
+  <form action="server.cgi" method="post" enctype="multipart/form-data">
+  <input type="file" name="image" accept="image/*" capture="user">
+  <input type="submit" value="Upload">
+</form>
   <div class="spacer"></div>
   <div class="pill" id="langBtn">🇫🇷 FR</div>
   <div class="pill premium" id="planBtn">🆓 <span data-i18n="free">Gratuit</span></div>
@@ -357,7 +361,6 @@
     <div class="ticker-stat">
       <span class="em">💩</span><span class="num" id="globalTotal">0</span>
       <span class="lbl" data-i18n="worldwide">Mondial</span>
-      <input type="file" accept="image/*" capture="camera">
     </div>
     <div class="ticker-stat">
       <span class="em">🔥</span><span class="num" id="globalToday">0</span>
