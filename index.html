@@ -347,10 +347,6 @@
 
 <div class="topbar">
   <div class="logo"><span class="blob">🍑</span><span data-i18n="appName">Pose ta pêche</span></div>
-  <form action="server.cgi" method="post" enctype="multipart/form-data">
-  <input type="file" name="image" accept="image/*" capture="user">
-  <input type="submit" value="Upload">
-</form>
   <div class="spacer"></div>
   <div class="pill" id="langBtn">🇫🇷 FR</div>
   <div class="pill premium" id="planBtn">🆓 <span data-i18n="free">Gratuit</span></div>
@@ -393,8 +389,24 @@
   - galleryInput: no capture → shows file/gallery picker
   Both must be reachable in the DOM for .click() to work on Android.
 -->
-<input type="file" id="cameraInput" accept="image/*" capture="environment" />
-<input type="file" id="galleryInput" accept="image/*" />
+  <div>OK TEST</div>
+<div style="opacity: 0; width: 0; height: 0; position: absolute; overflow: hidden;">
+  <input type="file" id="cameraInput" accept="image/*" capture="environment">
+  
+  <input type="file" id="galleryInput" accept="image/*">
+</div>
+
+<div class="photo-opts">
+  <label for="cameraInput" class="photo-opt-btn">
+    <span class="opt-em">📸</span>
+    <span class="opt-lbl">Take Photo</span>
+  </label>
+
+  <label for="galleryInput" class="photo-opt-btn">
+    <span class="opt-em">🖼️</span>
+    <span class="opt-lbl">Gallery</span>
+  </label>
+</div>
 
 <button class="challenge-fab" id="trophyBtn" style="position:fixed;" aria-label="Défis">
   🏆<span class="count" id="challengeCount">0</span>
