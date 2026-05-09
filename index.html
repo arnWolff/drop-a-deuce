@@ -213,13 +213,17 @@
   .photo-row { margin-bottom: 16px; }
 
   /*
-   * Hidden file inputs — CRITICAL: use position:fixed offscreen, NOT display:none.
-   * display:none blocks programmatic .click() on many Android browsers.
-   * capture="environment" on cameraInput tells Android to open the rear camera app directly.
-   */
+  * Visually hidden but reachable. Do NOT use display:none, visibility:hidden,
+  * or pointer-events:none — they break <label for> on Android Chrome.
+  * Keeping the input in the layout (position:absolute, off-screen) is what works everywhere.
+  */
   #cameraInput, #galleryInput {
-    position: fixed; top: -9999px; left: -9999px;
-    width: 1px; height: 1px; opacity: 0; pointer-events: none;
+    position: absolute;
+    left: -9999px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
   }
 
   /* Mobile: two side-by-side option buttons */
@@ -773,29 +777,49 @@ function renderPerks(){
 // ---------- PHOTO AREA ----------
 function renderPhotoRow(){
   const row=$('photoRow');
-  if(pendingPhoto){
-    // Show preview + retake
-    row.innerHTML=`<div class="photo-preview-wrap">
+  if (pendingPhoto) {
+    // On mobile, the retake button is itself a <label> for the camera input,
+    // so the camera reopens with a native click — no setTimeout/.click() trickery.
+    const retakeEl = isMobile
+      ? `<label class="photo-retake" for="cameraInput">🔄 ${t('retake')}</label>`
+      : `<button class="photo-retake" id="retakePhoto" type="button">🔄 ${t('retake')}</button>`;
+
+    row.innerHTML = `<div class="photo-preview-wrap">
       <div class="photo-preview"><img src="${pendingPhoto}" alt=""/><button class="x" id="rmPhoto" type="button">×</button></div>
-      <button class="photo-retake" id="retakePhoto" type="button">🔄 ${t('retake')}</button>
+      ${retakeEl}
     </div>`;
-    $('rmPhoto').addEventListener('click',()=>{pendingPhoto=null;renderPhotoRow();});
-    $('retakePhoto').addEventListener('click',()=>{pendingPhoto=null;renderPhotoRow();setTimeout(()=>{if(isMobile)$('cameraInput').click();else openWebcamModal();},100);});
+
+    $('rmPhoto').addEventListener('click', () => { pendingPhoto = null; renderPhotoRow(); });
+
+    if (!isMobile) {
+      $('retakePhoto').addEventListener('click', () => {
+        pendingPhoto = null;
+        renderPhotoRow();
+        openWebcamModal();
+      });
+    } else {
+      // Mobile retake: clear the pending photo immediately, but the label
+      // will still trigger cameraInput natively in the same gesture.
+      // We need to clear pendingPhoto when the new photo arrives, which the
+      // existing change handler already does (it overwrites pendingPhoto).
+      // But we should also reset the input value so a re-pick of the same file fires change.
+      $('cameraInput').value = '';
+    }
     return;
   }
-  if(isMobile){
-    // Mobile: two clear choices
-    row.innerHTML=`<div class="photo-opts">
-      <button class="photo-opt-btn" id="optCamera" type="button">
+  if (isMobile) {
+    // Mobile: <label for> beats JS .click() — the native label→input click preserves
+    // the user gesture on iOS Safari and bypasses Android Chrome's hidden-input rules.
+    // capture="environment" on cameraInput tells the OS to open the rear camera directly.
+    row.innerHTML = `<div class="photo-opts">
+      <label class="photo-opt-btn" for="cameraInput">
         <span class="opt-em">📷</span><span class="opt-lbl">${t('takePhoto')}</span>
-      </button>
-      <button class="photo-opt-btn" id="optGallery" type="button">
+      </label>
+      <label class="photo-opt-btn" for="galleryInput">
         <span class="opt-em">🖼️</span><span class="opt-lbl">${t('fromGallery')}</span>
-      </button>
+      </label>
     </div>`;
-    // capture="environment" on cameraInput triggers the native camera app on Android/iOS
-    $('optCamera').addEventListener('click',()=>$('cameraInput').click());
-    $('optGallery').addEventListener('click',()=>$('galleryInput').click());
+    // No addEventListener needed — labels fire the inputs natively.
   } else {
     // Desktop: open webcam modal
     row.innerHTML=`<button class="photo-btn" id="photoBtn" type="button">
