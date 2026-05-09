@@ -2098,20 +2098,38 @@ $('emailAuthBtn').addEventListener('click', async () => {
 });
 
 $('googleBtn').addEventListener('click', async () => {
-  if (!FIREBASE_ON) { toast(t('offlineBanner'), 'warn'); return; }
+  if (!FIREBASE_ON) return;
   const provider = new GoogleAuthProvider();
+  
+  // Optionnel : Forcer la sélection du compte Google à chaque fois
+  provider.setCustomParameters({ prompt: 'select_account' });
+
   try {
+    // Si l'utilisateur est anonyme, on tente d'abord de lier son compte (pour garder ses stats)
     if (currentUser && currentUser.isAnonymous) {
-      await linkWithPopup(currentUser, provider);
+      try {
+        await linkWithPopup(currentUser, provider);
+        toast(t('signedIn'), 'win');
+        closeSheets();
+      } catch (linkError) {
+        // Si l'e-mail est déjà utilisé, on bascule sur une connexion classique
+        if (linkError.code === 'auth/credential-already-in-use') {
+          console.log("Compte déjà existant, bascule sur connexion simple...");
+          await signInWithPopup(auth, provider);
+          toast(t('signedIn'), 'win');
+          closeSheets();
+        } else {
+          throw linkError;
+        }
+      }
     } else {
+      // Si l'utilisateur n'est pas anonyme (ou déjà identifié), connexion directe
       await signInWithPopup(auth, provider);
+      toast(t('signedIn'), 'win');
+      closeSheets();
     }
-    closeSheets();
-    toast(t('signedIn'), 'win');
-  } catch (e) {
-    if (e.code === 'auth/popup-blocked') {
-      try { await signInWithRedirect(auth, provider); } catch (e2) { showAuthError(e2); }
-    } else { showAuthError(e); }
+  } catch(e) {
+    showAuthError(e);
   }
 });
 
