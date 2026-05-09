@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <meta name="theme-color" content="#3d2817" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="description" content="The fun way to map your #2 around the world." />
-<title>Drop a Deuce 🍑 — The fun way to map your #2</title>
+<meta name="description" content="La façon fun de cartographier ta #2." />
+<title>Pose ta pêche 🍑 — La façon fun de cartographier ta #2</title>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" crossorigin="anonymous" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" crossorigin="anonymous"></script>
@@ -130,11 +130,38 @@
   .locate-fab.locating { animation: spin 1s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
+  /* ===== MAP STYLE FAB + PICKER ===== */
+  .style-fab { position: fixed; right: 14px; top: 164px; z-index: 998;
+    background: var(--cream); border: 2px solid var(--brown-1); border-radius: 50%;
+    width: 44px; height: 44px; font-size: 20px; cursor: pointer;
+    box-shadow: 3px 3px 0 var(--brown-1); display: flex; align-items: center; justify-content: center;
+    transition: transform .1s, box-shadow .1s; }
+  .style-fab:active { transform: translate(3px,3px); box-shadow: 0 0 0 var(--brown-1); }
+  .style-fab.active { background: var(--gold); }
+
+  .style-picker { position: fixed; right: 68px; top: 110px; z-index: 999;
+    background: var(--cream); border: 2px solid var(--brown-1); border-radius: 16px;
+    padding: 8px; display: none; flex-direction: column; gap: 4px;
+    box-shadow: 4px 4px 0 var(--brown-1); min-width: 160px; }
+  .style-picker.open { display: flex; }
+  .style-picker-title { font-size: 9px; font-weight: 800; text-transform: uppercase;
+    letter-spacing: 0.8px; opacity: 0.5; padding: 2px 8px 6px; border-bottom: 1px solid rgba(61,40,23,0.15);
+    margin-bottom: 2px; }
+  .style-opt { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 10px;
+    cursor: pointer; font-weight: 700; font-size: 12px; white-space: nowrap;
+    border: 2px solid transparent; transition: background .12s, border-color .12s; }
+  .style-opt:active { background: var(--bg); }
+  .style-opt.active { background: var(--gold); border-color: var(--brown-1); }
+  .style-opt .s-em { font-size: 18px; line-height: 1; }
+  .style-opt .s-info { display: flex; flex-direction: column; gap: 1px; }
+  .style-opt .s-name { font-size: 12px; font-weight: 800; }
+  .style-opt .s-desc { font-size: 9px; opacity: 0.6; font-weight: 600; }
+
   .challenge-fab { position: fixed; left: 14px; bottom: 28px; z-index: 999;
     background: var(--cream); border: 2px solid var(--brown-1); border-radius: 50%;
     width: 54px; height: 54px; font-size: 24px; cursor: pointer;
     box-shadow: 3px 3px 0 var(--brown-1); display: flex; align-items: center; justify-content: center;
-    position: relative; transition: transform .1s, box-shadow .1s; }
+    transition: transform .1s, box-shadow .1s; }
   .challenge-fab:active { transform: translate(3px,3px); box-shadow: 0 0 0 var(--brown-1); }
   .challenge-fab .count { position: absolute; top: -4px; right: -4px; background: var(--brown-1); color: var(--cream);
     font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 999px; border: 2px solid var(--cream); }
@@ -197,10 +224,15 @@
   .ch-name { font-size: 10px; font-weight: 700; line-height: 1.15; }
   .ch-xp { font-size: 9px; color: var(--brown-2); margin-top: 2px; opacity: 0.8; }
 
+  /* ===== PHOTO ROW — Android-safe ===== */
   .photo-row { display: flex; gap: 10px; margin-bottom: 16px; align-items: center; }
-  .photo-btn { flex: 1; background: var(--cream); border: 2px dashed var(--brown-1); border-radius: 14px;
+  .photo-btn {
+    flex: 1; background: var(--cream); border: 2px dashed var(--brown-1); border-radius: 14px;
     padding: 18px; text-align: center; cursor: pointer; font-weight: 700; font-size: 13px;
-    color: var(--brown-2); transition: background .15s; }
+    color: var(--brown-2); transition: background .15s;
+    /* Use button instead of label — more reliable on Android */
+    font-family: inherit;
+  }
   .photo-btn:active { background: var(--bg); }
   .photo-preview { position: relative; width: 90px; height: 90px; border-radius: 14px;
     border: 2px solid var(--brown-1); overflow: hidden; box-shadow: 2px 2px 0 var(--brown-1); }
@@ -208,7 +240,14 @@
   .photo-preview .x { position: absolute; top: 2px; right: 2px; background: var(--brown-1);
     color: var(--cream); width: 22px; height: 22px; border-radius: 50%; font-size: 14px;
     font-weight: 800; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; }
-  #fileInput { display: none; }
+  /* Hidden file input — NOT display:none on Android, use opacity+position trick */
+  #fileInput {
+    position: absolute;
+    width: 1px; height: 1px;
+    opacity: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
 
   .cta { width: 100%; padding: 14px; border: 3px solid var(--brown-1); border-radius: 16px;
     background: linear-gradient(135deg, var(--gold), var(--gold-deep)); color: var(--brown-1);
@@ -265,10 +304,10 @@
 <body>
 
 <div class="topbar">
-  <div class="logo"><span class="blob">🍑</span><span data-i18n="appName">Drop a Deuce</span></div>
+  <div class="logo"><span class="blob">🍑</span><span data-i18n="appName">Pose ta pêche</span></div>
   <div class="spacer"></div>
-  <div class="pill" id="langBtn">🇬🇧 EN</div>
-  <div class="pill premium" id="planBtn">🆓 <span data-i18n="free">Free</span></div>
+  <div class="pill" id="langBtn">🇫🇷 FR</div>
+  <div class="pill premium" id="planBtn">🆓 <span data-i18n="free">Gratuit</span></div>
 </div>
 
 <!-- GLOBAL LIVE TICKER -->
@@ -277,12 +316,12 @@
     <div class="ticker-stat">
       <span class="em">💩</span>
       <span class="num" id="globalTotal">0</span>
-      <span class="lbl" data-i18n="worldwide">Worldwide</span>
+      <span class="lbl" data-i18n="worldwide">Mondial</span>
     </div>
     <div class="ticker-stat">
       <span class="em">🔥</span>
       <span class="num" id="globalToday">0</span>
-      <span class="lbl" data-i18n="todayLbl">Today</span>
+      <span class="lbl" data-i18n="todayLbl">Aujourd'hui</span>
     </div>
   </div>
   <div class="ticker-fact" id="funFact">—</div>
@@ -290,24 +329,34 @@
 
 <!-- MY STATS -->
 <div class="stats">
-  <span class="me-tag" data-i18n="meTag">My stats</span>
+  <span class="me-tag" data-i18n="meTag">Mes stats</span>
   <div class="stats-row">
-    <div class="stats-item"><span class="num" id="myToday">0</span><span class="lbl" data-i18n="today">Today</span></div>
+    <div class="stats-item"><span class="num" id="myToday">0</span><span class="lbl" data-i18n="today">Aujourd'hui</span></div>
     <div class="stats-item"><span class="num" id="myTotal">0</span><span class="lbl" data-i18n="total">Total</span></div>
-    <div class="stats-item"><span class="num lvl" id="lvlNum">1</span><span class="lbl" data-i18n="level">Level</span></div>
+    <div class="stats-item"><span class="num lvl" id="lvlNum">1</span><span class="lbl" data-i18n="level">Niv</span></div>
   </div>
 </div>
 
-<button class="locate-fab" id="locateBtn" aria-label="Locate me" title="Center on my location">📍</button>
+<button class="locate-fab" id="locateBtn" aria-label="Me localiser">📍</button>
+
+<!-- MAP STYLE FAB + PICKER -->
+<button class="style-fab" id="styleFab" aria-label="Changer le style de carte">🗺️</button>
+<div class="style-picker" id="stylePicker">
+  <div class="style-picker-title" data-i18n="mapStyle">Style de carte</div>
+  <!-- Options injected by JS -->
+</div>
 
 <div id="map"></div>
 
-<button class="challenge-fab" id="trophyBtn" aria-label="Challenges">
+<!-- Hidden file input: NOT display:none — Android requires it to be in the DOM flow -->
+<input type="file" id="fileInput" accept="image/*" />
+
+<button class="challenge-fab" id="trophyBtn" aria-label="Défis" style="position:fixed;">
   🏆<span class="count" id="challengeCount">0</span>
 </button>
 
 <div class="fab-wrap">
-  <div class="fab-label" data-i18n="tap">Tap when it's time</div>
+  <div class="fab-label" data-i18n="tap">Tape quand c'est le moment</div>
   <button class="fab" id="dropBtn">💩</button>
 </div>
 
@@ -315,22 +364,21 @@
 
 <div class="sheet" id="dropSheet">
   <div class="sheet-handle"></div>
-  <h2 data-i18n="dropTitle">Drop a Pin 💩</h2>
-  <p class="sub" data-i18n="dropSub">Pick a challenge and snap a fun photo!</p>
+  <h2 data-i18n="dropTitle">Déposer un Pin 💩</h2>
+  <p class="sub" data-i18n="dropSub">Choisis un défi et prends une photo !</p>
   <div class="ch-grid" id="dropChGrid"></div>
   <div class="photo-row" id="photoRow">
-    <label class="photo-btn" id="photoBtn" for="fileInput">
-      📸 <span data-i18n="addPhoto">Add a photo (optional)</span>
-    </label>
-    <input type="file" id="fileInput" accept="image/*" capture="environment" />
+    <button class="photo-btn" id="photoBtn" type="button">
+      📸 <span data-i18n="addPhoto">Ajouter une photo (optionnel)</span>
+    </button>
   </div>
-  <button class="cta" id="confirmDrop" disabled data-i18n="dropIt">Drop it! 💩</button>
+  <button class="cta" id="confirmDrop" disabled data-i18n="dropIt">Déposer ! 💩</button>
 </div>
 
 <div class="sheet" id="chSheet">
   <div class="sheet-handle"></div>
-  <h2>🏆 <span data-i18n="challenges">Challenges</span></h2>
-  <p class="sub"><span id="chProgress">0/0</span> <span data-i18n="completed">completed</span></p>
+  <h2>🏆 <span data-i18n="challenges">Défis</span></h2>
+  <p class="sub"><span id="chProgress">0/0</span> <span data-i18n="completed">complétés</span></p>
   <div class="xp-bar"><div class="xp-fill" id="xpFill" style="width:0%"></div>
     <div class="xp-text"><span id="xpText">0 / 100 XP</span></div></div>
   <div class="ch-panel-list" id="chPanelList"></div>
@@ -338,28 +386,81 @@
 
 <div class="sheet" id="premiumSheet">
   <div class="sheet-handle"></div>
-  <h2 data-i18n="goPremium">Go Premium ⭐</h2>
-  <p class="sub" data-i18n="premiumDesc">Unlock the full experience!</p>
+  <h2 data-i18n="goPremium">Passer Premium ⭐</h2>
+  <p class="sub" data-i18n="premiumDesc">Débloque l'expérience complète !</p>
   <div class="ch-panel-list" id="perksList"></div>
-  <button class="cta" id="upgradeBtn" data-i18n="upgrade">Upgrade Now</button>
+  <button class="cta" id="upgradeBtn" data-i18n="upgrade">Passer Premium</button>
 </div>
 
 <div class="ach" id="ach">
   <span class="em" id="achEmoji">🏆</span>
-  <div class="ttl" data-i18n="achievement">Challenge Complete!</div>
+  <div class="ttl" data-i18n="achievement">Défi Réussi !</div>
   <div class="nm" id="achName">—</div>
 </div>
 
 <script>
 /* ================================================================
- * DROP A DEUCE / POSE TA PÊCHE v1 — Live Ticker + Real Geolocation + Persistence
- * Static, no-backend POC ready for GitHub Pages.
- *
- * The "global counter" is computed deterministically from the
- * launch date + a fixed rate (poos/sec). It looks live, ticks
- * naturally, works offline, and can be swapped for a real API
- * later (e.g. CountAPI, your own /stats endpoint).
+ * DROP A DEUCE / POSE TA PÊCHE v2
+ * Fixes: French default, fun map styles selector, Android photo
  * ================================================================ */
+
+// ---------- MAP STYLES ----------
+const MAP_STYLES = [
+  {
+    id: 'voyager',
+    em: '🎨',
+    en: ['Colorful', 'Bright & vivid'],
+    fr: ['Colorée', 'Vive et joyeuse'],
+    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+    attr: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/">CARTO</a>',
+    maxZoom: 19
+  },
+  {
+    id: 'osm',
+    em: '🗺️',
+    en: ['Classic', 'Standard OSM'],
+    fr: ['Classique', 'OpenStreetMap'],
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attr: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 19
+  },
+  {
+    id: 'dark',
+    em: '🌙',
+    en: ['Dark Mode', 'Night vibes'],
+    fr: ['Mode Sombre', 'Ambiance nuit'],
+    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    attr: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/">CARTO</a>',
+    maxZoom: 19
+  },
+  {
+    id: 'topo',
+    em: '🏔️',
+    en: ['Topo', 'Relief & contours'],
+    fr: ['Topo', 'Relief & courbes'],
+    url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+    attr: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://opentopomap.org/">OpenTopoMap</a>',
+    maxZoom: 17
+  },
+  {
+    id: 'satellite',
+    em: '🛰️',
+    en: ['Satellite', 'From space 🚀'],
+    fr: ['Satellite', 'Vue du ciel 🚀'],
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    attr: '© <a href="https://www.esri.com/">Esri</a>',
+    maxZoom: 18
+  },
+  {
+    id: 'watercolor',
+    em: '🎭',
+    en: ['Watercolor', 'Artistic & dreamy'],
+    fr: ['Aquarelle', 'Artistique & poétique'],
+    url: 'https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg',
+    attr: '© <a href="https://stadiamaps.com/">Stadia Maps</a> © <a href="http://stamen.com/">Stamen Design</a> © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 16
+  }
+];
 
 // ---------- CHALLENGES ----------
 const CHALLENGES = [
@@ -373,7 +474,7 @@ const CHALLENGES = [
   { id: 'plane',    em: '✈️', xp: 40, premium: false, en: ['Mile High', 'Cruising altitude.'],                          fr: ['Vol Plané', 'En altitude de croisière.'] },
   { id: 'train',    em: '🚂', xp: 30, premium: false, en: ['Loco Locomotive', 'On the rails.'],                        fr: ['Train Express', 'Sur les rails.'] },
   { id: 'night',    em: '🌃', xp: 20, premium: false, en: ['Midnight Run', 'Between 11pm and 4am.'],                   fr: ['Course de Minuit', 'Entre 23h et 4h.'] },
-  { id: 'sunrise',  em: '🌅', xp: 25, premium: true,  en: ['Dawn Patrol', 'First poo of the day, at sunrise.'],         fr: ['Au Lever du Soleil', "Premier dépôt de la journée, à l'aube."] },
+  { id: 'sunrise',  em: '🌅', xp: 25, premium: true,  en: ['Dawn Patrol', 'First poo of the day, at sunrise.'],         fr: ['Au Lever du Soleil', "Premier dépôt du jour, à l'aube."] },
   { id: 'hotel',    em: '🏨', xp: 20, premium: false, en: ['Five Star Stool', 'Hotel sweet hotel.'],                   fr: ['Cinq Étoiles', 'Hôtel sweet hôtel.'] },
   { id: 'water',    em: '🌊', xp: 25, premium: false, en: ['Riverside Relief', 'By the water.'],                       fr: ["Au Bord de l'Eau", 'Près des flots.'] },
   { id: 'abroad',   em: '🌍', xp: 75, premium: true,  en: ['Globe Trotter', 'Different country. Bonjour, hola, ciao!'], fr: ['Tour du Monde', 'Pays différent. Hello, hola, ciao !'] },
@@ -394,6 +495,7 @@ const I18N = {
     welcome: 'Welcome! Tap 💩 to drop your first pin.', pickChallenge: 'Pick a challenge first!',
     nowFree: 'Switched to Free 🆓', nowPremium: 'Welcome to Premium! ⭐', levelUp: 'LEVEL UP! 🎉',
     foundYou: '📍 Found you!', worldwide: 'Worldwide', todayLbl: 'Today', meTag: 'My stats',
+    mapStyle: 'Map style',
     facts: [
       "That's enough drops to fill {pools} Olympic pools 🏊",
       "If lined up, they'd circle the Earth {laps} times 🌍",
@@ -417,6 +519,7 @@ const I18N = {
     welcome: 'Bienvenue ! Tape 💩 pour ton premier dépôt.', pickChallenge: "Choisis d'abord un défi !",
     nowFree: 'Mode Gratuit 🆓', nowPremium: 'Bienvenue en Premium ! ⭐', levelUp: 'NIVEAU SUPÉRIEUR ! 🎉',
     foundYou: '📍 Localisé !', worldwide: 'Mondial', todayLbl: "Aujourd'hui", meTag: 'Mes stats',
+    mapStyle: 'Style de carte',
     facts: [
       "De quoi remplir {pools} piscines olympiques 🏊",
       "Mis bout à bout, ils feraient {laps} fois le tour de la Terre 🌍",
@@ -443,17 +546,18 @@ function loadState() {
 function saveState() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      pins: pins.filter(p => p.mine), // only persist mine; demo pins reseed
-      xp, completed: [...completed], plan, lang
+      pins: pins.filter(p => p.mine),
+      xp, completed: [...completed], plan, lang, mapStyleId
     }));
   } catch (e) { /* private browsing or quota */ }
 }
 
 // ---------- STATE ----------
-let lang = 'en';
+let lang = 'fr';           // ← French by default
 let plan = 'free';
+let mapStyleId = 'voyager'; // ← Fun colorful style by default
 const FREE_DAILY_LIMIT = 3;
-const pins = [];          // {lat, lng, ts, mine, challengeId, photo}
+const pins = [];
 const markersByPin = new Map();
 const completed = new Set();
 let xp = 0;
@@ -470,6 +574,7 @@ if (saved) {
   if (Array.isArray(saved.completed)) saved.completed.forEach(id => completed.add(id));
   if (saved.plan === 'premium' || saved.plan === 'free') plan = saved.plan;
   if (saved.lang === 'en' || saved.lang === 'fr') lang = saved.lang;
+  if (saved.mapStyleId && MAP_STYLES.find(s => s.id === saved.mapStyleId)) mapStyleId = saved.mapStyleId;
 }
 
 // ---------- HELPERS ----------
@@ -493,19 +598,16 @@ function applyLang() {
   renderChallengeGrid();
   renderChallengePanel();
   renderPerks();
-  // Force counter format refresh
+  renderStylePicker();
   lastTotal = -1; lastToday = -1;
   tickCounter();
   rotateFunFact();
 }
 
 // ---------- GLOBAL LIVE COUNTER ----------
-// Deterministic ticker: base + (seconds since launch * rate).
-// To swap for a real backend later, replace totalCount() / todayCount()
-// with a fetch to your /api/stats endpoint.
 const LAUNCH_TS = Date.parse('2024-01-01T00:00:00Z');
-const BASE_OFFSET = 47832156; // funny base
-const RATE = 5.3;             // pins per second across the app
+const BASE_OFFSET = 47832156;
+const RATE = 5.3;
 
 function totalCount() {
   return BASE_OFFSET + Math.floor((Date.now() - LAUNCH_TS) / 1000 * RATE)
@@ -539,21 +641,18 @@ function flash(el) {
 }
 setInterval(tickCounter, 250);
 
-// Rotating fun fact (computed live from the counter)
 let factIdx = 0;
 function rotateFunFact() {
   const facts = I18N[lang].facts;
   const tot = totalCount();
-  // Realistic-ish derived numbers, tongue-in-cheek
-  const avgKg = 0.13;          // ~130g per poo
+  const avgKg = 0.13;
   const totalKg = tot * avgKg;
   const tons = Math.round(todayGlobal() * avgKg / 1000);
-  const pools = Math.floor(totalKg / 2500000);            // 2.5M kg ~ 2500m³ ~ Olympic pool
-  const laps = (tot * 0.12 / 40075000).toFixed(1);        // 12cm avg, earth circ 40,075km
-  // Real stat: avg poo lasts ~12 min -> ~0.83% of population is going at any moment
+  const pools = Math.floor(totalKg / 2500000);
+  const laps = (tot * 0.12 / 40075000).toFixed(1);
   const persec = fmt(Math.floor(8.1e9 * 0.0083));
   const now = persec;
-  const kg = Math.round(avgKg * 365 * 10) / 10;           // ~47kg/yr
+  const kg = Math.round(avgKg * 365 * 10) / 10;
   let f = facts[factIdx % facts.length];
   f = f.replace('{pools}', fmt(pools)).replace('{laps}', laps)
        .replace('{persec}', persec).replace('{now}', now)
@@ -566,9 +665,68 @@ setInterval(rotateFunFact, 5000);
 // ---------- MAP ----------
 const map = L.map('map', { zoomControl: false }).setView([48.8566, 2.3522], 13);
 L.control.zoom({ position: 'bottomright' }).addTo(map);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 19, attribution: '© OpenStreetMap'
-}).addTo(map);
+
+// Tile layer management
+let currentTile = null;
+
+function applyMapStyle(styleId) {
+  const style = MAP_STYLES.find(s => s.id === styleId) || MAP_STYLES[0];
+  mapStyleId = style.id;
+  if (currentTile) map.removeLayer(currentTile);
+  currentTile = L.tileLayer(style.url, {
+    maxZoom: style.maxZoom,
+    attribution: style.attr
+  }).addTo(map);
+  renderStylePicker();
+  saveState();
+}
+
+// Build style picker
+function renderStylePicker() {
+  const picker = $('stylePicker');
+  picker.innerHTML = `<div class="style-picker-title">${t('mapStyle')}</div>`;
+  MAP_STYLES.forEach(style => {
+    const opt = document.createElement('div');
+    opt.className = 'style-opt' + (style.id === mapStyleId ? ' active' : '');
+    const name = style[lang][0];
+    const desc = style[lang][1];
+    opt.innerHTML = `<span class="s-em">${style.em}</span>
+      <span class="s-info"><span class="s-name">${name}</span><span class="s-desc">${desc}</span></span>`;
+    opt.addEventListener('click', () => {
+      applyMapStyle(style.id);
+      closePicker();
+    });
+    picker.appendChild(opt);
+  });
+}
+
+function closePicker() {
+  $('stylePicker').classList.remove('open');
+  $('styleFab').classList.remove('active');
+}
+
+$('styleFab').addEventListener('click', (e) => {
+  e.stopPropagation();
+  const picker = $('stylePicker');
+  const isOpen = picker.classList.contains('open');
+  if (isOpen) {
+    closePicker();
+  } else {
+    picker.classList.add('open');
+    $('styleFab').classList.add('active');
+  }
+});
+
+// Close picker when clicking map
+map.on('click', closePicker);
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#stylePicker') && !e.target.closest('#styleFab')) {
+    closePicker();
+  }
+});
+
+// Apply initial style
+applyMapStyle(mapStyleId);
 
 // ---------- USER LOCATION ----------
 function setUserLocation(lat, lng, zoom = 15, fly = true) {
@@ -655,7 +813,6 @@ function seedDemoPins(center) {
   });
 }
 
-// Re-render persisted pins
 pins.forEach(pin => {
   const ch = CHALLENGES.find(c => c.id === pin.challengeId);
   const m = L.marker([pin.lat, pin.lng], { icon: makeIcon('💩', ch ? ch.em : '', pin.mine) }).addTo(map);
@@ -683,7 +840,7 @@ function closeSheets() {
   $('sheetBg').classList.remove('open');
   document.querySelectorAll('.sheet').forEach(s => s.classList.remove('open'));
   pendingPhoto = null; pendingChallenge = null;
-  $('photoBtn').innerHTML = '📸 <span>' + t('addPhoto') + '</span>';
+  resetPhotoBtn();
   $('confirmDrop').disabled = true;
   renderChallengeGrid();
 }
@@ -774,7 +931,16 @@ function showAchievement(challenge) {
   el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
 }
 
-// ---------- PHOTO ----------
+// ---------- PHOTO — Android-safe ----------
+// Key fix: programmatic .click() on the input, NOT display:none.
+// display:none blocks the file picker on many Android WebViews.
+
+function resetPhotoBtn() {
+  $('photoBtn').innerHTML = `📸 <span>${t('addPhoto')}</span>`;
+  $('fileInput').value = '';
+  pendingPhoto = null;
+}
+
 function compressImage(file, maxW = 900) {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -791,18 +957,31 @@ function compressImage(file, maxW = 900) {
     img.src = URL.createObjectURL(file);
   });
 }
+
+// Use a <button> that programmatically triggers the input
+// This is the Android-safe approach (avoids label/display:none issues)
+$('photoBtn').addEventListener('click', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  $('fileInput').click();
+});
+
 $('fileInput').addEventListener('change', async e => {
   const file = e.target.files && e.target.files[0];
   if (!file) return;
-  pendingPhoto = await compressImage(file);
-  $('photoBtn').innerHTML = `<div class="photo-preview">
-    <img src="${pendingPhoto}" /><button class="x" id="rmPhoto">×</button></div>`;
-  $('rmPhoto').addEventListener('click', e => {
-    e.preventDefault(); e.stopPropagation();
-    pendingPhoto = null;
-    $('fileInput').value = '';
-    $('photoBtn').innerHTML = '📸 <span>' + t('addPhoto') + '</span>';
-  });
+  try {
+    pendingPhoto = await compressImage(file);
+    $('photoBtn').innerHTML = `<div class="photo-preview" style="margin:0 auto;">
+      <img src="${pendingPhoto}" alt="" /><button class="x" id="rmPhoto" type="button">×</button>
+    </div>`;
+    $('rmPhoto').addEventListener('click', e => {
+      e.preventDefault(); e.stopPropagation();
+      resetPhotoBtn();
+    });
+  } catch (err) {
+    console.error('Photo error:', err);
+    toast('❌ Photo error', 'warn');
+  }
 });
 
 // ---------- DROP FLOW ----------
@@ -828,7 +1007,6 @@ function commitDrop(lat, lng, challenge, photo) {
   const isFirst = !completed.has(challenge.id);
   completed.add(challenge.id);
   updateMyStats();
-  // Bump global counter immediately for fun feedback
   lastTotal = -1; lastToday = -1; tickCounter();
   flash($('globalTotal')); flash($('globalToday'));
   saveState();
@@ -872,7 +1050,6 @@ function enableTapToDrop(challenge, photo) {
 $('langBtn').addEventListener('click', () => {
   lang = lang === 'en' ? 'fr' : 'en';
   applyLang();
-  // Re-render existing popups in new language
   pins.forEach(pin => { const m = markersByPin.get(pin); if (m) m.setPopupContent(popupHtml(pin)); });
   saveState();
 });
