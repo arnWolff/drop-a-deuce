@@ -1047,6 +1047,13 @@ let lang = 'fr', plan = 'free', mapStyleId = 'voyager';
 let migrating = false;            // suppress auto-anon during account migration
 let pickedAvatarEmoji = null;     // currently-edited avatar in profile sheet
 const ANON_WELCOMED_KEY = 'deuce_anon_welcomed';
+const EXPLICIT_SIGNOUT_KEY = 'deuce_explicit_signout';
+
+function hasAnonData() {
+  if (!currentUser || !currentUser.isAnonymous) return false;
+  const minePins = allPins.filter(p => p.mine).length;
+  return minePins > 0 || savedLocations.length > 0 || xp > 0 || completed.size > 0;
+}
 let xp = 0;
 const completed = new Set();
 
@@ -1412,7 +1419,13 @@ function closeSheets() {
   // tear down miniMap if it was active
   if (miniMap) { miniMap.remove(); miniMap = null; miniMarker = null; }
 }
-$('sheetBg').addEventListener('click', closeSheets);
+$('sheetBg').addEventListener('click', () => {
+  // If signed out and seeing the auth sheet, force a choice — don't allow dismissal
+  if (FIREBASE_ON && !currentUser && $('authSheet').classList.contains('open')) {
+    return;
+  }
+  closeSheets();
+});
 
 /* ================================================================
  * RENDER: CHALLENGES
@@ -2147,125 +2160,135 @@ $('emailAuthBtn').addEventListener('click', async () => {
   if (!email || !password) { showAuthError({ code:'auth/invalid-email' }); return; }
   $('authError').classList.remove('show');
 
-  try {
-    if (authMode === 'signup') {
-      // Anonymous user wants a real account → try to LINK first
-      if (currentUser && currentUser.isAnonymous) {
-        try {
-          const cred = EmailAuthProvider.credential(email, password);
-          await linkWithCredential(currentUser, cred);
-          closeSheets(); toast(t('signedIn'), 'win');
-          return;
-        } catch (e) {
-          if (e.code === 'auth/email-already-in-use'
-              || e.code === 'auth/credential-already-in-use') {
-            // Offer to merge into the existing account
-            if (confirm(t('mergeEmailPrompt'))) {
-              const ok = await migrateAnonTo(() => signInWithEmailAndPassword(auth, email, password));
-              if (!ok) showAuthError({ code:'auth/wrong-password' });
-            } else {
-              try {
-                await currentUser.delete();
-              } catch(_) { await signOut(auth); }
-              try {
-                await signInWithEmailAndPassword(auth, email, password);
-                closeSheets(); toast(t('signedIn'), 'win');
-              } catch(e2) { showAuthError(e2); }
-            }
-            return;
-          }
-          throw e;
-        }
-      } else {
-        // Not anonymous — normal create
-        await createUserWithEmailAndPassword(auth, email, password);
-      }
-    } else {
-      // SIGN-IN mode: if currently anonymous, we *also* need migration logic
-      if (currentUser && currentUser.isAnonymous) {
-        if (confirm(t('mergeEmailPrompt'))) {
-          const ok = await migrateAnonTo(() => signInWithEmailAndPassword(auth, email, password));
-          if (!ok) return;
-        } else {
-          try { await currentUser.delete(); } catch(_) { await signOut(auth); }
-          await signInWithEmailAndPassword(auth, email, password);
-        }
-      } else {
-        await signInWithEmailAndPassword(auth, email, password);
-      }
+  const plainSignIn = async () => {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      closeSheets(); toast(t('signedIn'), 'win');
+    } catch(e) { showAuthError(e); }
+  };
+  const plainSignUp = async () => {
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+      closeSheets(); toast(t('signedIn'), 'win');
+    } catch(e) { showAuthError(e); }
+  };
+
+  // ====== SIGN-IN MODE ======
+  if (authMode === 'signin') {
+    if (!currentUser || !currentUser.isAnonymous) return plainSignIn();
+    if (!hasAnonData()) {
+      try { await currentUser.delete(); } catch(_) { await signOut(auth); }
+      return plainSignIn();
     }
-    closeSheets();
-    toast(t('signedIn'), 'win');
-  } catch (e) { showAuthError(e); }
+    // anon WITH data: ask
+    if (confirm(t('mergeEmailPrompt'))) {
+      const ok = await migrateAnonTo(() => signInWithEmailAndPassword(auth, email, password));
+      if (!ok) showAuthError({ code:'auth/wrong-password' });
+    } else {
+      try { await currentUser.delete(); } catch(_) { await signOut(auth); }
+      return plainSignIn();
+    }
+    return;
+  }
+
+  // ====== SIGN-UP MODE ======
+  if (!currentUser || !currentUser.isAnonymous) return plainSignUp();
+
+  // Anon → upgrade by linking credentials (preserves uid AND data, no merge needed)
+  try {
+    const cred = EmailAuthProvider.credential(email, password);
+    await linkWithCredential(currentUser, cred);
+    closeSheets(); toast(t('signedIn'), 'win');
+    return;
+  } catch (e) {
+    if (e.code !== 'auth/email-already-in-use'
+        && e.code !== 'auth/credential-already-in-use') {
+      showAuthError(e); return;
+    }
+    // Email already taken
+    if (!hasAnonData()) {
+      try { await currentUser.delete(); } catch(_) { await signOut(auth); }
+      return plainSignIn();
+    }
+    if (confirm(t('mergeEmailPrompt'))) {
+      const ok = await migrateAnonTo(() => signInWithEmailAndPassword(auth, email, password));
+      if (!ok) showAuthError({ code:'auth/wrong-password' });
+    } else {
+      try { await currentUser.delete(); } catch(_) { await signOut(auth); }
+      return plainSignIn();
+    }
+  }
 });
 
 $('googleBtn').addEventListener('click', async () => {
   if (!FIREBASE_ON) { toast(t('offlineBanner'), 'warn'); return; }
   const provider = new GoogleAuthProvider();
 
-  // Anonymous user: try to LINK first, then fall back to migration
-  if (currentUser && currentUser.isAnonymous) {
+  const doSignIn = async () => {
     try {
-      await linkWithPopup(currentUser, provider);
-      closeSheets();
-      toast(t('signedIn'), 'win');
-      return;
+      await signInWithPopup(auth, provider);
+      closeSheets(); toast(t('signedIn'), 'win');
     } catch (e) {
-      // The Google account already exists → offer to merge
-      if (e.code === 'auth/credential-already-in-use'
-          || e.code === 'auth/email-already-in-use'
-          || e.code === 'auth/account-exists-with-different-credential') {
-        if (confirm(t('mergeDataPrompt'))) {
-          await migrateAnonTo(() => signInWithPopup(auth, provider));
-        } else {
-          // User said "no merge" — wipe anon and just sign in
-          try {
-            await currentUser.delete();
-          } catch(_) { await signOut(auth); }
-          try {
-            const r = await signInWithPopup(auth, provider);
-            closeSheets();
-            toast(t('signedIn'), 'win');
-          } catch(e2) { showAuthError(e2); }
-        }
-        return;
-      }
       if (e.code === 'auth/popup-blocked') {
         try { await signInWithRedirect(auth, provider); } catch(e2) { showAuthError(e2); }
-        return;
-      }
-      showAuthError(e);
-      return;
+      } else { showAuthError(e); }
     }
+  };
+
+  // CASE 1 — Signed out OR signed in with a real account: just sign in normally
+  if (!currentUser || !currentUser.isAnonymous) {
+    return doSignIn();
   }
 
-  // Already signed-out (or non-anon): plain sign-in
+  // CASE 2 — Anonymous but EMPTY: silently swap to the Google account, no prompt
+  if (!hasAnonData()) {
+    try { await currentUser.delete(); } catch(_) { await signOut(auth); }
+    return doSignIn();
+  }
+
+  // CASE 3 — Anonymous WITH data: try linking, fall back to migrate-or-discard
   try {
-    await signInWithPopup(auth, provider);
-    closeSheets();
-    toast(t('signedIn'), 'win');
+    await linkWithPopup(currentUser, provider);
+    closeSheets(); toast(t('signedIn'), 'win');
   } catch (e) {
+    if (e.code === 'auth/credential-already-in-use'
+        || e.code === 'auth/email-already-in-use'
+        || e.code === 'auth/account-exists-with-different-credential') {
+      if (confirm(t('mergeDataPrompt'))) {
+        await migrateAnonTo(() => signInWithPopup(auth, provider));
+      } else {
+        try { await currentUser.delete(); } catch(_) { await signOut(auth); }
+        await doSignIn();
+      }
+      return;
+    }
     if (e.code === 'auth/popup-blocked') {
-      try { await signInWithRedirect(auth, provider); } catch (e2) { showAuthError(e2); }
-    } else { showAuthError(e); }
+      try { await signInWithRedirect(auth, provider); } catch(e2) { showAuthError(e2); }
+      return;
+    }
+    showAuthError(e);
   }
 });
 
 $('anonBtn').addEventListener('click', async () => {
   if (!FIREBASE_ON) { closeSheets(); return; }
   try {
-    await signInAnonymously(auth);
+    localStorage.removeItem(EXPLICIT_SIGNOUT_KEY); // they choose guest
+    if (!currentUser) {
+      await signInAnonymously(auth);
+    }
     closeSheets();
-    toast(t('signedIn'), 'win');
   } catch(e) { showAuthError(e); }
 });
 
 $('signOutBtn').addEventListener('click', async () => {
   if (!FIREBASE_ON) return;
   try {
+    localStorage.setItem(EXPLICIT_SIGNOUT_KEY, '1');
     await signOut(auth);
     toast(t('signedOut'));
     closeSheets();
+    // onAuthStateChanged(null) will pop the auth sheet automatically
   } catch(e) { showAuthError(e); }
 });
 
@@ -2449,6 +2472,7 @@ async function deleteMyAccount() {
     // Local cache
     localStorage.removeItem(SK);
     localStorage.removeItem(ANON_WELCOMED_KEY);
+    localStorage.removeItem(EXPLICIT_SIGNOUT_KEY);
 
     // Auth user
     await currentUser.delete();
@@ -2678,9 +2702,11 @@ if (FIREBASE_ON && auth) {
   onAuthStateChanged(auth, async (user) => {
     unsubAll();
     if (user) {
+      // Successful sign-in clears the explicit-signout intent
+      localStorage.removeItem(EXPLICIT_SIGNOUT_KEY);
+
       const wasFirstAnon = user.isAnonymous && !localStorage.getItem(ANON_WELCOMED_KEY);
       currentUser = user;
-      // Ensure user doc exists; merge displayName/photoURL
       try {
         const ref = doc(db, 'users', user.uid);
         const cur = await getDoc(ref);
@@ -2696,7 +2722,7 @@ if (FIREBASE_ON && auth) {
         } else {
           await setDoc(ref, {
             displayName: user.displayName || cur.data().displayName || null,
-            photoURL: user.photoURL || cur.data().photoURL || null,
+            photoURL:    user.photoURL    || cur.data().photoURL    || null,
             updatedAt: serverTimestamp()
           }, { merge: true });
         }
@@ -2704,7 +2730,6 @@ if (FIREBASE_ON && auth) {
       subscribeUserData();
       updateUserBtn();
 
-      // Welcome the very first anonymous session
       if (wasFirstAnon) {
         localStorage.setItem(ANON_WELCOMED_KEY, '1');
         setTimeout(() => toast(t('welcomeAnon'), 'win'), 1200);
@@ -2716,11 +2741,18 @@ if (FIREBASE_ON && auth) {
       allPins = []; savedLocations = [];
       renderAllMarkers(); renderLocationsList(); renderDropLocRow();
       updateUserBtn();
-      // Auto sign-in anonymously so the app always has a user — UNLESS we're
-      // mid-migration, in which case the migration code will handle sign-in.
-      if (!migrating) {
-        try { await signInAnonymously(auth); } catch(e) { console.warn('Auto-anon failed', e); }
+
+      // Migration handles its own re-sign-in
+      if (migrating) return;
+
+      // User explicitly signed out → show auth sheet, do NOT auto-anon
+      if (localStorage.getItem(EXPLICIT_SIGNOUT_KEY) === '1') {
+        setTimeout(() => openSheet('authSheet'), 100);
+        return;
       }
+
+      // First visit (or session restore with no flag): silent anon
+      try { await signInAnonymously(auth); } catch(e) { console.warn('Auto-anon failed', e); }
     }
   });
 } else {
