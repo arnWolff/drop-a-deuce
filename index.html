@@ -609,6 +609,67 @@
     0%,100% { transform: translateY(0)   rotate(-1deg); }
     50%     { transform: translateY(-6px) rotate(1deg); }
   }
+  /* ===== INSTALL BUTTON ===== */
+.pill.install {
+  background: var(--gold);
+  border: 2px solid var(--brown-1);
+  color: var(--brown-1);
+  font-weight: 800;
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 3px 3px 0 var(--brown-1);
+  transition: transform .1s, box-shadow .1s;
+  animation: install-bounce 2.4s cubic-bezier(0.34,1.56,0.64,1) infinite;
+}
+.pill.install:active {
+  transform: translate(3px, 3px);
+  box-shadow: 0 0 0 var(--brown-1);
+  animation-play-state: paused;
+}
+.pill.install .install-em { font-size: 14px; line-height: 1; }
+@keyframes install-bounce {
+  0%, 70%, 100% { transform: translateY(0)    rotate(0deg); }
+  78%           { transform: translateY(-3px) rotate(-4deg); }
+  86%           { transform: translateY(-1px) rotate(3deg); }
+}
+@media (max-width: 380px) {
+  .pill.install .install-lbl { display: none; } /* keep just 📲 on tiny screens */
+  .pill.install { padding: 6px 9px; }
+}
+/* When the app IS the installed app, kill it dead — belt + suspenders */
+@media (display-mode: standalone) { #installBtn { display: none !important; } }
+@media (display-mode: minimal-ui) { #installBtn { display: none !important; } }
+
+/* ===== iOS INSTALL STEPS ===== */
+.ios-steps { display: flex; flex-direction: column; gap: 10px; margin: 14px 0 18px; }
+.ios-step {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--cream);
+  border: 2px solid var(--brown-1);
+  border-radius: 14px;
+  padding: 12px 14px;
+  box-shadow: 3px 3px 0 var(--brown-1);
+}
+.ios-step-num {
+  font-family: 'Bagel Fat One', cursive;
+  background: var(--gold); color: var(--brown-1);
+  border: 2px solid var(--brown-1);
+  width: 28px; height: 28px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 14px; flex-shrink: 0;
+}
+.ios-step-icon {
+  font-size: 22px; color: var(--brown-1);
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; flex-shrink: 0;
+}
+.ios-step-txt { font-size: 13px; line-height: 1.35; }
+.ios-step-txt b { font-weight: 800; color: var(--brown-1); }
 </style>
 </head>
 <body>
@@ -626,6 +687,12 @@
   </div>
   <div class="pill" id="langBtn">🇫🇷 FR</div>
   <div class="pill premium" id="planBtn">🆓 <span data-i18n="free">Gratuit</span></div>
+
+  <!-- 📲 INSTALL BUTTON (hidden until installable, hidden if already installed) -->
+  <button class="pill install" id="installBtn" type="button" hidden aria-label="Installer l'app">
+    <span class="install-em">📲</span>
+    <span class="install-lbl" data-i18n="install">Installer</span>
+  </button>
 </div>
 
 <!-- ===== TICKER ===== -->
@@ -763,6 +830,48 @@
   <div class="auth-toggle" style="margin-top:14px;">
     <a id="anonBtn" data-i18n="continueAnon">Continuer sans compte (anonyme)</a>
   </div>
+</div>
+
+<!-- IOS INSTALL INSTRUCTIONS SHEET -->
+<div class="sheet" id="iosInstallSheet">
+  <div class="sheet-handle"></div>
+  <h2>📲 <span data-i18n="iosInstallTitle">Installer Pose ta pêche</span></h2>
+  <p class="sub" data-i18n="iosInstallSub">
+    Sur iPhone, c'est toi qui poses ta pêche sur l'écran d'accueil 🍑
+  </p>
+
+  <div class="ios-steps">
+    <div class="ios-step">
+      <span class="ios-step-num">1</span>
+      <span class="ios-step-icon">
+        <!-- iOS share icon -->
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 16V4M12 4l-4 4M12 4l4 4"/>
+          <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/>
+        </svg>
+      </span>
+      <span class="ios-step-txt" data-i18n="iosStep1">
+        Touche le bouton <b>Partager</b> en bas de Safari
+      </span>
+    </div>
+    <div class="ios-step">
+      <span class="ios-step-num">2</span>
+      <span class="ios-step-icon">➕</span>
+      <span class="ios-step-txt" data-i18n="iosStep2">
+        Choisis <b>« Sur l'écran d'accueil »</b>
+      </span>
+    </div>
+    <div class="ios-step">
+      <span class="ios-step-num">3</span>
+      <span class="ios-step-icon">🍑</span>
+      <span class="ios-step-txt" data-i18n="iosStep3">
+        Tape <b>Ajouter</b>, et c'est dans la poche !
+      </span>
+    </div>
+  </div>
+
+  <button class="cta secondary" id="iosInstallClose" data-i18n="gotIt">Compris !</button>
 </div>
 
 <!-- PROFILE SHEET -->
@@ -1081,7 +1190,15 @@ const I18N = {
     migrating:'📦 Moving your data over…',
     migrationDone:'Data merged! 🎉 Welcome back!',
     needRecentLogin:'Please sign out and back in, then try again 🔐',
-    
+    install:        'Install',
+    installOk:      'App installed — happy dropping!',
+    installManual:  'Open your browser menu → "Install app"',
+    iosInstallTitle:'Install Drop a Deuce',
+    iosInstallSub:  'On iPhone you place the peach yourself 🍑',
+    iosStep1:       'Tap the <b>Share</b> button at the bottom of Safari',
+    iosStep2:       'Choose <b>"Add to Home Screen"</b>',
+    iosStep3:       'Tap <b>Add</b> — done and done!',
+    gotIt:          'Got it!'
   },
   fr: {
     appName:'Pose ta pêche', tagline:'La façon fun de cartographier ta #2',
@@ -1164,7 +1281,16 @@ const I18N = {
     mergeEmailPrompt:'⚠️ Cet email a déjà un compte.\n\nClique OK pour FUSIONNER tes données invité dedans, ou Annuler.',
     migrating:'📦 Migration de tes données…',
     migrationDone:'Données fusionnées ! 🎉 Bon retour !',
-    needRecentLogin:'Déconnecte-toi puis reconnecte-toi, puis réessaie 🔐'
+    needRecentLogin:'Déconnecte-toi puis reconnecte-toi, puis réessaie 🔐',
+    install:        'Installer',
+    installOk:      'App installée — bonne pêche !',
+    installManual:  'Ouvre le menu du navigateur → « Installer l\'application »',
+    iosInstallTitle:'Installer Pose ta pêche',
+    iosInstallSub:  'Sur iPhone, c\'est toi qui poses ta pêche sur l\'écran d\'accueil 🍑',
+    iosStep1:       'Touche le bouton <b>Partager</b> en bas de Safari',
+    iosStep2:       'Choisis <b>« Sur l\'écran d\'accueil »</b>',
+    iosStep3:       'Tape <b>Ajouter</b>, et c\'est dans la poche !',
+    gotIt:          'Compris !'
   }
 };
 
@@ -1270,6 +1396,87 @@ function applyLang() {
   try { updateAuthToggleText(); } catch (e) { console.warn('updateAuthToggleText failed:', e); }
   lastTotalCount = -1; lastTodayCount = -1; tickCounter(); rotateFunFact();
 }
+
+/* ================================================================
+ * PWA INSTALL — universal handler
+ * ================================================================ */
+(() => {
+  const installBtn = document.getElementById('installBtn');
+  const iosCloseBtn = document.getElementById('iosInstallClose');
+  if (!installBtn) return;
+
+  // Already running as installed app? Nothing to do, ever.
+  const isStandalone =
+    window.matchMedia('(display-mode: standalone)').matches ||
+    window.matchMedia('(display-mode: minimal-ui)').matches ||
+    window.navigator.standalone === true ||
+    document.referrer.startsWith('android-app://');
+
+  if (isStandalone) {
+    installBtn.remove(); // gone, no flash, no relayout
+    return;
+  }
+
+  const ua = navigator.userAgent;
+  const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+  const isIOSSafari = isIOS && /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS/.test(ua);
+
+  let deferredPrompt = null;
+
+  // Android Chrome / Edge / Samsung — capture and stash
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBtn.hidden = false;
+  });
+
+  // iOS Safari has no event — show the button immediately so the user can find instructions
+  if (isIOSSafari) installBtn.hidden = false;
+
+  installBtn.addEventListener('click', async () => {
+    // Path A — native prompt (Android Chrome/Edge/Samsung Internet)
+    if (deferredPrompt) {
+      try {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          installBtn.hidden = true;
+          if (typeof toast === 'function') toast('🎉 ' + t('installOk'), 'win');
+        }
+      } catch (err) {
+        console.warn('Install prompt failed', err);
+      } finally {
+        deferredPrompt = null;
+      }
+      return;
+    }
+
+    // Path B — iOS Safari, show the share-sheet instructions
+    if (isIOS) {
+      if (typeof openSheet === 'function') openSheet('iosInstallSheet');
+      return;
+    }
+
+    // Path C — Firefox Android, desktop Firefox/Safari, etc.
+    // No programmatic install: tell the user where to find it.
+    if (typeof toast === 'function') {
+      toast(t('installManual'), 'warn');
+    } else {
+      alert('Open your browser menu and choose "Install app" / "Add to Home screen"');
+    }
+  });
+
+  iosCloseBtn?.addEventListener('click', () => {
+    if (typeof closeSheet === 'function') closeSheet('iosInstallSheet');
+  });
+
+  // Vanish forever once installed, even mid-session
+  window.addEventListener('appinstalled', () => {
+    installBtn.hidden = true;
+    deferredPrompt = null;
+    if (typeof toast === 'function') toast('🍑 ' + t('installOk'), 'win');
+  });
+})();
 
 /* ================================================================
  * COUNTER (deterministic + offset by real local pins)
@@ -3056,6 +3263,52 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') closeLightbox();
 });
 
+let deferredPrompt = null;
+const installBtn = document.getElementById('installBtn'); // add this button to your topbar
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();        // stop the mini-infobar
+  deferredPrompt = e;
+  installBtn.hidden = false; // show your own button
+});
+
+installBtn?.addEventListener('click', async () => {
+  // iOS Safari path — no prompt API, show instructions
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const isStandalone =
+    window.matchMedia('(display-mode: standalone)').matches ||
+    window.navigator.standalone === true;
+
+  if (isStandalone) return; // already installed
+
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    installBtn.hidden = true;
+    return;
+  }
+
+  if (isIOS) {
+    // Show a little sheet: "Tap Share → Add to Home Screen 🍑"
+    openSheet('iosInstallSheet');
+    return;
+  }
+
+  // Fallback for Firefox Android etc.
+  toast('Open browser menu → "Install app" / "Add to Home screen"');
+});
+
+// Hide button if launched as installed app
+window.addEventListener('appinstalled', () => { installBtn.hidden = true; });
+
+</script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(console.error);
+    });
+  }
 </script>
 <!-- LIGHTBOX -->
 <div class="lightbox-overlay hidden" id="lightboxOverlay">
