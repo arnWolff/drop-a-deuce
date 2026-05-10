@@ -5,8 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <meta name="theme-color" content="#3d2817" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="Pêche" />
 <meta name="description" content="La façon fun de cartographier ta #2." />
 <title>Pose ta pêche 🍑 — La façon fun de cartographier ta #2</title>
+
+<!-- Favicons -->
+<link rel="icon" type="image/x-icon" href="favicon.ico" />
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png" />
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
+
+<!-- PWA manifest -->
+<link rel="manifest" href="manifest.json" />
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" crossorigin="anonymous" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" crossorigin="anonymous"></script>
@@ -42,9 +54,20 @@
     background: linear-gradient(180deg, rgba(250,243,231,0.96) 70%, rgba(250,243,231,0));
     backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
   .logo { font-family: 'Bagel Fat One', cursive; font-size: 22px; color: var(--brown-1);
-    display: flex; align-items: center; gap: 5px; letter-spacing: -0.3px; }
-  .logo .blob { display: inline-block; animation: wobble 3s ease-in-out infinite; }
-  @keyframes wobble { 0%,100%{transform:rotate(-8deg)} 50%{transform:rotate(8deg) translateY(-2px)} }
+    display: flex; align-items: center; gap: 6px; letter-spacing: -0.3px; }
+  .logo .logo-img {
+    width: 34px; height: 34px;
+    display: inline-block; vertical-align: middle;
+    animation: wobble 3s ease-in-out infinite;
+    filter: drop-shadow(0 2px 3px rgba(61,40,23,0.2));
+    flex-shrink: 0;
+    pointer-events: none;
+    -webkit-user-drag: none;
+  }
+  @keyframes wobble {
+    0%,100% { transform: rotate(-6deg) translateY(0); }
+    50%     { transform: rotate(6deg)  translateY(-2px); }
+  }
   .spacer { flex: 1; }
   .pill { background: var(--cream); border: 2px solid var(--brown-1); border-radius: 999px;
     padding: 6px 11px; font-weight: 700; font-size: 12px; cursor: pointer;
@@ -561,7 +584,8 @@
 
   /* ===== SMALL SCREENS ===== */
   @media (max-width: 380px) {
-    .logo{font-size:16px} .pill{font-size:11px;padding:5px 8px}
+    .logo{font-size:16px} .logo .logo-img { width: 26px; height: 26px; }
+    .pill{font-size:11px;padding:5px 8px}
     .ticker-row{gap:12px} .ticker-stat .num{font-size:16px;min-width:60px}
     .ticker-fact{font-size:9px} .stats{padding:6px 10px} .stats-row{gap:10px}
     .pill.user .avatar { width: 22px; height: 22px; font-size: 11px; }
@@ -571,13 +595,30 @@
   #avatarPicker .emoji-pick { font-size: 26px; }
   .cta.danger { background: var(--red); color: white; border-color: var(--brown-1); }
   .cta.danger:hover { filter: brightness(1.05); }
+
+  .auth-hero {
+    text-align: center;
+    margin: 4px 0 8px;
+  }
+  .auth-hero-img {
+    width: 70%; max-width: 280px; height: auto; display: inline-block;
+    filter: drop-shadow(0 6px 14px rgba(61,40,23,0.18));
+    animation: hero-float 4s ease-in-out infinite;
+  }
+  @keyframes hero-float {
+    0%,100% { transform: translateY(0)   rotate(-1deg); }
+    50%     { transform: translateY(-6px) rotate(1deg); }
+  }
 </style>
 </head>
 <body>
 
 <!-- ===== TOPBAR ===== -->
 <div class="topbar">
-  <div class="logo"><span class="blob">🍑</span><span data-i18n="appName">Pose ta pêche</span></div>
+  <div class="logo">
+    <img class="logo-img" src="logo-icon.png" alt="" decoding="async" />
+    <span data-i18n="appName">Pose ta pêche</span>
+  </div>
   <div class="spacer"></div>
   <div class="pill user" id="userBtn">
     <span class="avatar" id="userAvatar">?</span>
@@ -682,8 +723,10 @@
 <!-- AUTH SHEET -->
 <div class="sheet" id="authSheet">
   <div class="sheet-handle"></div>
-  <h2 id="authTitle" data-i18n="signInTitle">Connexion</h2>
-  <p class="sub" data-i18n="signInSub">Sauvegarde tes dépôts et vois ceux des autres !</p>
+  <div class="auth-hero">
+    <img class="auth-hero-img" src="logo-full.png" alt="Pose ta pêche" decoding="async" />
+  </div>
+  <p class="sub" style="text-align:center;" data-i18n="signInSub">Sauvegarde tes dépôts et vois ceux des autres !</p>
 
   <div class="auth-error" id="authError"></div>
 
