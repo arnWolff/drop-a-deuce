@@ -1267,7 +1267,7 @@ function applyLang() {
   renderStylePicker(); renderPhotoRow();
   renderLocationsList(); renderEmojiPicker();
   renderDropLocRow();
-  updateAuthToggleText();
+  try { updateAuthToggleText(); } catch (e) { console.warn('updateAuthToggleText failed:', e); }
   lastTotalCount = -1; lastTodayCount = -1; tickCounter(); rotateFunFact();
 }
 
@@ -2302,13 +2302,11 @@ function updateAuthToggleText() {
   if (authMode === 'signin') {
     $('authToggleText').textContent = t('noAccount');
     $('authToggleLink').textContent = t('createAccount');
-    $('authTitle').textContent = t('signInTitle');
-    $('emailAuthBtn').textContent = t('signIn');
+    $('emailAuthBtn').textContent   = t('signIn');
   } else {
     $('authToggleText').textContent = t('haveAccount');
     $('authToggleLink').textContent = t('signInLink');
-    $('authTitle').textContent = t('createAccount');
-    $('emailAuthBtn').textContent = t('createAccount');
+    $('emailAuthBtn').textContent   = t('createAccount');
   }
 }
 
@@ -3044,7 +3042,11 @@ function closeLightbox() {
 }
 
 // wire up: click background or image to close, X button to close, ESC key
-$('lightboxClose').addEventListener('click', closeLightbox);
+document.addEventListener('click', (e) => {
+  if (e.target.id === 'lightboxClose') return closeLightbox();
+  const overlay = e.target.closest('#lightboxOverlay');
+  if (overlay && e.target.id !== 'lightboxMeta') closeLightbox();
+});
 $('lightboxOverlay').addEventListener('click', (e) => {
   // any click that isn't on the close button or meta closes
   if (e.target.id === 'lightboxClose' || e.target.id === 'lightboxMeta') return;
