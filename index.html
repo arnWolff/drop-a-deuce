@@ -24,9 +24,12 @@
     --brown-3: #8b5a3c;
     --gold: #f4c430;
     --gold-deep: #e0a800;
+    --silver: #c0c0c0;
+    --bronze: #cd7f32;
     --pink: #ffb4a2;
     --green: #7cb342;
     --blue: #2196f3;
+    --purple: #9c27b0;
     --red: #e74c3c;
     --shadow: 0 8px 24px rgba(61,40,23,0.18);
     --shadow-lg: 0 16px 40px rgba(61,40,23,0.25);
@@ -101,6 +104,10 @@
   .poo-marker .badge { position: absolute; top: -6px; right: -10px; font-size: 16px;
     background: var(--gold); border: 2px solid var(--brown-1); border-radius: 50%;
     width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; line-height: 1; }
+  .poo-marker .quest-badge { position: absolute; top: -6px; left: -10px; font-size: 14px;
+    background: var(--purple); color: white; border: 2px solid var(--cream); border-radius: 50%;
+    width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;
+    line-height: 1; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
   .poo-marker .count-badge { position: absolute; bottom: -2px; right: -10px;
     background: var(--brown-1); color: var(--gold); font-family: 'Bagel Fat One', cursive;
     font-size: 11px; padding: 1px 6px; border-radius: 999px; border: 2px solid var(--cream);
@@ -113,6 +120,9 @@
   .popup-body { padding: 10px 12px; }
   .popup-title { font-weight: 800; font-size: 13px; display: flex; align-items: center; gap: 5px; margin-bottom: 3px; }
   .popup-meta { font-size: 11px; color: var(--brown-2); opacity: 0.8; }
+  .popup-quest-tag { display: inline-flex; align-items: center; gap: 4px;
+    background: var(--purple); color: white; font-size: 10px; font-weight: 800;
+    padding: 2px 8px; border-radius: 999px; margin-top: 4px; }
   .popup-history-btn { margin-top: 8px; width: 100%; padding: 7px;
     background: var(--brown-1); color: var(--cream); border: none; border-radius: 8px;
     font-weight: 700; font-size: 11px; cursor: pointer; }
@@ -141,7 +151,7 @@
   .side-fab { background: var(--cream); border: 2px solid var(--brown-1); border-radius: 50%;
     width: 44px; height: 44px; font-size: 20px; cursor: pointer;
     box-shadow: 3px 3px 0 var(--brown-1); display: flex; align-items: center; justify-content: center;
-    transition: transform .1s, box-shadow .1s; padding: 0; }
+    transition: transform .1s, box-shadow .1s; padding: 0; position: relative; }
   .side-fab:active { transform: translate(3px,3px); box-shadow: 0 0 0 var(--brown-1); }
   .side-fab.locating { animation: spin 1s linear infinite; }
   .side-fab.active { background: var(--gold); }
@@ -165,17 +175,25 @@
   .style-opt .s-name { font-size: 12px; font-weight: 800; }
   .style-opt .s-desc { font-size: 9px; opacity: 0.6; font-weight: 600; }
 
-  /* ===== BOTTOM FABs ===== */
-  .challenge-fab { position: fixed; left: 14px; bottom: 28px; z-index: 999;
-    background: var(--cream); border: 2px solid var(--brown-1); border-radius: 50%;
-    width: 54px; height: 54px; font-size: 24px; cursor: pointer;
+  /* ===== BOTTOM-LEFT FABs (locations, trophy, quests) ===== */
+  .left-fab-stack { position: fixed; left: 14px; bottom: 28px; z-index: 999;
+    display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+  .small-fab { background: var(--cream); border: 2px solid var(--brown-1); border-radius: 50%;
+    width: 44px; height: 44px; font-size: 20px; cursor: pointer;
     box-shadow: 3px 3px 0 var(--brown-1); display: flex; align-items: center; justify-content: center;
-    transition: transform .1s, box-shadow .1s; padding: 0; }
-  .challenge-fab:active { transform: translate(3px,3px); box-shadow: 0 0 0 var(--brown-1); }
-  .challenge-fab .count { position: absolute; top: -4px; right: -4px; background: var(--brown-1);
+    transition: transform .1s, box-shadow .1s; padding: 0; position: relative; }
+  .small-fab:active { transform: translate(3px,3px); box-shadow: 0 0 0 var(--brown-1); }
+  .small-fab.quest-fab { background: linear-gradient(135deg, #d8b4fe 0%, var(--purple) 100%);
+    color: white; width: 54px; height: 54px; font-size: 24px; }
+  .small-fab.quest-fab .quest-pulse { position: absolute; inset: -4px; border-radius: 50%;
+    background: var(--purple); opacity: 0.25; animation: ripple 2s ease-out infinite; z-index: -1;
+    pointer-events: none; }
+  .small-fab .count { position: absolute; top: -4px; right: -4px; background: var(--brown-1);
     color: var(--cream); font-size: 10px; font-weight: 800; padding: 2px 6px;
-    border-radius: 999px; border: 2px solid var(--cream); }
+    border-radius: 999px; border: 2px solid var(--cream); min-width: 18px; }
+  .small-fab .count.purple { background: var(--purple); color: white; }
 
+  /* ===== DROP FAB ===== */
   .fab-wrap { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 999;
     display: flex; flex-direction: column; align-items: center; gap: 6px; }
   .fab-label { background: var(--brown-1); color: var(--cream); padding: 4px 12px; border-radius: 999px;
@@ -190,16 +208,6 @@
   @keyframes ripple { 0%{transform:scale(1);opacity:0.4} 100%{transform:scale(1.4);opacity:0} }
   .fab:active { transform: translateY(6px); box-shadow: 0 0 0 var(--brown-1), var(--shadow); }
   .fab:disabled { opacity: 0.6; cursor: not-allowed; }
-  .fab .cooldown { position: absolute; inset: -2px; border-radius: 50%;
-    pointer-events: none; }
-
-  /* Locations FAB on left, above challenge fab */
-  .locations-fab { position: fixed; left: 14px; bottom: 92px; z-index: 999;
-    background: var(--cream); border: 2px solid var(--brown-1); border-radius: 50%;
-    width: 44px; height: 44px; font-size: 20px; cursor: pointer;
-    box-shadow: 3px 3px 0 var(--brown-1); display: flex; align-items: center; justify-content: center;
-    transition: transform .1s, box-shadow .1s; padding: 0; }
-  .locations-fab:active { transform: translate(3px,3px); box-shadow: 0 0 0 var(--brown-1); }
 
   /* ===== TOAST / CONFETTI ===== */
   .confetti { position: fixed; pointer-events: none; z-index: 9999; font-size: 28px;
@@ -213,6 +221,7 @@
   .toast.warn { background: var(--pink); color: var(--brown-1); }
   .toast.win { background: var(--green); color: white; }
   .toast.err { background: var(--red); color: white; }
+  .toast.quest { background: var(--purple); color: white; }
   @keyframes toast-in { from{transform:translate(-50%,30px);opacity:0} to{transform:translate(-50%,0);opacity:1} }
   @keyframes toast-out { to{transform:translate(-50%,30px);opacity:0} }
 
@@ -226,11 +235,23 @@
     z-index: 9100; max-height: 85vh; overflow-y: auto; padding: 8px 18px 24px; }
   .sheet.open { transform: translateY(0); }
   .sheet-handle { width: 44px; height: 5px; background: var(--brown-3); opacity: 0.4;
-    border-radius: 999px; margin: 6px auto 14px; }
-  .sheet h2 { font-family: 'Bagel Fat One', cursive; font-size: 26px; margin-bottom: 4px; }
+    border-radius: 999px; margin: 6px auto 14px; cursor: pointer; }
+  .sheet-handle:hover { opacity: 0.7; }
+  .sheet-close { position: absolute; top: 12px; right: 14px; width: 36px; height: 36px;
+    border-radius: 50%; background: var(--cream); border: 2px solid var(--brown-1);
+    color: var(--brown-1); font-size: 18px; font-weight: 800; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; padding: 0;
+    box-shadow: 2px 2px 0 var(--brown-1); transition: transform .12s, box-shadow .12s;
+    font-family: inherit; line-height: 1; z-index: 5; }
+  .sheet-close:hover { background: var(--gold); }
+  .sheet-close:active { transform: translate(2px,2px); box-shadow: 0 0 0 var(--brown-1); }
+  .sheet { position: relative; }
+  .sheet h2 { font-family: 'Bagel Fat One', cursive; font-size: 26px; margin-bottom: 4px; padding-right: 50px; }
   .sheet .sub { font-size: 13px; color: var(--brown-2); opacity: 0.85; margin-bottom: 16px; }
   .section-title { font-size: 11px; font-weight: 800; text-transform: uppercase;
-    letter-spacing: 0.8px; color: var(--brown-2); margin: 14px 0 8px; }
+    letter-spacing: 0.8px; color: var(--brown-2); margin: 14px 0 8px;
+    display: flex; align-items: center; justify-content: space-between; }
+  .section-title .opt { opacity: 0.5; font-weight: 700; text-transform: none; letter-spacing: 0; font-size: 10px; }
 
   /* ===== LOCATION PICKER (in drop sheet) ===== */
   .loc-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px;
@@ -246,6 +267,23 @@
   .loc-card .em { font-size: 24px; line-height: 1; display: block; margin-bottom: 4px; }
   .loc-card .nm { font-size: 11px; line-height: 1.15; word-break: break-word; }
   .loc-card .sub-info { font-size: 9px; opacity: 0.6; margin-top: 2px; font-weight: 600; }
+
+  /* ===== QUEST PICKER (in drop sheet) ===== */
+  .quest-pick-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px;
+    scrollbar-width: none; }
+  .quest-pick-row::-webkit-scrollbar { display: none; }
+  .quest-pick-card { flex: 0 0 auto; min-width: 110px; max-width: 130px; padding: 10px 8px;
+    background: var(--bg); border: 2px solid var(--brown-1); border-radius: 14px;
+    text-align: center; cursor: pointer; transition: transform .15s, background .15s;
+    font-weight: 700; font-size: 11px; color: var(--brown-1); position: relative; }
+  .quest-pick-card:active { transform: scale(0.96); }
+  .quest-pick-card.selected { background: linear-gradient(135deg, #e9d5ff, var(--purple));
+    color: white; transform: scale(1.05); border-color: var(--purple); }
+  .quest-pick-card.selected .em { transform: scale(1.1); }
+  .quest-pick-card.none { background: transparent; border-style: dashed; color: var(--brown-2); }
+  .quest-pick-card .em { font-size: 24px; line-height: 1; display: block; margin-bottom: 4px;
+    transition: transform .15s; }
+  .quest-pick-card .nm { font-size: 11px; line-height: 1.15; word-break: break-word; }
 
   /* ===== CHALLENGE GRID ===== */
   .ch-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 16px; }
@@ -338,6 +376,7 @@
   .cta:disabled { opacity: 0.45; cursor: not-allowed; transform: none!important; box-shadow: 4px 4px 0 var(--brown-1)!important; }
   .cta.secondary { background: var(--cream); }
   .cta.danger { background: var(--red); color: white; }
+  .cta.purple { background: linear-gradient(135deg, #d8b4fe, var(--purple)); color: white; }
 
   /* ===== CHALLENGE PANEL LIST ===== */
   .ch-panel-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
@@ -396,10 +435,12 @@
   .field { display: flex; flex-direction: column; gap: 4px; }
   .field label { font-size: 11px; font-weight: 800; text-transform: uppercase;
     letter-spacing: 0.6px; color: var(--brown-2); }
-  .field input { width: 100%; padding: 12px 14px; border: 2px solid var(--brown-1);
+  .field input, .field textarea { width: 100%; padding: 12px 14px; border: 2px solid var(--brown-1);
     border-radius: 12px; background: var(--cream); font-size: 14px; font-weight: 600;
-    color: var(--brown-1); outline: none; transition: box-shadow .12s; }
-  .field input:focus { box-shadow: 3px 3px 0 var(--gold); }
+    color: var(--brown-1); outline: none; transition: box-shadow .12s; resize: vertical;
+    font-family: inherit; }
+  .field textarea { min-height: 70px; }
+  .field input:focus, .field textarea:focus { box-shadow: 3px 3px 0 var(--gold); }
   .auth-toggle { text-align: center; font-size: 12px; color: var(--brown-2); margin-top: 10px; }
   .auth-toggle a { color: var(--brown-1); font-weight: 800; cursor: pointer;
     text-decoration: underline; }
@@ -471,6 +512,104 @@
   .hist-time { font-size: 11px; color: var(--brown-2); opacity: 0.8; }
   .hist-loc { font-size: 11px; color: var(--brown-2); }
 
+  /* ===== QUESTS SHEET ===== */
+  .quest-hero { background: linear-gradient(135deg, #e9d5ff 0%, var(--purple) 100%);
+    border: 2px solid var(--brown-1); border-radius: 16px; padding: 14px 16px;
+    margin-bottom: 16px; color: white; box-shadow: 3px 3px 0 var(--brown-1); }
+  .quest-hero .qh-title { font-family: 'Bagel Fat One', cursive; font-size: 18px;
+    margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+  .quest-hero .qh-text { font-size: 12px; opacity: 0.95; line-height: 1.4; }
+  .quest-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 14px; }
+  .quest-card { background: var(--bg); border: 2px solid var(--brown-1); border-radius: 16px;
+    padding: 12px; box-shadow: 3px 3px 0 var(--brown-1); cursor: pointer;
+    transition: transform .1s, box-shadow .1s; position: relative; overflow: hidden; }
+  .quest-card:active { transform: translate(3px,3px); box-shadow: 0 0 0 var(--brown-1); }
+  .quest-card.custom::before { content: '✨'; position: absolute; top: 6px; right: 8px;
+    font-size: 14px; opacity: 0.7; }
+  .quest-card-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 8px; }
+  .quest-em-wrap { width: 56px; height: 56px; flex-shrink: 0;
+    background: linear-gradient(135deg, #f3e8ff, #d8b4fe); border: 2px solid var(--brown-1);
+    border-radius: 16px; display: flex; align-items: center; justify-content: center;
+    font-size: 32px; }
+  .quest-card-info { flex: 1; min-width: 0; }
+  .quest-card-name { font-family: 'Bagel Fat One', cursive; font-size: 16px;
+    line-height: 1.1; margin-bottom: 3px; }
+  .quest-card-desc { font-size: 11px; color: var(--brown-2); line-height: 1.35; opacity: 0.85; }
+  .quest-card-stats { display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+    padding-top: 8px; border-top: 1.5px dashed rgba(61,40,23,0.15); }
+  .quest-stat { font-size: 11px; font-weight: 700; color: var(--brown-2);
+    display: flex; align-items: center; gap: 4px; }
+  .quest-stat .em { font-size: 14px; }
+  .quest-stat strong { color: var(--brown-1); font-family: 'Bagel Fat One', cursive;
+    font-size: 14px; }
+  .quest-prizes-mini { display: flex; gap: 4px; }
+  .quest-prizes-mini span { font-size: 16px; }
+  .my-rank { margin-left: auto; background: var(--gold); padding: 2px 8px;
+    border-radius: 999px; font-size: 11px; font-weight: 800; color: var(--brown-1);
+    border: 1.5px solid var(--brown-1); }
+  .my-rank.gold { background: linear-gradient(135deg, var(--gold), var(--gold-deep)); }
+  .my-rank.silver { background: var(--silver); }
+  .my-rank.bronze { background: var(--bronze); color: white; }
+
+  /* ===== QUEST DETAIL SHEET ===== */
+  .quest-detail-head { background: linear-gradient(135deg, #e9d5ff 0%, var(--purple) 100%);
+    border: 2px solid var(--brown-1); border-radius: 16px; padding: 18px;
+    margin-bottom: 16px; color: white; text-align: center;
+    box-shadow: 3px 3px 0 var(--brown-1); }
+  .quest-detail-em { font-size: 56px; line-height: 1; display: block; margin-bottom: 6px;
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3)); }
+  .quest-detail-name { font-family: 'Bagel Fat One', cursive; font-size: 24px;
+    line-height: 1.1; margin-bottom: 6px; }
+  .quest-detail-desc { font-size: 13px; opacity: 0.95; line-height: 1.4; }
+  .quest-creator-tag { font-size: 11px; opacity: 0.85; margin-top: 6px; font-weight: 700; }
+
+  .prize-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+  .prize-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px;
+    background: var(--bg); border: 2px solid var(--brown-1); border-radius: 14px;
+    position: relative; overflow: hidden; }
+  .prize-row.gold { background: linear-gradient(90deg, rgba(244,196,48,0.25), var(--bg)); }
+  .prize-row.silver { background: linear-gradient(90deg, rgba(192,192,192,0.25), var(--bg)); }
+  .prize-row.bronze { background: linear-gradient(90deg, rgba(205,127,50,0.25), var(--bg)); }
+  .prize-rank { font-family: 'Bagel Fat One', cursive; font-size: 22px; line-height: 1;
+    width: 36px; text-align: center; flex-shrink: 0; }
+  .prize-name { font-weight: 700; font-size: 13px; line-height: 1.3; flex: 1; }
+
+  .leaderboard-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+  .lb-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+    background: var(--bg); border: 2px solid var(--brown-1); border-radius: 12px; }
+  .lb-row.mine { background: linear-gradient(90deg, var(--gold), rgba(244,196,48,0.3)); }
+  .lb-row.podium-1 { box-shadow: 3px 3px 0 var(--gold-deep); }
+  .lb-row.podium-2 { box-shadow: 3px 3px 0 var(--silver); }
+  .lb-row.podium-3 { box-shadow: 3px 3px 0 var(--bronze); }
+  .lb-rank { font-family: 'Bagel Fat One', cursive; font-size: 18px;
+    color: var(--brown-2); width: 32px; text-align: center; flex-shrink: 0; }
+  .lb-rank.podium { font-size: 22px; }
+  .lb-av { width: 32px; height: 32px; border-radius: 50%;
+    background: var(--brown-2); color: var(--cream); display: flex; align-items: center;
+    justify-content: center; font-weight: 800; font-size: 12px; overflow: hidden;
+    border: 2px solid var(--brown-1); flex-shrink: 0; }
+  .lb-av img { width: 100%; height: 100%; object-fit: cover; }
+  .lb-name { flex: 1; min-width: 0; font-weight: 700; font-size: 13px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lb-name .you { background: var(--gold-deep); color: white; font-size: 9px;
+    padding: 1px 6px; border-radius: 999px; margin-left: 4px; vertical-align: middle; }
+  .lb-count { font-family: 'Bagel Fat One', cursive; font-size: 16px; color: var(--purple); }
+  .lb-empty { text-align: center; padding: 30px 16px; color: var(--brown-2);
+    font-size: 13px; opacity: 0.7; line-height: 1.5; }
+
+  /* ===== CREATE QUEST SHEET ===== */
+  .premium-required { background: linear-gradient(135deg, var(--gold), var(--gold-deep));
+    border: 2px solid var(--brown-1); border-radius: 14px; padding: 14px;
+    margin-bottom: 14px; text-align: center; box-shadow: 3px 3px 0 var(--brown-1); }
+  .premium-required .pr-em { font-size: 32px; margin-bottom: 4px; display: block; }
+  .premium-required .pr-text { font-size: 13px; font-weight: 700; line-height: 1.4; }
+  .prize-input-row { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+  .prize-input-row .rank-em { font-size: 22px; flex-shrink: 0; width: 32px; text-align: center; }
+  .prize-input-row input { flex: 1; padding: 10px 12px; border: 2px solid var(--brown-1);
+    border-radius: 10px; background: var(--cream); font-size: 13px; font-weight: 600;
+    color: var(--brown-1); outline: none; font-family: inherit; }
+  .prize-input-row input:focus { box-shadow: 2px 2px 0 var(--gold); }
+
   /* ===== COOLDOWN INDICATOR ===== */
   .cooldown-pill { background: var(--pink); border: 2px solid var(--brown-1);
     border-radius: 999px; padding: 6px 12px; font-size: 11px; font-weight: 800;
@@ -482,6 +621,7 @@
     .ticker-row{gap:12px} .ticker-stat .num{font-size:16px;min-width:60px}
     .ticker-fact{font-size:9px} .stats{padding:6px 10px} .stats-row{gap:10px}
     .pill.user .avatar { width: 22px; height: 22px; font-size: 11px; }
+    .quest-em-wrap { width: 48px; height: 48px; font-size: 28px; }
   }
 </style>
 </head>
@@ -543,10 +683,15 @@
 </div>
 
 <!-- ===== LEFT-SIDE FABs ===== -->
-<button class="locations-fab" id="locationsFab" aria-label="Mes lieux">🏠</button>
-<button class="challenge-fab" id="trophyBtn" aria-label="Défis">
-  🏆<span class="count" id="challengeCount">0</span>
-</button>
+<div class="left-fab-stack">
+  <button class="small-fab" id="locationsFab" aria-label="Mes lieux">🏠</button>
+  <button class="small-fab" id="trophyBtn" aria-label="Succès">
+    🏆<span class="count" id="challengeCount">0</span>
+  </button>
+  <button class="small-fab quest-fab" id="questsFab" aria-label="Défis">
+    <span class="quest-pulse"></span>🎯<span class="count purple" id="activeQuestCount">0</span>
+  </button>
+</div>
 
 <!-- ===== DROP FAB ===== -->
 <div class="fab-wrap">
@@ -560,15 +705,21 @@
 <div class="sheet" id="dropSheet">
   <div class="sheet-handle"></div>
   <h2 data-i18n="dropTitle">Déposer une Pêche 🍑</h2>
-  <p class="sub" data-i18n="dropSub">Choisis un endroit, un défi et une photo !</p>
+  <p class="sub" data-i18n="dropSub">Choisis un endroit, un succès et une photo !</p>
 
-  <div class="section-title" data-i18n="whereLbl">Où ?</div>
+  <div class="section-title"><span data-i18n="whereLbl">Où ?</span></div>
   <div class="loc-row" id="dropLocRow"></div>
 
-  <div class="section-title" data-i18n="challengeLbl">Défi</div>
+  <div class="section-title"><span data-i18n="challengeLbl">Succès</span></div>
   <div class="ch-grid" id="dropChGrid"></div>
 
-  <div class="section-title" data-i18n="photoLbl">Photo</div>
+  <div class="section-title">
+    <span>🎯 <span data-i18n="questLbl">Défi en cours</span></span>
+    <span class="opt" data-i18n="optional">facultatif</span>
+  </div>
+  <div class="quest-pick-row" id="dropQuestRow"></div>
+
+  <div class="section-title"><span data-i18n="photoLbl">Photo</span></div>
   <div class="photo-row" id="photoRow"></div>
 
   <button class="cta" id="confirmDrop" disabled data-i18n="dropIt">Déposer ! 💩</button>
@@ -576,11 +727,92 @@
 
 <div class="sheet" id="chSheet">
   <div class="sheet-handle"></div>
-  <h2>🏆 <span data-i18n="challenges">Défis</span></h2>
+  <h2>🏆 <span data-i18n="achievements">Succès</span></h2>
   <p class="sub"><span id="chProgress">0/0</span> <span data-i18n="completed">complétés</span></p>
   <div class="xp-bar"><div class="xp-fill" id="xpFill" style="width:0%"></div>
     <div class="xp-text"><span id="xpText">0 / 100 XP</span></div></div>
   <div class="ch-panel-list" id="chPanelList"></div>
+</div>
+
+<!-- QUESTS LIST SHEET -->
+<div class="sheet" id="questsSheet">
+  <div class="sheet-handle"></div>
+  <h2>🎯 <span data-i18n="questsTitle">Défis</span></h2>
+  <p class="sub" data-i18n="questsSub">Affronte le monde entier dans des défis loufoques !</p>
+
+  <div class="quest-hero">
+    <div class="qh-title">⚔️ <span data-i18n="howItWorks">Comment ça marche ?</span></div>
+    <div class="qh-text" data-i18n="questsHow">Choisis un défi, dépose une pêche en y participant, et grimpe au classement. Les 3 premiers gagnent des prix complètement absurdes.</div>
+  </div>
+
+  <button class="cta purple" id="createQuestBtn" style="margin-bottom:14px;">
+    ✨ <span data-i18n="createQuest">Créer un défi</span>
+  </button>
+
+  <div class="quest-list" id="questList"></div>
+</div>
+
+<!-- QUEST DETAIL SHEET -->
+<div class="sheet" id="questDetailSheet">
+  <div class="sheet-handle"></div>
+  <div class="quest-detail-head" id="questDetailHead"></div>
+
+  <div class="section-title">🏅 <span data-i18n="prizes">Récompenses</span></div>
+  <div class="prize-list" id="prizeList"></div>
+
+  <div class="section-title">📊 <span data-i18n="leaderboard">Classement</span></div>
+  <div class="leaderboard-list" id="leaderboardList"></div>
+
+  <button class="cta purple" id="participateBtn">
+    🎯 <span data-i18n="participate">Participer maintenant</span>
+  </button>
+  <button class="cta secondary" id="deleteQuestBtn" style="margin-top:10px; display:none;">
+    🗑️ <span data-i18n="deleteQuest">Supprimer ce défi</span>
+  </button>
+</div>
+
+<!-- CREATE QUEST SHEET -->
+<div class="sheet" id="createQuestSheet">
+  <div class="sheet-handle"></div>
+  <h2>✨ <span data-i18n="createQuestTitle">Créer un défi</span></h2>
+  <p class="sub" data-i18n="createQuestSub">Invente un défi loufoque que tout le monde pourra relever !</p>
+
+  <div id="premiumBlock" class="premium-required" style="display:none;">
+    <span class="pr-em">⭐</span>
+    <div class="pr-text" data-i18n="premiumOnly">Réservé aux Premium ! Passe Premium pour créer des défis.</div>
+    <button class="cta" id="premiumFromQuest" style="margin-top:12px;" data-i18n="goPremium">Passer Premium ⭐</button>
+  </div>
+
+  <div id="createQuestForm">
+    <div class="field" style="margin-bottom:10px;">
+      <label data-i18n="questNameLbl">Nom du défi</label>
+      <input type="text" id="qName" maxlength="50" placeholder="Le défi du Frigo Hanté…" />
+    </div>
+
+    <div class="section-title" data-i18n="emojiLbl">Emoji</div>
+    <div class="emoji-picker" id="qEmojiPicker"></div>
+
+    <div class="field" style="margin-bottom:10px;">
+      <label data-i18n="descLbl">Description</label>
+      <textarea id="qDesc" maxlength="200" placeholder="Pose une pêche derrière le frigo. Mémorable. Audacieux."></textarea>
+    </div>
+
+    <div class="section-title" data-i18n="prizesLbl">Récompenses (les + drôles gagnent !)</div>
+    <div class="prize-input-row">
+      <span class="rank-em">🥇</span>
+      <input type="text" id="qPrize1" maxlength="60" placeholder="Trône en or massif…" />
+    </div>
+    <div class="prize-input-row">
+      <span class="rank-em">🥈</span>
+      <input type="text" id="qPrize2" maxlength="60" placeholder="Sceptre en argent…" />
+    </div>
+    <div class="prize-input-row" style="margin-bottom:14px;">
+      <span class="rank-em">🥉</span>
+      <input type="text" id="qPrize3" maxlength="60" placeholder="Médaille en bronze…" />
+    </div>
+
+    <button class="cta purple" id="saveQuestBtn" data-i18n="createIt">Créer ! 🎯</button>
+  </div>
 </div>
 
 <div class="sheet" id="premiumSheet">
@@ -604,7 +836,7 @@
       <svg class="gicon" viewBox="0 0 18 18"><path fill="#4285f4" d="M17.64 9.205c0-.639-.057-1.252-.164-1.841H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34a853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#fbbc04" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#ea4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
       <span data-i18n="googleSignIn">Continuer avec Google</span>
     </button>
-    <button class="cta secondary" id="signOutBtnAnonym">
+    <button class="cta secondary" id="signOutBtnAnonym" style="display:none;" data-i18n="exitGuest">
       Se déconnecter (Mode Invité)
     </button>
   </div>
@@ -629,7 +861,7 @@
     <a id="authToggleLink" data-i18n="createAccount">Créer un compte</a>
   </div>
 
-  <div class="auth-toggle" style="margin-top:14px;">
+  <div class="auth-toggle" id="anonRow" style="margin-top:14px;">
     <a id="anonBtn" data-i18n="continueAnon">Continuer sans compte (anonyme)</a>
   </div>
 </div>
@@ -736,14 +968,13 @@
 <!-- ACHIEVEMENT POPUP -->
 <div class="ach" id="ach">
   <span class="em" id="achEmoji">🏆</span>
-  <div class="ttl" data-i18n="achievement">Défi Réussi !</div>
+  <div class="ttl" data-i18n="achievement">Succès débloqué !</div>
   <div class="nm" id="achName">—</div>
 </div>
 
 <!-- ============================================================
      FIREBASE CONFIG — REPLACE WITH YOUR PROJECT'S CONFIG
      If left as placeholders, the app runs in offline/local mode.
-     See FIREBASE_SETUP.md for setup instructions.
      ============================================================ -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
@@ -760,9 +991,6 @@ import {
   serverTimestamp, deleteDoc, getDocs
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
-// ============================================================
-// FIREBASE CONFIG — paste your project's config here.
-// ============================================================
 const firebaseConfig = {
     apiKey: "AIzaSyAiUezrtbOD7pLixpwFL9R8Iq7AP0cCZ1w",
     authDomain: "pose-ta-peche.firebaseapp.com",
@@ -790,7 +1018,6 @@ if (FIREBASE_ON) {
   }
 }
 
-// Expose for inline handlers / debugging
 window.__fb = { FIREBASE_ON };
 
 /* ================================================================
@@ -800,9 +1027,9 @@ window.__fb = { FIREBASE_ON };
 const isMobile = /Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent)
   || (navigator.maxTouchPoints > 1 && !/Macintosh/.test(navigator.userAgent));
 
-const RATE_LIMIT_MS = 5 * 60 * 1000; // 5 min between drops
+const RATE_LIMIT_MS = 5 * 60 * 1000;
 const FREE_DAILY_LIMIT = 3;
-const CLUSTER_PRECISION = 4; // ~11m at equator (degrees rounded to 4dp)
+const CLUSTER_PRECISION = 4;
 const PIN_LOAD_LIMIT = 300;
 
 const MAP_STYLES = [
@@ -844,27 +1071,163 @@ const CHALLENGES = [
   {id:'public',  em:'🏛️',xp:35,premium:true, en:['Public Performance','Public restroom on tour.'],           fr:['Spectacle Public','Toilettes publiques en tournée.']}
 ];
 
+/* ================================================================
+ * QUESTS — Tournament-style community challenges with prizes
+ * ================================================================ */
+const DEFAULT_QUESTS = [
+  {
+    id:'q_elevator', em:'🛗',
+    en:['Elevator Surprise','Pose une pêche entre deux étages. Tiens la porte… ou pas.'],
+    fr:['L\'Ascenseur Surprise','Dépose une pêche entre deux étages. Tiens la porte… ou pas.'],
+    prizes:{
+      en:['Golden "Out of Order" plaque','Silver elevator button','Bronze mirror selfie'],
+      fr:['Plaque dorée « En Panne »','Bouton d\'étage en argent','Selfie miroir en bronze']
+    }
+  },
+  {
+    id:'q_everest', em:'🏔️',
+    en:['Everest Excretion','Plus haut que les attentes des Sherpas. Au sommet du monde.'],
+    fr:['Sommet du Mont Caca','Plus haut que les attentes des Sherpas. Au sommet du monde.'],
+    prizes:{
+      en:['Frozen Crown of Glory ❄️','Yeti\'s Stamp of Approval','Bronze oxygen tank'],
+      fr:['Couronne Gelée de Gloire ❄️','Tampon d\'Approbation du Yéti','Bouteille d\'oxygène en bronze']
+    }
+  },
+  {
+    id:'q_cake', em:'🎂',
+    en:['Birthday Cake Catastrophe','Sur le gâteau d\'anniversaire. Vœux annulés.'],
+    fr:['Surprise sur le Gâteau','Sur le gâteau d\'anniversaire. Vœux annulés.'],
+    prizes:{
+      en:['"Worst Guest" Trophy','Half-melted candle souvenir','Awkward family photo'],
+      fr:['Trophée du « Pire Invité »','Bougie à moitié fondue souvenir','Photo de famille gênante']
+    }
+  },
+  {
+    id:'q_moon', em:'🌙',
+    en:['Lunar Landing','Un petit caca pour l\'homme, un grand bond pour la cacanité.'],
+    fr:['Alunissage Audacieux','Un petit caca pour l\'homme, un grand bond pour la cacanité.'],
+    prizes:{
+      en:['Solid gold astronaut diaper','Souvenir moon rock','Space toilet paper roll'],
+      fr:['Couche d\'astronaute en or massif','Caillou lunaire souvenir','Rouleau de PQ spatial']
+    }
+  },
+  {
+    id:'q_restaurant', em:'🍽️',
+    en:['Fine Dining Disaster','Restaurant trois étoiles, dépôt trois étoiles.'],
+    fr:['Restaurant Étoilé','Restaurant trois étoiles, dépôt trois étoiles.'],
+    prizes:{
+      en:['Michelin Stink Star ⭐⭐⭐','Silver soup spoon','Stale bread basket'],
+      fr:['Étoile Michelin du Fumet ⭐⭐⭐','Cuillère à soupe en argent','Panier à pain rassis']
+    }
+  },
+  {
+    id:'q_cinema', em:'🎬',
+    en:['Cinema Surprise','Meilleur second rôle, rangée 4. Standing ovation.'],
+    fr:['Séance Surprise','Meilleur second rôle, rangée 4. Standing ovation.'],
+    prizes:{
+      en:['The Stinky Palme 🌴','Silver 3D glasses trophy','Used ticket stub'],
+      fr:['La Palme Puante 🌴','Trophée Lunettes 3D en argent','Bout de ticket usagé']
+    }
+  },
+  {
+    id:'q_wedding', em:'💒',
+    en:['Wedding Whoopsie','Pour le meilleur et pour le pire… surtout le pire.'],
+    fr:['Mariage Mémorable','Pour le meilleur et pour le pire… surtout le pire.'],
+    prizes:{
+      en:['"Best Man Demoted" medal','Tossed bouquet (used)','Champagne cork'],
+      fr:['Médaille « Témoin Démoté »','Bouquet lancé (déjà servi)','Bouchon de champagne']
+    }
+  },
+  {
+    id:'q_karaoke', em:'🎤',
+    en:['Karaoke Catastrophe','Atteins la note aiguë. Puis la cuvette. Bis !'],
+    fr:['Karaoké Catastrophe','Atteins la note aiguë. Puis la cuvette. Bis !'],
+    prizes:{
+      en:['Golden Microphone of Shame','Silver disco ball trophy','Encore plea card'],
+      fr:['Microphone Doré de la Honte','Boule disco en argent','Carton « rappel ! »']
+    }
+  },
+  {
+    id:'q_museum', em:'🏛️',
+    en:['Museum Mishap','Un chef-d\'œuvre. De l\'art moderne, peut-être ?'],
+    fr:['Méfait au Musée','Un chef-d\'œuvre. De l\'art moderne, peut-être ?'],
+    prizes:{
+      en:['"Banksy Approves" plaque','Replica of ancient artifact','Audio guide on loop'],
+      fr:['Plaque « Approuvé par Banksy »','Réplique d\'artéfact ancien','Audio-guide en boucle']
+    }
+  },
+  {
+    id:'q_traffic', em:'🚗',
+    en:['Traffic Jam Trophy','Bouchon ? Pose et fonce. Klaxon optionnel.'],
+    fr:['Bouchon Parisien','Bouchon ? Pose et fonce. Klaxon optionnel.'],
+    prizes:{
+      en:['Honking Hero Horn','Pine-scented air freshener','Patience medal (silver)'],
+      fr:['Klaxon du Héros','Désodorisant senteur pin','Médaille de patience (argent)']
+    }
+  },
+  {
+    id:'q_rollercoaster', em:'🎢',
+    en:['Roller Coaster','Looping en boucle. Mains à l\'intérieur du wagon, svp.'],
+    fr:['Grand Huit Légendaire','Looping en boucle. Mains à l\'intérieur du wagon, svp.'],
+    prizes:{
+      en:['Anti-Gravity Crown','"Splash Zone Survivor" badge','Crumpled park map'],
+      fr:['Couronne Anti-Gravité','Badge « Survivant Zone Aquatique »','Plan du parc froissé']
+    }
+  },
+  {
+    id:'q_concert', em:'🎸',
+    en:['Stage Dive','Premier rang. Musique forte. Dépôt plus fort.'],
+    fr:['Concert Live','Premier rang. Musique forte. Dépôt plus fort.'],
+    prizes:{
+      en:['Smashed Guitar Trophy','Drumstick souvenir (used)','Sweaty wristband'],
+      fr:['Trophée Guitare Brisée','Baguette de batterie (usagée)','Bracelet en sueur']
+    }
+  }
+];
+
 const LOCATION_EMOJIS = ['🏠','🏢','🏖️','🏔️','✈️','🏨','🚂','🌳','🍳','🚽','🌃','🌅','🌊','🌍','🏛️','⛺','🛏️','📍','❤️','🎯'];
+
+const QUEST_EMOJIS = ['🎯','🛗','🏔️','🎂','🌙','🍽️','🎬','💒','🎤','🏛️','🚗','🎢','🎸','🛁','🎪','⛺','🚀','🦄','👻','🎁','🏝️','🎨','🎭','🦖'];
 
 const I18N = {
   en: {
     appName:'Drop a Deuce', tagline:'The fun way to map your #2',
     free:'Free', premium:'Premium', today:'Today', total:'Total', level:'Lvl',
-    tap:"Tap when it's time", dropTitle:'Drop a Deuce 💩', dropSub:'Pick a place, challenge & photo!',
-    whereLbl:'Where?', challengeLbl:'Challenge', photoLbl:'Photo',
+    tap:"Tap when it's time", dropTitle:'Drop a Deuce 💩', dropSub:'Pick a place, achievement & photo!',
+    whereLbl:'Where?', challengeLbl:'Achievement', photoLbl:'Photo',
+    questLbl:'Active Quest', optional:'optional',
     takePhoto:'Take a photo', fromGallery:'From gallery',
     addPhoto:'Add a photo', webcamTitle:'Webcam 📸',
     capture:'Capture', retake:'Retake', usePhoto:'Use this photo', uploadFile:'Upload file',
     webcamError:'Webcam not available. Grant permission or upload a file.',
-    dropIt:'Drop it! 💩', challenges:'Challenges', completed:'completed',
+    dropIt:'Drop it! 💩',
+    achievements:'Achievements', completed:'completed',
+    questsTitle:'Quests', questsSub:'Compete in absurd worldwide tournaments!',
+    howItWorks:'How does it work?',
+    questsHow:'Pick a quest, drop while joining it, and climb the leaderboard. Top 3 win wonderfully ridiculous prizes.',
+    createQuest:'Create a quest',
+    createQuestTitle:'Create a quest', createQuestSub:'Invent a wacky quest the whole world can join!',
+    premiumOnly:'Premium-only feature! Upgrade to create your own quests.',
+    questNameLbl:'Quest name', descLbl:'Description', prizesLbl:'Prizes (funniest wins!)',
+    createIt:'Create it! 🎯',
+    prizes:'Prizes', leaderboard:'Leaderboard',
+    participate:'Join now!', alreadyParticipating:'✓ Joined — drop again to climb',
+    deleteQuest:'Delete this quest', confirmDeleteQuest:'Delete this quest forever?',
+    questDeleted:'Quest deleted',
+    customQuestBy:'Created by',
+    questCreated:'Quest created! 🎯',
+    questNeedsName:'Give your quest a name & description!',
+    questsLeaderboardEmpty:'No participants yet — be the first to drop here!',
+    you:'You',
     goPremium:'Go Premium ⭐', premiumDesc:'Unlock the full experience!',
-    upgrade:'Upgrade Now', achievement:'Challenge Complete!',
+    upgrade:'Upgrade Now', achievement:'Achievement Unlocked!',
     locating:'📍 Finding you...', dropped:'Dropped! 💩 +{xp} XP',
+    droppedQuest:'Dropped & joined "{q}" 🎯 +{xp} XP',
     dailyLimit:'Daily limit reached! Go Premium 🚀',
     rateLimit:'Slow down! Wait {s}s before dropping again 🍑',
     locationDenied:'Location denied. Pick a saved location or tap the map!',
     welcome:'Welcome! Tap 💩 to drop your first pin.',
-    pickChallenge:'Pick a challenge first!',
+    pickChallenge:'Pick an achievement first!',
     pickLocation:'Pick a location first!',
     nowFree:'Switched to Free 🆓', nowPremium:'Welcome to Premium! ⭐', levelUp:'LEVEL UP! 🎉',
     foundYou:'📍 Found you!', worldwide:'Worldwide', todayLbl:'Today', meTag:'My stats',
@@ -875,13 +1238,13 @@ const I18N = {
       "You're not alone — {now} pooping at this very second 🤝",
       "Average human poos {kg}kg/year. We count every one 💪",
       "{tons} tons logged today. Plumbers HATE us 🚽"],
-    perks:['Unlimited daily drops','All Premium challenges 🔓','Photo gallery & export',
-      'Friends-only & ghost mode','Heatmap, badges & global rank','Rate spots ⭐⭐⭐⭐⭐','Ad-free forever'],
+    perks:['Unlimited daily drops','All Premium achievements 🔓','Create your own Quests 🎯',
+      'Photo gallery & export','Friends-only & ghost mode','Heatmap, badges & global rank','Ad-free forever'],
     yourPin:'You', anonPin:'Anon',
-    // auth
     signIn:'Sign in', signOut:'Sign out',
     signInTitle:'Sign in', signInSub:'Save your drops & see other users on the map!',
     googleSignIn:'Continue with Google', or:'or',
+    exitGuest:'Sign out (Guest Mode)',
     emailLbl:'Email', passwordLbl:'Password',
     noAccount:'No account?', createAccount:'Sign up',
     haveAccount:'Already a user?', signInLink:'Sign in',
@@ -897,7 +1260,6 @@ const I18N = {
     userNotFound:'No account with that email.',
     signedIn:'Signed in! 👋', signedOut:'Signed out 👋',
     accountSaved:'Account saved! ✨',
-    // locations
     myLocations:'My places', locationsSub:'Your favorite spots, one tap away.',
     addLocation:'+ Add a place', editLocation:'Edit place',
     addLocationSub:'Pick a name, an emoji, and the spot.',
@@ -906,34 +1268,65 @@ const I18N = {
     confirmDelete:'Delete this place?',
     locSaved:'Place saved! 📍', locDeleted:'Place deleted',
     needName:'Give it a name!',
-    gpsHere:'GPS', // label for the GPS card in drop sheet
-    pickOnMap:'Pick on map',
+    gpsHere:'GPS', pickOnMap:'Pick on map',
     tapMapPrompt:'Tap the map where you want to drop 👆',
-    // history
     historyTitle:'History', historySub:'{n} drops at this spot',
     viewHistory:'View {n} drops at this spot',
-    // misc
     offlineBanner:'⚡ Offline mode — set up Firebase to enable cloud sync.',
-    loading:'Loading…'
+    loading:'Loading…',
+    noQuest:'No quest', participants:'players', participant:'player',
+    accountCreated:'Account created! ✨', signedOut:'Signed out',
+    welcomePremium:'Welcome to Premium! ⭐',
+    here:'📍 Here', addLocShort:'+ New', noLocYet:'No saved spots yet',
+    locNeedsName:'Give your spot a name!', anon:'Anon', guest:'Guest',
+    cooldown:'Wait {s}s before next drop', offlineNoAuth:'Offline mode — sign-in disabled',
+    signUp:'Create account', dropped:'Deposit logged! 💩',
+    snap:'Snap', use:'Use', uploadPhoto:'Upload', webcamErr:'Webcam unavailable',
+    authErrGeneric:'Something went wrong. Try again.',
+    authErrEmailUsed:'This email is already in use.',
+    authErrInvalidEmail:'Invalid email address.',
+    authErrWeakPwd:'Password too weak (min 6 chars).',
+    authErrBadCreds:'Wrong email or password.',
+    authErrFillBoth:'Fill in both fields.'
   },
   fr: {
     appName:'Pose ta pêche', tagline:'La façon fun de cartographier ta #2',
     free:'Gratuit', premium:'Premium', today:"Aujourd'hui", total:'Total', level:'Niv',
-    tap:"Tape quand c'est le moment", dropTitle:'Déposer une Pêche 🍑', dropSub:'Choisis un endroit, un défi et une photo !',
-    whereLbl:'Où ?', challengeLbl:'Défi', photoLbl:'Photo',
+    tap:"Tape quand c'est le moment", dropTitle:'Déposer une Pêche 🍑', dropSub:'Choisis un endroit, un succès et une photo !',
+    whereLbl:'Où ?', challengeLbl:'Succès', photoLbl:'Photo',
+    questLbl:'Défi en cours', optional:'facultatif',
     takePhoto:'Prendre une photo', fromGallery:'Depuis la galerie',
     addPhoto:'Ajouter une photo', webcamTitle:'Webcam 📸',
     capture:'Capturer', retake:'Reprendre', usePhoto:'Utiliser', uploadFile:'Importer un fichier',
     webcamError:'Webcam indisponible. Autorise la caméra ou importe un fichier.',
-    dropIt:'Déposer ! 💩', challenges:'Défis', completed:'complétés',
+    dropIt:'Déposer ! 💩',
+    achievements:'Succès', completed:'complétés',
+    questsTitle:'Défis', questsSub:'Affronte le monde entier dans des tournois absurdes !',
+    howItWorks:'Comment ça marche ?',
+    questsHow:'Choisis un défi, dépose une pêche en y participant, et grimpe au classement. Les 3 premiers gagnent des prix complètement délirants.',
+    createQuest:'Créer un défi',
+    createQuestTitle:'Créer un défi', createQuestSub:'Invente un défi loufoque que tout le monde pourra relever !',
+    premiumOnly:'Réservé aux Premium ! Passe Premium pour créer des défis.',
+    questNameLbl:'Nom du défi', descLbl:'Description', prizesLbl:'Récompenses (les + drôles gagnent !)',
+    createIt:'Créer ! 🎯',
+    prizes:'Récompenses', leaderboard:'Classement',
+    participate:'Participer maintenant !', alreadyParticipating:'✓ Inscrit — dépose encore pour grimper',
+    deleteQuest:'Supprimer ce défi', confirmDeleteQuest:'Supprimer ce défi pour de bon ?',
+    questDeleted:'Défi supprimé',
+    customQuestBy:'Créé par',
+    questCreated:'Défi créé ! 🎯',
+    questNeedsName:'Donne un nom et une description à ton défi !',
+    questsLeaderboardEmpty:'Aucun participant pour l\'instant — sois le/la premier·e à déposer ici !',
+    you:'Toi',
     goPremium:'Passer Premium ⭐', premiumDesc:"Débloque l'expérience complète !",
-    upgrade:'Passer Premium', achievement:'Défi Réussi !',
+    upgrade:'Passer Premium', achievement:'Succès débloqué !',
     locating:'📍 Localisation...', dropped:'Déposé ! 💩 +{xp} XP',
+    droppedQuest:'Déposé & inscrit à "{q}" 🎯 +{xp} XP',
     dailyLimit:'Limite atteinte ! Passe Premium 🚀',
-    rateLimit:'Doucement ! Attends {s}s avant de redéposer une 🍑 ... Ou débloque le mode secret "jus de pêche"',
+    rateLimit:'Doucement ! Attends {s}s avant de redéposer une 🍑',
     locationDenied:'Localisation refusée. Choisis un lieu sauvé ou tape la carte !',
     welcome:'Bienvenue ! Tape 💩 pour ton premier dépôt.',
-    pickChallenge:"Choisis d'abord un défi !",
+    pickChallenge:"Choisis d'abord un succès !",
     pickLocation:"Choisis d'abord un endroit !",
     nowFree:'Mode Gratuit 🆓', nowPremium:'Bienvenue en Premium ! ⭐', levelUp:'NIVEAU SUPÉRIEUR ! 🎉',
     foundYou:'📍 Localisé !', worldwide:'Mondial', todayLbl:"Aujourd'hui", meTag:'Mes stats',
@@ -944,13 +1337,13 @@ const I18N = {
       "Tu n'es pas seul·e — {now} en train, là, tout de suite 🤝",
       "Un humain produit {kg}kg/an. On compte chaque dépôt 💪",
       "{tons} tonnes loguées aujourd'hui. Les plombiers nous DÉTESTENT 🚽"],
-    perks:['Dépôts quotidiens illimités','Tous les défis Premium 🔓','Galerie photos & export',
-      'Mode amis & fantôme','Carte de chaleur, badges & classement','Note les spots ⭐⭐⭐⭐⭐','Sans publicité, à vie'],
+    perks:['Dépôts quotidiens illimités','Tous les succès Premium 🔓','Créer tes propres Défis 🎯',
+      'Galerie photos & export','Mode amis & fantôme','Carte de chaleur, badges & classement','Sans publicité, à vie'],
     yourPin:'Toi', anonPin:'Anon',
-    // auth
     signIn:'Connexion', signOut:'Se déconnecter',
     signInTitle:'Connexion', signInSub:'Sauvegarde tes dépôts et vois ceux des autres !',
     googleSignIn:'Continuer avec Google', or:'ou',
+    exitGuest:'Se déconnecter (Mode Invité)',
     emailLbl:'Email', passwordLbl:'Mot de passe',
     noAccount:'Pas de compte ?', createAccount:'Créer un compte',
     haveAccount:'Déjà inscrit ?', signInLink:'Connexion',
@@ -966,7 +1359,6 @@ const I18N = {
     userNotFound:"Aucun compte avec cet email.",
     signedIn:'Connecté ! 👋', signedOut:'Déconnecté 👋',
     accountSaved:'Compte sauvegardé ! ✨',
-    // locations
     myLocations:'Mes lieux', locationsSub:'Tes spots favoris, en un clic.',
     addLocation:'+ Ajouter un lieu', editLocation:'Modifier le lieu',
     addLocationSub:'Donne un nom, choisis un emoji et place le point.',
@@ -975,15 +1367,26 @@ const I18N = {
     confirmDelete:'Supprimer ce lieu ?',
     locSaved:'Lieu enregistré ! 📍', locDeleted:'Lieu supprimé',
     needName:'Donne-lui un nom !',
-    gpsHere:'GPS',
-    pickOnMap:'Sur la carte',
+    gpsHere:'GPS', pickOnMap:'Sur la carte',
     tapMapPrompt:'Tape la carte où déposer 👆',
-    // history
     historyTitle:'Historique', historySub:'{n} dépôts à cet endroit',
     viewHistory:'Voir les {n} dépôts ici',
-    // misc
     offlineBanner:'⚡ Mode hors-ligne — configure Firebase pour le sync cloud.',
-    loading:'Chargement…'
+    loading:'Chargement…',
+    noQuest:'Sans défi', participants:'joueurs', participant:'joueur',
+    accountCreated:'Compte créé ! ✨', signedOut:'Déconnecté',
+    welcomePremium:'Bienvenue chez les Premium ! ⭐',
+    here:'📍 Ici', addLocShort:'+ Nouveau', noLocYet:'Aucun lieu enregistré',
+    locNeedsName:'Donne-lui un nom !', anon:'Anon', guest:'Invité',
+    cooldown:'Attends {s}s avant de re-déposer', offlineNoAuth:'Mode hors-ligne — connexion indisponible',
+    signUp:'Créer un compte', dropped:'Pêche déposée ! 💩',
+    snap:'Capturer', use:'Utiliser', uploadPhoto:'Importer', webcamErr:'Webcam indisponible',
+    authErrGeneric:'Erreur. Réessaie.',
+    authErrEmailUsed:'Cet email est déjà utilisé.',
+    authErrInvalidEmail:'Email invalide.',
+    authErrWeakPwd:'Mot de passe trop faible (min 6 car.).',
+    authErrBadCreds:'Email ou mot de passe incorrect.',
+    authErrFillBoth:'Remplis les deux champs.'
   }
 };
 
@@ -995,50 +1398,57 @@ let lang = 'fr', plan = 'free', mapStyleId = 'voyager';
 let xp = 0;
 const completed = new Set();
 
-let currentUser = null;       // Firebase user object (or null)
-let userProfile = null;       // Firestore user doc data
-let savedLocations = [];      // [{id, name, emoji, lat, lng}]
-let allPins = [];             // all pins from firestore (or local in offline mode)
-let myPinsList = [];          // pins where uid === currentUser.uid (computed)
-let lastDropTs = 0;           // for rate limiting
+let currentUser = null;
+let userProfile = null;
+let savedLocations = [];
+let allPins = [];
+let lastDropTs = 0;
 
-const markersById = new Map(); // pinId -> Leaflet marker
-const clusterIndex = new Map(); // clusterKey -> [pin, ...]
-const clusterMarkers = new Map(); // clusterKey -> Leaflet marker
+let allQuests = [];        // Hardcoded + user-created (premium)
+let activeQuestId = null;  // Quest user is currently focused on (from drop sheet)
+
+const markersById = new Map();
+const clusterIndex = new Map();
+const clusterMarkers = new Map();
 
 let pendingPhoto = null;
 let pendingChallenge = null;
-let pendingLocation = null;   // { type:'gps'|'saved'|'map'|'tap', name, emoji, lat?, lng? }
+let pendingLocation = null;
+let pendingQuest = null;
 let userMarker = null;
-let userGpsCoords = null;     // last known GPS
+let userGpsCoords = null;
 
-let pinsUnsub = null;         // firestore unsubscribe
+let pinsUnsub = null;
 let locationsUnsub = null;
 let userDocUnsub = null;
+let questsUnsub = null;
 
-let editingLocId = null;      // for add/edit location sheet
+let editingLocId = null;
 let addLocCoords = null;
 let miniMap = null;
 let miniMarker = null;
 let pickedEmoji = '🏠';
+let pickedQuestEmoji = '🎯';
 
 let cooldownTimer = null;
+let viewedQuestId = null;
 
 /* ================================================================
  * LOCAL FALLBACK STORAGE (offline mode)
  * ================================================================ */
-const SK = 'deuce_v2';
+const SK = 'deuce_v3';
 function loadLocal() {
   try { const r = localStorage.getItem(SK); return r ? JSON.parse(r) : null; }
   catch(e) { return null; }
 }
 function saveLocal() {
-  if (FIREBASE_ON && currentUser && !currentUser.isAnonymous) return; // cloud is source of truth
+  if (FIREBASE_ON && currentUser && !currentUser.isAnonymous) return;
   try {
     localStorage.setItem(SK, JSON.stringify({
       pins: allPins.filter(p => p.mine),
       xp, completed: [...completed], plan, lang, mapStyleId,
-      savedLocations, lastDropTs
+      savedLocations, lastDropTs,
+      customQuests: allQuests.filter(q => q.custom)
     }));
   } catch(e) {}
 }
@@ -1050,6 +1460,9 @@ const $ = id => document.getElementById(id);
 const t = k => I18N[lang][k] || k;
 const chName = c => c[lang][0];
 const chDesc = c => c[lang][1];
+const qName = q => (q[lang] && q[lang][0]) || q.name || '?';
+const qDesc = q => (q[lang] && q[lang][1]) || q.desc || '';
+const qPrizes = q => (q.prizes && q.prizes[lang]) || q.prizes?.fr || ['🏆','🏆','🏆'];
 const level = () => Math.floor(xp/100)+1;
 const xpInLevel = () => xp%100;
 const fmt = n => n.toLocaleString(lang==='fr'?'fr-FR':'en-US');
@@ -1059,6 +1472,9 @@ const initialsOf = (name) => {
   const parts = name.trim().split(/\s+/);
   return (parts[0][0] + (parts[1]?.[0] || '')).toUpperCase();
 };
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
 
 function applyLang() {
   document.querySelectorAll('[data-i18n]').forEach(el => {
@@ -1069,11 +1485,12 @@ function applyLang() {
   $('planBtn').innerHTML = (plan==='premium'?'⭐ ':'🆓 ')+t(plan);
   $('langBtn').textContent = lang==='en'?'🇬🇧 EN':'🇫🇷 FR';
   $('webcamTitle').textContent = t('webcamTitle');
-  updateUserBtn();
+  refreshAuthUI();
   renderChallengeGrid(); renderChallengePanel(); renderPerks();
   renderStylePicker(); renderPhotoRow();
   renderLocationsList(); renderEmojiPicker();
-  renderDropLocRow();
+  renderDropLocRow(); renderDropQuestRow();
+  renderQuestList(); renderQuestEmojiPicker();
   updateAuthToggleText();
   lastTotalCount = -1; lastTodayCount = -1; tickCounter(); rotateFunFact();
 }
@@ -1205,291 +1622,125 @@ function locateUser(silent=false) {
 $('locateBtn').addEventListener('click', () => locateUser(false));
 
 /* ================================================================
- * PINS — RENDERING & CLUSTERING
+ * TOAST + ACHIEVEMENT POPUP
  * ================================================================ */
-function makeIcon(emoji, badge, mine, count) {
-  const countHtml = count > 1 ? `<span class="count-badge">×${count}</span>` : '';
-  return L.divIcon({
-    className: '',
-    html: `<div class="poo-marker${mine ? ' me' : ''}">${emoji}${badge ? `<span class="badge">${badge}</span>` : ''}${countHtml}</div>`,
-    iconSize: [40,40], iconAnchor: [20,36], popupAnchor: [0,-32]
-  });
+function toast(msg, kind='') {
+  const el = document.createElement('div');
+  el.className = 'toast' + (kind ? ' ' + kind : '');
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => { el.style.animation = 'toast-out 0.25s forwards'; setTimeout(() => el.remove(), 250); }, 2400);
 }
-
-function authorPopupHtml(pin) {
-  if (pin.mine) return `<div class="popup-author"><span class="av">👤</span> ${t('yourPin')}</div>`;
-  const name = pin.displayName || t('anonPin');
-  const av = pin.photoURL
-    ? `<span class="av"><img src="${escapeHtml(pin.photoURL)}" alt=""/></span>`
-    : `<span class="av">${escapeHtml(initialsOf(name))}</span>`;
-  return `<div class="popup-author">${av} ${escapeHtml(name)}</div>`;
-}
-
-function popupHtml(pin, clusterPins=null) {
-  const ch = CHALLENGES.find(c => c.id === pin.challengeId);
-  const time = new Date(pin.ts).toLocaleString(lang==='fr'?'fr-FR':'en-US',
-    { dateStyle: 'short', timeStyle: 'short' });
-  const photo = pin.photo ? `<img class="popup-photo" src="${escapeHtml(pin.photo)}" alt=""/>` : '';
-  const title = `${ch ? ch.em : '💩'} ${ch ? escapeHtml(chName(ch)) : ''}`;
-  const locLine = pin.locationName ? `<div class="popup-meta">📍 ${escapeHtml(pin.locationName)}</div>` : '';
-  let historyBtn = '';
-  if (clusterPins && clusterPins.length > 1) {
-    const myCount = clusterPins.filter(p => p.mine).length;
-    if (myCount > 1) {
-      historyBtn = `<button class="popup-history-btn" data-cluster="${escapeHtml(clusterKeyFor(pin.lat, pin.lng))}">📜 ${t('viewHistory').replace('{n}', myCount)}</button>`;
-    }
-  }
-  return `<div class="popup-card">${photo}
-    <div class="popup-body">
-      <div class="popup-title">${title}</div>
-      <div class="popup-meta">${time}</div>
-      ${locLine}
-      ${authorPopupHtml(pin)}
-      ${historyBtn}
-    </div></div>`;
-}
-
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
-
-function rebuildClusterIndex() {
-  clusterIndex.clear();
-  allPins.forEach(p => {
-    const k = clusterKeyFor(p.lat, p.lng);
-    if (!clusterIndex.has(k)) clusterIndex.set(k, []);
-    clusterIndex.get(k).push(p);
-  });
-}
-
-function renderAllMarkers() {
-  // remove old markers
-  clusterMarkers.forEach(m => map.removeLayer(m));
-  clusterMarkers.clear();
-  markersById.clear();
-
-  rebuildClusterIndex();
-
-  clusterIndex.forEach((pinsArr, key) => {
-    // Pick a representative: most recent
-    const rep = pinsArr.reduce((a, b) => a.ts > b.ts ? a : b);
-    const ch = CHALLENGES.find(c => c.id === rep.challengeId);
-    const anyMine = pinsArr.some(p => p.mine);
-    const mineCount = pinsArr.filter(p => p.mine).length;
-    const totalCount = pinsArr.length;
-
-    const marker = L.marker([rep.lat, rep.lng], {
-      icon: makeIcon('💩', ch ? ch.em : '', anyMine, totalCount)
-    }).addTo(map);
-
-    marker.bindPopup(popupHtml(rep, pinsArr));
-    marker.on('popupopen', () => {
-      // Wire up history button
-      setTimeout(() => {
-        const btn = document.querySelector('.popup-history-btn');
-        if (btn) btn.addEventListener('click', () => {
-          openHistorySheet(key);
-        });
-      }, 50);
-    });
-    clusterMarkers.set(key, marker);
-    pinsArr.forEach(p => p.id && markersById.set(p.id, marker));
-  });
-
-  updateMyStats();
-}
-
-function updateMyStats() {
-  const ts = new Date(); ts.setHours(0,0,0,0);
-  const myPins = allPins.filter(p => p.mine);
-  $('myToday').textContent = myPins.filter(p => p.ts >= ts.getTime()).length;
-  $('myTotal').textContent = myPins.length;
-  $('lvlNum').textContent = level();
-  $('challengeCount').textContent = completed.size;
-}
-
-function todayMineCount() {
-  const ts = new Date(); ts.setHours(0,0,0,0);
-  return allPins.filter(p => p.mine && p.ts >= ts.getTime()).length;
+function showAchievement(c) {
+  $('achEmoji').textContent = c.em;
+  $('achName').textContent = chName(c);
+  const el = $('ach');
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2400);
 }
 
 /* ================================================================
- * SEED DEMO PINS (offline mode only)
+ * SHEETS — OPEN / CLOSE
  * ================================================================ */
-function seedDemoPins(center) {
-  const seeds = [
-    [0.008,0.012,'toilet'], [-0.011,0.003,'office'],
-    [0.005,-0.018,'beach'], [-0.006,-0.009,'nature'],
-    [0.014,-0.005,'hotel'], [-0.018,0.015,'train']
-  ];
-  const now = Date.now();
-  seeds.forEach(([dlat,dlng,cid], i) => {
-    allPins.push({
-      id: 'seed_'+i,
-      lat: center[0]+dlat, lng: center[1]+dlng,
-      ts: now-(i+1)*3600000, mine: false,
-      challengeId: cid, photo: null,
-      displayName: 'Demo user', photoURL: null
-    });
-  });
-  renderAllMarkers();
-}
-
-/* ================================================================
- * SHEETS
- * ================================================================ */
-function openSheet(id) { $('sheetBg').classList.add('open'); $(id).classList.add('open'); }
+const SHEETS = ['dropSheet','chSheet','questsSheet','questDetailSheet','createQuestSheet','premiumSheet','authSheet','profileSheet','locationsSheet','addLocSheet','historySheet'];
 function closeSheets() {
+  SHEETS.forEach(id => $(id)?.classList.remove('open'));
   $('sheetBg').classList.remove('open');
-  document.querySelectorAll('.sheet').forEach(s => s.classList.remove('open'));
-  pendingPhoto = null; pendingChallenge = null; pendingLocation = null;
-  $('cameraInput').value = ''; $('galleryInput').value = '';
-  renderPhotoRow();
-  $('confirmDrop').disabled = true;
-  if ($('authError')) $('authError').classList.remove('show');
-  // tear down miniMap if it was active
-  if (miniMap) { miniMap.remove(); miniMap = null; miniMarker = null; }
+  if (miniMap) { try { miniMap.remove(); } catch(e){} miniMap = null; miniMarker = null; }
+}
+function openSheet(id) {
+  closeSheets();
+  $(id).classList.add('open');
+  $('sheetBg').classList.add('open');
 }
 $('sheetBg').addEventListener('click', closeSheets);
+document.querySelectorAll('.sheet-handle').forEach(h => h.addEventListener('click', closeSheets));
+
+// Inject explicit (×) close button into every sheet
+SHEETS.forEach(id => {
+  const sheet = $(id);
+  if (!sheet || sheet.querySelector('.sheet-close')) return;
+  const btn = document.createElement('button');
+  btn.className = 'sheet-close';
+  btn.type = 'button';
+  btn.setAttribute('aria-label', 'Close');
+  btn.textContent = '✕';
+  btn.addEventListener('click', e => { e.stopPropagation(); closeSheets(); });
+  sheet.appendChild(btn);
+});
+
+// Escape key closes any open sheet
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (!$('webcamOverlay').classList.contains('hidden')) { closeWebcam(); return; }
+    const anyOpen = SHEETS.some(id => $(id)?.classList.contains('open'));
+    if (anyOpen) closeSheets();
+  }
+});
 
 /* ================================================================
- * RENDER: CHALLENGES
+ * CHALLENGES (now "Achievements" in UI) — Grid in drop sheet, panel in chSheet, perks in premium
  * ================================================================ */
 function renderChallengeGrid() {
-  const grid = $('dropChGrid'); if (!grid) return;
-  grid.innerHTML = '';
+  const g = $('dropChGrid'); g.innerHTML = '';
   CHALLENGES.forEach(c => {
     const locked = c.premium && plan !== 'premium';
-    const done = completed.has(c.id);
-    const sel = pendingChallenge === c.id;
     const card = document.createElement('div');
-    card.className = 'ch-card'+(locked?' locked':'')+(done?' done':'')+(sel?' selected':'');
-    card.innerHTML = `<span class="ch-emoji">${c.em}</span><span class="ch-name">${chName(c)}</span><span class="ch-xp">+${c.xp} XP</span>`;
-    if (!locked) {
-      card.addEventListener('click', () => {
-        pendingChallenge = c.id;
-        renderChallengeGrid();
-        updateConfirmBtn();
-      });
-    } else {
-      card.addEventListener('click', () => {
-        closeSheets();
-        setTimeout(() => openSheet('premiumSheet'), 200);
-      });
-    }
-    grid.appendChild(card);
+    card.className = 'ch-card' + (locked ? ' locked' : '') + (pendingChallenge === c.id ? ' picked' : '');
+    card.innerHTML = `
+      ${locked?'<span class="lock">🔒</span>':''}
+      <span class="em">${c.em}</span>
+      <span class="nm">${chName(c)}</span>
+      <span class="xp">+${c.xp} XP</span>`;
+    card.addEventListener('click', () => {
+      if (locked) { openSheet('premiumSheet'); return; }
+      pendingChallenge = pendingChallenge === c.id ? null : c.id;
+      renderChallengeGrid();
+      updateConfirmDropState();
+    });
+    g.appendChild(card);
   });
 }
-
 function renderChallengePanel() {
-  $('chProgress').textContent = `${completed.size}/${CHALLENGES.length}`;
-  $('xpFill').style.width = (xpInLevel()/100)*100+'%';
-  $('xpText').textContent = `${xpInLevel()} / 100 XP · LVL ${level()}`;
-  const list = $('chPanelList'); list.innerHTML = '';
+  const p = $('chPanelList'); p.innerHTML = '';
+  const total = CHALLENGES.length, done = CHALLENGES.filter(c => completed.has(c.id)).length;
+  $('chProgress').textContent = `${done}/${total}`;
+  const lvlXp = xpInLevel();
+  $('xpFill').style.width = lvlXp + '%';
+  $('xpText').textContent = `${t('level')} ${level()} · ${lvlXp}/100 XP`;
   CHALLENGES.forEach(c => {
-    const locked = c.premium && plan !== 'premium', done = completed.has(c.id);
+    const isDone = completed.has(c.id);
+    const locked = c.premium && plan !== 'premium';
     const row = document.createElement('div');
-    row.className = 'ch-row'+(done?' done':'')+(locked?' locked':'');
-    row.innerHTML = `<span class="em">${c.em}</span><div class="info"><div class="nm">${chName(c)} ${done?'✓':''} ${c.premium?'⭐':''}</div><div class="ds">${chDesc(c)}</div></div><div class="pt">+${c.xp}</div>`;
-    list.appendChild(row);
+    row.className = 'ch-row' + (isDone ? ' done' : '') + (locked ? ' locked' : '');
+    row.innerHTML = `
+      <span class="em">${c.em}</span>
+      <div class="info">
+        <div class="nm">${chName(c)} ${locked?'🔒':''} ${isDone?'✅':''}</div>
+        <div class="dc">${chDesc(c)}</div>
+      </div>
+      <span class="xp">+${c.xp} XP</span>`;
+    p.appendChild(row);
   });
 }
-
 function renderPerks() {
   const list = $('perksList'); list.innerHTML = '';
-  I18N[lang].perks.forEach(p => {
-    const r = document.createElement('div'); r.className = 'ch-row';
-    r.innerHTML = `<span class="em">⭐</span><div class="info"><div class="nm">${escapeHtml(p)}</div></div>`;
-    list.appendChild(r);
+  const perks = I18N[lang].perks;
+  perks.forEach(p => {
+    const row = document.createElement('div');
+    row.className = 'perk-row';
+    row.innerHTML = `<span class="em">${p[0]}</span><div class="info"><div class="nm">${p[1]}</div><div class="dc">${p[2]}</div></div>`;
+    list.appendChild(row);
   });
-}
-
-/* ================================================================
- * RENDER: LOCATION PICKER (in drop sheet)
- * ================================================================ */
-function renderDropLocRow() {
-  const row = $('dropLocRow'); if (!row) return;
-  row.innerHTML = '';
-
-  // GPS card (always available; on mobile, default-selected)
-  const gpsCard = locCard({
-    em:'📍', nm: t('gpsHere'),
-    sub: userGpsCoords ? '✓' : '',
-    selected: pendingLocation && pendingLocation.type === 'gps',
-    onClick: () => selectGpsLocation()
-  });
-  row.appendChild(gpsCard);
-
-  // Saved locations
-  savedLocations.forEach(loc => {
-    const card = locCard({
-      em: loc.emoji, nm: loc.name,
-      selected: pendingLocation && pendingLocation.type === 'saved' && pendingLocation.id === loc.id,
-      onClick: () => {
-        pendingLocation = { type:'saved', id:loc.id, name:loc.name, emoji:loc.emoji,
-          lat:loc.lat, lng:loc.lng };
-        renderDropLocRow();
-        updateConfirmBtn();
-      }
-    });
-    row.appendChild(card);
-  });
-
-  // Pick on map
-  const mapCard = locCard({
-    em:'📌', nm: t('pickOnMap'),
-    selected: pendingLocation && pendingLocation.type === 'map',
-    onClick: () => {
-      pendingLocation = { type:'map', name:null, emoji:'📌' };
-      renderDropLocRow();
-      updateConfirmBtn();
-    }
-  });
-  row.appendChild(mapCard);
-
-  // Add new
-  const addCard = locCard({
-    em:'+', nm: t('addLocation'),
-    klass: 'add',
-    onClick: () => {
-      closeSheets();
-      setTimeout(() => openAddLocSheet(null), 200);
-    }
-  });
-  row.appendChild(addCard);
-}
-
-function locCard({ em, nm, sub='', selected=false, klass='', onClick }) {
-  const card = document.createElement('div');
-  card.className = 'loc-card' + (selected?' selected':'') + (klass?' '+klass:'');
-  card.innerHTML = `<span class="em">${em}</span><span class="nm">${escapeHtml(nm)}</span>${sub?`<span class="sub-info">${escapeHtml(sub)}</span>`:''}`;
-  card.addEventListener('click', onClick);
-  return card;
-}
-
-async function selectGpsLocation() {
-  pendingLocation = { type:'gps', name:null, emoji:'📍' };
-  renderDropLocRow();
-  updateConfirmBtn();
-  if (!userGpsCoords) {
-    locateUser(true).catch(() => {});
-  }
-}
-
-function updateConfirmBtn() {
-  $('confirmDrop').disabled = !(pendingChallenge && pendingLocation);
 }
 
 /* ================================================================
  * SAVED LOCATIONS
  * ================================================================ */
 function renderLocationsList() {
-  const list = $('savedLocList'); if (!list) return;
-  list.innerHTML = '';
-  if (savedLocations.length === 0) {
-    list.innerHTML = `<div style="text-align:center;padding:24px;color:var(--brown-2);font-size:13px;opacity:0.7;">
-      ${t('locationsSub')}
-    </div>`;
+  const el = $('savedLocList'); el.innerHTML = '';
+  if (!savedLocations.length) {
+    el.innerHTML = `<div style="text-align:center; padding:20px; color:var(--brown-2);">${t('noLocYet')}</div>`;
     return;
   }
   savedLocations.forEach(loc => {
@@ -1499,947 +1750,1074 @@ function renderLocationsList() {
       <span class="em">${loc.emoji}</span>
       <div class="info">
         <div class="nm">${escapeHtml(loc.name)}</div>
-        <div class="coords">${loc.lat.toFixed(4)}, ${loc.lng.toFixed(4)}</div>
+        <div class="dc">${loc.lat.toFixed(4)}, ${loc.lng.toFixed(4)}</div>
       </div>
-      <div class="loc-item-actions">
-        <button class="icon-btn edit-loc" data-id="${loc.id}" aria-label="Edit">✏️</button>
-        <button class="icon-btn danger del-loc" data-id="${loc.id}" aria-label="Delete">🗑️</button>
-      </div>`;
-    list.appendChild(row);
-  });
-  list.querySelectorAll('.edit-loc').forEach(b => b.addEventListener('click', () => {
-    closeSheets();
-    setTimeout(() => openAddLocSheet(b.dataset.id), 200);
-  }));
-  list.querySelectorAll('.del-loc').forEach(b => b.addEventListener('click', () => {
-    if (confirm(t('confirmDelete'))) deleteLocation(b.dataset.id);
-  }));
-}
-
-function renderEmojiPicker() {
-  const p = $('emojiPicker'); if (!p) return;
-  p.innerHTML = '';
-  LOCATION_EMOJIS.forEach(e => {
-    const el = document.createElement('div');
-    el.className = 'emoji-pick' + (e === pickedEmoji ? ' selected' : '');
-    el.textContent = e;
-    el.addEventListener('click', () => {
-      pickedEmoji = e;
-      renderEmojiPicker();
+      <button class="loc-edit" data-id="${loc.id}" aria-label="edit">✏️</button>
+      <button class="loc-del" data-id="${loc.id}" aria-label="delete">🗑️</button>`;
+    row.querySelector('.loc-edit').addEventListener('click', e => { e.stopPropagation(); openLocSheet(loc.id); });
+    row.querySelector('.loc-del').addEventListener('click', e => { e.stopPropagation(); deleteSavedLoc(loc.id); });
+    row.addEventListener('click', () => {
+      map.flyTo([loc.lat, loc.lng], 16, { duration: 0.9 });
+      closeSheets();
     });
-    p.appendChild(el);
+    el.appendChild(row);
   });
 }
-
-function openAddLocSheet(editId) {
-  editingLocId = editId;
-  let initial = { name:'', emoji:'🏠', lat:null, lng:null };
-  if (editId) {
-    const loc = savedLocations.find(l => l.id === editId);
-    if (loc) initial = { name: loc.name, emoji: loc.emoji, lat: loc.lat, lng: loc.lng };
-    $('addLocTitle').textContent = t('editLocation');
-  } else {
-    $('addLocTitle').textContent = t('addLocation');
-  }
-  $('locNameInput').value = initial.name;
-  pickedEmoji = initial.emoji;
-  addLocCoords = initial.lat ? [initial.lat, initial.lng] : null;
-  renderEmojiPicker();
-  openSheet('addLocSheet');
-  setTimeout(initMiniMap, 350); // wait for sheet animation
+function renderEmojiPicker() {
+  const el = $('emojiPicker'); el.innerHTML = '';
+  LOCATION_EMOJIS.forEach(em => {
+    const cell = document.createElement('div');
+    cell.className = 'emoji-cell' + (em === pickedEmoji ? ' active' : '');
+    cell.textContent = em;
+    cell.addEventListener('click', () => { pickedEmoji = em; renderEmojiPicker(); });
+    el.appendChild(cell);
+  });
 }
-
-function initMiniMap() {
-  const center = addLocCoords || userGpsCoords || [48.8566, 2.3522];
-  if (miniMap) { miniMap.remove(); miniMap = null; }
-  miniMap = L.map('miniMap', { zoomControl: true }).setView(center, addLocCoords ? 16 : 13);
-  L.tileLayer(MAP_STYLES[0].url, { maxZoom: MAP_STYLES[0].maxZoom, attribution: MAP_STYLES[0].attr }).addTo(miniMap);
-
-  function setMarker(lat, lng) {
-    addLocCoords = [lat, lng];
-    if (miniMarker) miniMarker.setLatLng([lat,lng]);
-    else {
-      const icon = L.divIcon({
-        className:'',
-        html:`<div class="poo-marker" style="font-size:32px;">${pickedEmoji}</div>`,
-        iconSize:[40,40], iconAnchor:[20,36]
-      });
-      miniMarker = L.marker([lat,lng], { icon, draggable: true }).addTo(miniMap);
-      miniMarker.on('dragend', () => {
-        const ll = miniMarker.getLatLng();
-        addLocCoords = [ll.lat, ll.lng];
-        updateCoordDisplay();
-      });
-    }
-    updateCoordDisplay();
-  }
-
-  if (addLocCoords) setMarker(addLocCoords[0], addLocCoords[1]);
-  miniMap.on('click', (e) => setMarker(e.latlng.lat, e.latlng.lng));
-  setTimeout(() => miniMap.invalidateSize(), 100);
-  updateCoordDisplay();
-}
-
-function updateCoordDisplay() {
-  $('coordDisplay').textContent = addLocCoords
-    ? `${addLocCoords[0].toFixed(5)}, ${addLocCoords[1].toFixed(5)}`
-    : (lang === 'fr' ? 'Tape sur la carte ou utilise le GPS' : 'Tap the map or use GPS');
-}
-
-$('useGpsBtn').addEventListener('click', async () => {
-  try {
-    const [lat,lng] = await locateUser(true);
-    if (miniMap) {
-      addLocCoords = [lat,lng];
-      miniMap.flyTo([lat,lng], 16);
-      if (miniMarker) miniMarker.setLatLng([lat,lng]);
-      else {
-        const icon = L.divIcon({
-          className:'',
-          html:`<div class="poo-marker" style="font-size:32px;">${pickedEmoji}</div>`,
-          iconSize:[40,40], iconAnchor:[20,36]
-        });
-        miniMarker = L.marker([lat,lng], { icon, draggable:true }).addTo(miniMap);
-      }
-      updateCoordDisplay();
-    }
-  } catch(e) { toast(t('locationDenied'), 'warn'); }
-});
-
-$('saveLocBtn').addEventListener('click', async () => {
-  const name = $('locNameInput').value.trim();
-  if (!name) { toast(t('needName'), 'warn'); return; }
-  if (!addLocCoords) { toast(t('locationDenied'), 'warn'); return; }
-  const data = { name, emoji: pickedEmoji, lat: addLocCoords[0], lng: addLocCoords[1] };
-  await saveLocation(editingLocId, data);
-  closeSheets();
-  toast(t('locSaved'), 'win');
-});
-
-async function saveLocation(id, data) {
-  if (FIREBASE_ON && currentUser) {
-    try {
-      const colRef = collection(db, 'users', currentUser.uid, 'locations');
-      if (id) {
-        await setDoc(doc(colRef, id), data, { merge: true });
-      } else {
-        await addDoc(colRef, { ...data, createdAt: serverTimestamp() });
-      }
-    } catch (e) {
-      console.error(e);
-      toast('❌ ' + (e.message || 'Save failed'), 'err');
-    }
-  } else {
-    if (id) {
-      const idx = savedLocations.findIndex(l => l.id === id);
-      if (idx >= 0) savedLocations[idx] = { ...savedLocations[idx], ...data };
-    } else {
-      savedLocations.push({ id: 'local_'+Date.now(), ...data });
-    }
-    saveLocal(); renderLocationsList(); renderDropLocRow();
-  }
-}
-
-async function deleteLocation(id) {
-  if (FIREBASE_ON && currentUser) {
-    try {
-      await deleteDoc(doc(db, 'users', currentUser.uid, 'locations', id));
-    } catch (e) {
-      console.error(e); toast('❌ ' + (e.message || 'Delete failed'), 'err');
-    }
-  } else {
-    savedLocations = savedLocations.filter(l => l.id !== id);
-    saveLocal();
-    renderLocationsList(); renderDropLocRow();
-  }
-  toast(t('locDeleted'));
+function renderDropLocRow() {
+  const el = $('dropLocRow'); el.innerHTML = '';
+  // "Here" card (use current GPS or map center)
+  const here = document.createElement('div');
+  here.className = 'loc-card' + (pendingLocation === 'here' ? ' picked' : '');
+  here.innerHTML = `<span class="em">📍</span><span class="nm">${t('here')}</span>`;
+  here.addEventListener('click', () => { pendingLocation = 'here'; renderDropLocRow(); updateConfirmDropState(); });
+  el.appendChild(here);
+  savedLocations.forEach(loc => {
+    const card = document.createElement('div');
+    card.className = 'loc-card' + (pendingLocation === loc.id ? ' picked' : '');
+    card.innerHTML = `<span class="em">${loc.emoji}</span><span class="nm">${escapeHtml(loc.name)}</span>`;
+    card.addEventListener('click', () => { pendingLocation = loc.id; renderDropLocRow(); updateConfirmDropState(); });
+    el.appendChild(card);
+  });
+  // Add new
+  const add = document.createElement('div');
+  add.className = 'loc-card add';
+  add.innerHTML = `<span class="em">+</span><span class="nm">${t('addLocShort')}</span>`;
+  add.addEventListener('click', () => openLocSheet(null));
+  el.appendChild(add);
 }
 
 /* ================================================================
- * PHOTO AREA
+ * QUESTS — Render list, detail, prizes, leaderboard, create form
  * ================================================================ */
-function renderPhotoRow() {
-  const row = $('photoRow');
-  if (pendingPhoto) {
-    const retakeEl = isMobile
-      ? `<label class="photo-retake" for="cameraInput">🔄 ${t('retake')}</label>`
-      : `<button class="photo-retake" id="retakePhoto" type="button">🔄 ${t('retake')}</button>`;
-    row.innerHTML = `<div class="photo-preview-wrap">
-      <div class="photo-preview"><img src="${pendingPhoto}" alt=""/><button class="x" id="rmPhoto" type="button">×</button></div>
-      ${retakeEl}
-    </div>`;
-    $('rmPhoto').addEventListener('click', () => { pendingPhoto = null; renderPhotoRow(); });
-    if (!isMobile) {
-      $('retakePhoto').addEventListener('click', () => {
-        pendingPhoto = null; renderPhotoRow(); openWebcamModal();
-      });
-    } else {
-      $('cameraInput').value = '';
-    }
+function getActiveQuestCount() {
+  // How many quests user has participated in (has at least one pin)
+  const myUid = currentUser?.uid;
+  if (!myUid) return 0;
+  const set = new Set();
+  allPins.forEach(p => { if (p.questId && p.uid === myUid) set.add(p.questId); });
+  return set.size;
+}
+function refreshActiveQuestBadge() {
+  const c = getActiveQuestCount();
+  const el = $('activeQuestCount');
+  if (el) {
+    el.textContent = c;
+    el.style.display = c > 0 ? 'flex' : 'none';
+  }
+}
+
+function renderDropQuestRow() {
+  const el = $('dropQuestRow');
+  if (!el) return;
+  el.innerHTML = '';
+  // "None" card
+  const none = document.createElement('div');
+  none.className = 'quest-pick-card' + (!pendingQuest ? ' picked' : '');
+  none.innerHTML = `<span class="em">🚫</span><span class="nm">${t('noQuest')}</span>`;
+  none.addEventListener('click', () => { pendingQuest = null; renderDropQuestRow(); });
+  el.appendChild(none);
+  allQuests.forEach(q => {
+    const card = document.createElement('div');
+    card.className = 'quest-pick-card' + (pendingQuest?.id === q.id ? ' picked' : '');
+    card.innerHTML = `<span class="em">${q.em}</span><span class="nm">${escapeHtml(qName(q))}</span>`;
+    card.addEventListener('click', () => { pendingQuest = q; renderDropQuestRow(); });
+    el.appendChild(card);
+  });
+}
+
+function questParticipantCount(questId) {
+  const uids = new Set();
+  allPins.forEach(p => { if (p.questId === questId && p.uid) uids.add(p.uid); });
+  return uids.size;
+}
+function questDropCount(questId) {
+  return allPins.filter(p => p.questId === questId).length;
+}
+function getQuestLeaderboard(questId, topN = 10) {
+  const map = new Map();
+  allPins.forEach(p => {
+    if (p.questId !== questId) return;
+    const uid = p.uid || 'anon';
+    const e = map.get(uid) || { uid, count: 0, name: p.userName || '?', photo: p.userPhoto || null };
+    e.count++;
+    if (p.userName) e.name = p.userName;
+    if (p.userPhoto) e.photo = p.userPhoto;
+    map.set(uid, e);
+  });
+  return [...map.values()].sort((a, b) => b.count - a.count).slice(0, topN);
+}
+
+function renderQuestList() {
+  const el = $('questList');
+  if (!el) return;
+  el.innerHTML = '';
+  if (!allQuests.length) {
+    el.innerHTML = `<div style="text-align:center; padding:20px; color:var(--brown-2);">…</div>`;
     return;
   }
-  if (isMobile) {
-    row.innerHTML = `<div class="photo-opts">
-      <label class="photo-opt-btn" for="cameraInput">
-        <span class="opt-em">📷</span><span class="opt-lbl">${t('takePhoto')}</span>
-      </label>
-      <label class="photo-opt-btn" for="galleryInput">
-        <span class="opt-em">🖼️</span><span class="opt-lbl">${t('fromGallery')}</span>
-      </label>
-    </div>`;
-  } else {
-    row.innerHTML = `<button class="photo-btn" id="photoBtn" type="button">
-      📸 ${t('addPhoto')} &nbsp;<span style="opacity:.55;font-size:11px;">${t('webcamTitle')}</span>
-    </button>`;
-    $('photoBtn').addEventListener('click', openWebcamModal);
-  }
-}
-
-function compressImage(file, maxW=600, quality=0.55) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const r = Math.min(maxW/img.width, maxW/img.height, 1);
-      canvas.width = img.width*r; canvas.height = img.height*r;
-      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-      resolve(canvas.toDataURL('image/jpeg', quality));
-      URL.revokeObjectURL(img.src);
-    };
-    img.onerror = reject;
-    img.src = URL.createObjectURL(file);
+  allQuests.forEach(q => {
+    const participants = questParticipantCount(q.id);
+    const drops = questDropCount(q.id);
+    const myUid = currentUser?.uid;
+    const myDrops = myUid ? allPins.filter(p => p.questId === q.id && p.uid === myUid).length : 0;
+    const card = document.createElement('div');
+    card.className = 'quest-card' + (myDrops > 0 ? ' joined' : '') + (q.custom ? ' custom' : '');
+    card.innerHTML = `
+      <div class="qc-head">
+        <span class="qc-em">${q.em}</span>
+        <div class="qc-info">
+          <div class="qc-nm">${escapeHtml(qName(q))} ${q.custom ? '<span class="qc-tag">✨</span>' : ''}</div>
+          <div class="qc-dc">${escapeHtml(qDesc(q))}</div>
+        </div>
+      </div>
+      <div class="qc-stats">
+        <span>👥 ${participants} ${participants === 1 ? t('participant') : t('participants')}</span>
+        <span>💩 ${drops}</span>
+        ${myDrops > 0 ? `<span class="qc-mine">🔥 ${t('you')}: ${myDrops}</span>` : ''}
+      </div>`;
+    card.addEventListener('click', () => openQuestDetail(q));
+    el.appendChild(card);
   });
 }
 
-$('cameraInput').addEventListener('change', async e => {
-  const file = e.target.files && e.target.files[0]; if (!file) return;
-  try { pendingPhoto = await compressImage(file); renderPhotoRow(); }
-  catch(err) { toast('❌ Erreur photo', 'warn'); }
-  e.target.value = '';
-});
-$('galleryInput').addEventListener('change', async e => {
-  const file = e.target.files && e.target.files[0]; if (!file) return;
-  try { pendingPhoto = await compressImage(file); renderPhotoRow(); }
-  catch(err) { toast('❌ Erreur photo', 'warn'); }
-  e.target.value = '';
-});
+function openQuestDetail(q) {
+  viewedQuestId = q.id;
+  const head = $('questDetailHead');
+  const drops = questDropCount(q.id);
+  const participants = questParticipantCount(q.id);
+  const isMine = q.custom && q.creatorUid === currentUser?.uid;
+  head.innerHTML = `
+    <div class="qd-em">${q.em}</div>
+    <div class="qd-name">${escapeHtml(qName(q))}</div>
+    <div class="qd-desc">${escapeHtml(qDesc(q))}</div>
+    ${q.custom && q.creatorName ? `<div class="qd-credit">${t('customQuestBy')} <b>${escapeHtml(q.creatorName)}</b></div>` : ''}
+    <div class="qd-stats">
+      <span>👥 ${participants}</span>
+      <span>💩 ${drops}</span>
+    </div>`;
+  // Prizes
+  const prizes = qPrizes(q);
+  const medals = ['🥇','🥈','🥉'];
+  const tints = ['gold','silver','bronze'];
+  $('prizeList').innerHTML = prizes.map((p, i) => `
+    <div class="prize-row ${tints[i]}">
+      <span class="rank-em">${medals[i]}</span>
+      <span class="prize-text">${escapeHtml(p)}</span>
+    </div>`).join('');
+  // Leaderboard
+  renderLeaderboard(q.id);
+  // Delete button (only for creator)
+  $('deleteQuestBtn').style.display = isMine ? 'flex' : 'none';
+  openSheet('questDetailSheet');
+}
+
+function renderLeaderboard(questId) {
+  const list = $('leaderboardList');
+  const entries = getQuestLeaderboard(questId);
+  if (!entries.length) {
+    list.innerHTML = `<div style="text-align:center; padding:14px; color:var(--brown-2); font-size:13px;">${t('questsLeaderboardEmpty')}</div>`;
+    return;
+  }
+  const myUid = currentUser?.uid;
+  list.innerHTML = entries.map((e, i) => {
+    const rank = i + 1;
+    const isMe = e.uid === myUid;
+    const podium = rank <= 3 ? `podium-${rank}` : '';
+    const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
+    const av = e.photo
+      ? `<img class="lb-av" src="${e.photo}" alt="" />`
+      : `<div class="lb-av initials">${initialsOf(e.name)}</div>`;
+    return `
+      <div class="lb-row ${podium} ${isMe ? 'mine' : ''}">
+        <span class="lb-rank">${medal}</span>
+        ${av}
+        <span class="lb-name">${escapeHtml(e.name)}${isMe ? ' (' + t('you') + ')' : ''}</span>
+        <span class="lb-count">💩 ${e.count}</span>
+      </div>`;
+  }).join('');
+}
+
+function renderQuestEmojiPicker() {
+  const el = $('qEmojiPicker');
+  if (!el) return;
+  el.innerHTML = '';
+  QUEST_EMOJIS.forEach(em => {
+    const cell = document.createElement('div');
+    cell.className = 'emoji-cell' + (em === pickedQuestEmoji ? ' active' : '');
+    cell.textContent = em;
+    cell.addEventListener('click', () => { pickedQuestEmoji = em; renderQuestEmojiPicker(); });
+    el.appendChild(cell);
+  });
+}
+
+async function saveCustomQuest() {
+  const name = $('qName').value.trim();
+  const desc = $('qDesc').value.trim();
+  const p1 = $('qPrize1').value.trim();
+  const p2 = $('qPrize2').value.trim();
+  const p3 = $('qPrize3').value.trim();
+  if (!name) { toast(t('questNeedsName'), 'warn'); return; }
+  const prizes = [p1 || '🏆', p2 || '🥈', p3 || '🥉'];
+  const id = 'custom_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+  const quest = {
+    id, em: pickedQuestEmoji,
+    en: [name, desc],
+    fr: [name, desc],
+    prizes: { en: prizes, fr: prizes },
+    custom: true,
+    creatorUid: currentUser?.uid || 'local',
+    creatorName: userProfile?.displayName || currentUser?.displayName || (currentUser?.email?.split('@')[0]) || 'Anonyme',
+    createdAt: Date.now()
+  };
+  if (FIREBASE_ON && currentUser && db) {
+    try {
+      const { setDoc, doc } = await import("https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js");
+      await setDoc(doc(db, 'quests', id), quest);
+    } catch (e) {
+      console.error('Save quest failed', e);
+      // Fallback to local
+      allQuests.push(quest); saveLocal();
+    }
+  } else {
+    allQuests.push(quest); saveLocal();
+  }
+  toast(t('questCreated'), 'win');
+  // Reset form
+  $('qName').value = ''; $('qDesc').value = '';
+  $('qPrize1').value = ''; $('qPrize2').value = ''; $('qPrize3').value = '';
+  pickedQuestEmoji = '🎯';
+  renderQuestEmojiPicker();
+  renderQuestList();
+  renderDropQuestRow();
+  closeSheets();
+  setTimeout(() => openSheet('questsSheet'), 300);
+}
+
+async function deleteCustomQuest(id) {
+  if (!confirm(t('confirmDeleteQuest'))) return;
+  if (FIREBASE_ON && currentUser && db) {
+    try {
+      const { deleteDoc, doc } = await import("https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js");
+      await deleteDoc(doc(db, 'quests', id));
+    } catch (e) { console.error('Delete failed', e); }
+  } else {
+    allQuests = allQuests.filter(q => q.id !== id); saveLocal();
+  }
+  toast(t('questDeleted'), 'win');
+  renderQuestList(); renderDropQuestRow();
+  closeSheets();
+  setTimeout(() => openSheet('questsSheet'), 300);
+}
 
 /* ================================================================
- * WEBCAM MODAL (desktop only)
+ * PINS — render markers, clusters, popups
  * ================================================================ */
-let webcamStream = null, webcamSnap = null;
-
-function openWebcamModal() {
-  webcamSnap = null;
-  $('webcamVideo').style.display = 'block';
-  $('webcamSnapshot').style.display = 'none';
-  $('webcamError').style.display = 'none';
-  $('webcamOverlay').classList.remove('hidden');
-  setWebcamActions('stream');
-  startWebcam();
-}
-function closeWebcamModal() {
-  $('webcamOverlay').classList.add('hidden');
-  stopWebcam(); webcamSnap = null;
-}
-async function startWebcam() {
-  try {
-    webcamStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 960 } },
-      audio: false
-    });
-    $('webcamVideo').srcObject = webcamStream;
-    $('webcamVideo').style.display = 'block';
-    $('webcamError').style.display = 'none';
-    setWebcamActions('stream');
-  } catch (err) {
-    $('webcamVideo').style.display = 'none';
-    $('webcamError').style.display = 'block';
-    $('webcamErrMsg').textContent = t('webcamError');
-    setWebcamActions('error');
-  }
-}
-function stopWebcam() {
-  if (webcamStream) { webcamStream.getTracks().forEach(tr => tr.stop()); webcamStream = null; }
-  $('webcamVideo').srcObject = null;
-}
-function captureWebcam() {
-  const v = $('webcamVideo'), canvas = $('webcamCanvas');
-  const maxW = 600, r = Math.min(maxW/v.videoWidth, maxW/v.videoHeight, 1);
-  canvas.width = v.videoWidth*r; canvas.height = v.videoHeight*r;
-  const ctx = canvas.getContext('2d');
-  ctx.translate(canvas.width, 0); ctx.scale(-1, 1);
-  ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
-  webcamSnap = canvas.toDataURL('image/jpeg', 0.55);
-  $('webcamSnapshot').src = webcamSnap;
-  $('webcamVideo').style.display = 'none';
-  $('webcamSnapshot').style.display = 'block';
-  stopWebcam();
-  setWebcamActions('preview');
-}
-function setWebcamActions(mode) {
-  const wrap = $('webcamActions');
-  if (mode === 'stream') {
-    wrap.innerHTML = `
-      <button class="webcam-btn secondary" id="wcUpload" type="button">📁 ${t('uploadFile')}</button>
-      <button class="webcam-btn" id="wcCapture" type="button">📸 ${t('capture')}</button>`;
-    $('wcCapture').addEventListener('click', captureWebcam);
-    $('wcUpload').addEventListener('click', () => {
-      closeWebcamModal();
-      setTimeout(() => $('galleryInput').click(), 150);
-    });
-  } else if (mode === 'preview') {
-    wrap.innerHTML = `
-      <button class="webcam-btn secondary" id="wcRetake" type="button">🔄 ${t('retake')}</button>
-      <button class="webcam-btn" id="wcUse" type="button">✅ ${t('usePhoto')}</button>`;
-    $('wcRetake').addEventListener('click', () => {
-      webcamSnap = null;
-      $('webcamVideo').style.display = 'block';
-      $('webcamSnapshot').style.display = 'none';
-      setWebcamActions('stream'); startWebcam();
-    });
-    $('wcUse').addEventListener('click', () => {
-      pendingPhoto = webcamSnap;
-      closeWebcamModal();
-      renderPhotoRow();
-    });
+function renderPin(pin) {
+  if (!pin || !pin.lat || !pin.lng || markersById.has(pin.id)) return;
+  const key = clusterKeyFor(pin.lat, pin.lng);
+  if (!clusterIndex.has(key)) clusterIndex.set(key, []);
+  clusterIndex.get(key).push(pin);
+  const list = clusterIndex.get(key);
+  if (list.length === 1) {
+    addSinglePin(pin, key);
   } else {
-    wrap.innerHTML = `
-      <button class="webcam-btn secondary" id="wcFallback" type="button">📁 ${t('uploadFile')}</button>
-      <button class="webcam-btn" id="wcCloseErr" type="button">✕</button>`;
-    $('wcFallback').addEventListener('click', () => {
-      closeWebcamModal();
-      setTimeout(() => $('galleryInput').click(), 150);
-    });
-    $('wcCloseErr').addEventListener('click', closeWebcamModal);
+    // Convert to cluster
+    if (markersById.has(list[0].id)) {
+      try { map.removeLayer(markersById.get(list[0].id)); } catch(e){}
+      markersById.delete(list[0].id);
+    }
+    const existing = clusterMarkers.get(key);
+    if (existing) try { map.removeLayer(existing); } catch(e){}
+    addClusterMarker(key, list);
   }
 }
-$('webcamClose').addEventListener('click', closeWebcamModal);
-$('webcamOverlay').addEventListener('click', e => {
-  if (e.target === $('webcamOverlay')) closeWebcamModal();
-});
+
+function addSinglePin(pin, key) {
+  const ch = CHALLENGES.find(c => c.id === pin.challenge);
+  const quest = pin.questId ? allQuests.find(q => q.id === pin.questId) : null;
+  const html = `
+    <div class="poo-marker${pin.mine?' mine':''}">
+      <div class="poo">💩</div>
+      ${ch?`<span class="ch-badge">${ch.em}</span>`:''}
+      ${quest?`<span class="quest-badge">${quest.em}</span>`:''}
+    </div>`;
+  const icon = L.divIcon({ className:'', html, iconSize:[44,44], iconAnchor:[22,22] });
+  const m = L.marker([pin.lat, pin.lng], { icon }).addTo(map);
+  const time = new Date(pin.ts).toLocaleString(lang==='fr'?'fr-FR':'en-US', { dateStyle:'short', timeStyle:'short' });
+  let popup = `<b>${pin.userName ? escapeHtml(pin.userName) : (pin.mine?'You':'Anon')}</b><br>${time}`;
+  if (ch) popup += `<br>${ch.em} ${chName(ch)}`;
+  if (quest) popup += `<br><span class="popup-quest-tag">🎯 ${escapeHtml(qName(quest))}</span>`;
+  if (pin.photo) popup += `<br><img src="${pin.photo}" style="width:120px;border-radius:8px;margin-top:6px;" />`;
+  m.bindPopup(popup);
+  markersById.set(pin.id, m);
+}
+
+function addClusterMarker(key, pins) {
+  const lats = pins.map(p => p.lat), lngs = pins.map(p => p.lng);
+  const lat = lats.reduce((a,b)=>a+b,0)/lats.length, lng = lngs.reduce((a,b)=>a+b,0)/lngs.length;
+  const count = pins.length;
+  const html = `<div class="poo-cluster"><div class="poo">💩</div><span class="cluster-count">${count}</span></div>`;
+  const icon = L.divIcon({ className:'', html, iconSize:[54,54], iconAnchor:[27,27] });
+  const m = L.marker([lat, lng], { icon }).addTo(map);
+  m.on('click', () => {
+    const list = pins.slice().sort((a,b)=>b.ts-a.ts).slice(0,8);
+    const html = list.map(p => {
+      const ch = CHALLENGES.find(c => c.id === p.challenge);
+      return `<div style="margin-bottom:4px;">${ch?ch.em:''} ${escapeHtml(p.userName||'?')} <span style="color:#888;">${new Date(p.ts).toLocaleDateString()}</span></div>`;
+    }).join('');
+    L.popup().setLatLng([lat,lng]).setContent(`<b>${count} 💩</b><br>${html}`).openOn(map);
+  });
+  clusterMarkers.set(key, m);
+}
+
+function rerenderAllPins() {
+  markersById.forEach(m => { try { map.removeLayer(m); } catch(e){} });
+  clusterMarkers.forEach(m => { try { map.removeLayer(m); } catch(e){} });
+  markersById.clear(); clusterMarkers.clear(); clusterIndex.clear();
+  allPins.forEach(renderPin);
+}
 
 /* ================================================================
  * DROP FLOW
  * ================================================================ */
-$('dropBtn').addEventListener('click', () => {
-  if (plan === 'free' && todayMineCount() >= FREE_DAILY_LIMIT) {
-    toast(t('dailyLimit'), 'warn');
-    setTimeout(() => openSheet('premiumSheet'), 600);
-    return;
+function updateConfirmDropState() {
+  const ok = !!pendingLocation;
+  $('confirmDrop').disabled = !ok;
+}
+
+async function confirmDrop() {
+  // Determine coordinates
+  let lat, lng;
+  if (pendingLocation === 'here') {
+    if (userGpsCoords) { [lat, lng] = userGpsCoords; }
+    else { const c = map.getCenter(); lat = c.lat; lng = c.lng; }
+  } else {
+    const loc = savedLocations.find(l => l.id === pendingLocation);
+    if (!loc) return;
+    lat = loc.lat; lng = loc.lng;
   }
   // Rate limit
-  const remain = rateLimitRemainMs();
-  if (remain > 0) {
-    toast(t('rateLimit').replace('{s}', Math.ceil(remain/1000)), 'warn');
-    return;
+  const now = Date.now();
+  if (plan === 'free' && now - lastDropTs < RATE_LIMIT_MS) {
+    const wait = Math.ceil((RATE_LIMIT_MS - (now - lastDropTs))/1000);
+    toast(t('cooldown').replace('{s}', wait), 'warn'); return;
   }
-
-  // Default location: GPS on mobile, nothing pre-selected on desktop (forces user choice)
-  pendingChallenge = null;
-  pendingPhoto = null;
-  if (isMobile) {
-    pendingLocation = { type: 'gps', name: null, emoji: '📍' };
-    if (!userGpsCoords) locateUser(true).catch(() => {});
-  } else {
-    // Desktop: default to first saved location if any, else "pick on map"
-    if (savedLocations.length > 0) {
-      const loc = savedLocations[0];
-      pendingLocation = { type:'saved', id:loc.id, name:loc.name, emoji:loc.emoji,
-        lat:loc.lat, lng:loc.lng };
-    } else {
-      pendingLocation = null;
-    }
+  if (plan === 'free') {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const todayPins = allPins.filter(p => p.mine && p.ts >= today.getTime()).length;
+    if (todayPins >= FREE_DAILY_LIMIT) { toast(t('dailyLimit'), 'warn'); return; }
   }
-
-  $('cameraInput').value = ''; $('galleryInput').value = '';
-  renderChallengeGrid(); renderPhotoRow(); renderDropLocRow();
-  updateConfirmBtn();
-  openSheet('dropSheet');
-});
-
-function rateLimitRemainMs() {
-  if (!lastDropTs) return 0;
-  return Math.max(0, RATE_LIMIT_MS - (Date.now() - lastDropTs));
-}
-
-function startCooldownIndicator() {
-  if (cooldownTimer) clearInterval(cooldownTimer);
-  const update = () => {
-    const remain = rateLimitRemainMs();
-    if (remain <= 0) {
-      $('fabLabel').textContent = t('tap');
-      $('dropBtn').disabled = false;
-      clearInterval(cooldownTimer); cooldownTimer = null;
-      return;
-    }
-    const s = Math.ceil(remain/1000);
-    const mm = Math.floor(s/60), ss = s%60;
-    $('fabLabel').textContent = `⏳ ${mm}:${String(ss).padStart(2,'0')}`;
-    $('dropBtn').disabled = false; // we still allow tap to show the rate-limit toast
+  // Build pin
+  const pin = {
+    id: 'p_' + now + '_' + Math.random().toString(36).slice(2,8),
+    lat, lng, ts: now, mine: true,
+    uid: currentUser?.uid || 'local',
+    userName: userProfile?.displayName || currentUser?.displayName || (currentUser?.email?.split('@')[0]) || (currentUser?.isAnonymous ? t('anon') : 'Anon'),
+    userPhoto: currentUser?.photoURL || null,
+    challenge: pendingChallenge,
+    photo: pendingPhoto,
+    questId: pendingQuest?.id || null
   };
-  update();
-  cooldownTimer = setInterval(update, 1000);
-}
-
-async function commitDrop(lat, lng, challenge, photo, locationName=null) {
-  // Rate limit re-check
-  const remain = rateLimitRemainMs();
-  if (remain > 0) {
-    toast(t('rateLimit').replace('{s}', Math.ceil(remain/1000)), 'warn');
-    return;
-  }
-  lastDropTs = Date.now();
-  startCooldownIndicator();
-  saveLocal();
-
-  const ts = Date.now();
-  const pinData = {
-    lat, lng, ts,
-    challengeId: challenge.id,
-    photo: photo || null,
-    locationName: locationName || null,
-    displayName: currentUser?.displayName || null,
-    photoURL: currentUser?.photoURL || null,
-    uid: currentUser?.uid || null
-  };
-
-  if (FIREBASE_ON && currentUser) {
+  // Save (Firebase or local)
+  if (FIREBASE_ON && currentUser && db) {
     try {
-      const docRef = await addDoc(collection(db, 'pins'), {
-        ...pinData,
-        createdAt: serverTimestamp()
-      });
-      // Optimistic add (snapshot will reconcile)
-      // Don't push manually — onSnapshot will deliver it
+      const { addDoc, collection, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js");
+      await addDoc(collection(db, 'pins'), { ...pin, serverTs: serverTimestamp() });
     } catch (e) {
-      console.error(e);
-      toast('❌ ' + (e.message || 'Drop failed'), 'err');
-      return;
+      console.error('Save pin failed', e);
+      allPins.unshift(pin); renderPin(pin);
     }
   } else {
-    // Offline mode
-    const pin = { id: 'local_'+ts, ...pinData, mine: true };
-    allPins.push(pin);
-    renderAllMarkers();
-    saveLocal();
+    allPins.unshift(pin); renderPin(pin); saveLocal();
   }
+  lastDropTs = now;
+  // XP & achievement
+  if (pendingChallenge) {
+    const ch = CHALLENGES.find(c => c.id === pendingChallenge);
+    if (ch && !completed.has(ch.id)) {
+      completed.add(ch.id);
+      xp += ch.xp;
+      showAchievement(ch);
+      saveLocal();
+      persistUserPrefs();
+    }
+  }
+  // Toasts
+  if (pendingQuest) {
+    toast(t('droppedQuest').replace('{q}', qName(pendingQuest)), 'quest');
+  } else {
+    toast(t('dropped'), 'win');
+  }
+  // Reset
+  pendingChallenge = null; pendingPhoto = null; pendingQuest = null;
+  pendingLocation = null;
+  closeSheets();
+  refreshActiveQuestBadge();
+}
+$('confirmDrop').addEventListener('click', confirmDrop);
 
-  // Animate to spot
-  map.flyTo([lat, lng], 16, { duration: 0.8 });
-  confetti();
-
-  // XP & completion (local; synced to firestore via user doc)
-  const oldLevel = level();
-  xp += challenge.xp;
-  const isFirst = !completed.has(challenge.id);
-  completed.add(challenge.id);
-  persistUserPrefs();
-  flash($('globalTotal')); flash($('globalToday'));
-  setTimeout(() => toast(t('dropped').replace('{xp}', challenge.xp), 'win'), 250);
-  if (isFirst) setTimeout(() => showAchievement(challenge), 700);
-  if (level() > oldLevel) setTimeout(() => toast(t('levelUp')+' LVL '+level(), 'win'), 1800);
+/* ================================================================
+ * PHOTOS / WEBCAM
+ * ================================================================ */
+function renderPhotoRow() {
+  const el = $('photoRow'); el.innerHTML = '';
+  if (pendingPhoto) {
+    const wrap = document.createElement('div'); wrap.className = 'photo-preview';
+    wrap.innerHTML = `<img src="${pendingPhoto}" /><button class="ph-x" aria-label="remove">×</button>`;
+    wrap.querySelector('.ph-x').addEventListener('click', () => { pendingPhoto = null; renderPhotoRow(); });
+    el.appendChild(wrap);
+  }
+  const addCam = document.createElement('button');
+  addCam.className = 'photo-add';
+  addCam.innerHTML = `<span class="em">📸</span><span class="nm">${t('takePhoto')}</span>`;
+  addCam.addEventListener('click', openWebcam);
+  el.appendChild(addCam);
+  const addFile = document.createElement('label');
+  addFile.className = 'photo-add';
+  addFile.innerHTML = `<span class="em">🖼️</span><span class="nm">${t('uploadPhoto')}</span><input type="file" accept="image/*" style="display:none;" />`;
+  addFile.querySelector('input').addEventListener('change', e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = () => { pendingPhoto = r.result; renderPhotoRow(); };
+    r.readAsDataURL(f);
+  });
+  el.appendChild(addFile);
 }
 
-$('confirmDrop').addEventListener('click', async () => {
-  if (!pendingChallenge) { toast(t('pickChallenge'), 'warn'); return; }
-  if (!pendingLocation) { toast(t('pickLocation'), 'warn'); return; }
-
-  const challenge = CHALLENGES.find(c => c.id === pendingChallenge);
-  const photo = pendingPhoto;
-  const loc = pendingLocation;
-  closeSheets();
-
-  if (loc.type === 'saved') {
-    await commitDrop(loc.lat, loc.lng, challenge, photo, loc.name);
-  } else if (loc.type === 'gps') {
-    toast(t('locating'));
-    if (!navigator.geolocation) {
-      toast(t('locationDenied'), 'warn');
-      enableTapToDrop(challenge, photo);
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      pos => commitDrop(pos.coords.latitude, pos.coords.longitude, challenge, photo),
-      () => { toast(t('locationDenied'), 'warn'); enableTapToDrop(challenge, photo); },
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
-  } else if (loc.type === 'map') {
-    toast(t('tapMapPrompt'));
-    enableTapToDrop(challenge, photo);
+let webcamStream = null;
+async function openWebcam() {
+  $('webcamOverlay').classList.remove('hidden');
+  $('webcamError').style.display = 'none';
+  $('webcamSnapshot').style.display = 'none';
+  $('webcamVideo').style.display = 'block';
+  $('webcamActions').innerHTML = `<button class="cta secondary" id="snapBtn">📷 ${t('snap')}</button>`;
+  $('snapBtn').addEventListener('click', snapWebcam);
+  try {
+    webcamStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    $('webcamVideo').srcObject = webcamStream;
+  } catch (e) {
+    $('webcamError').style.display = 'flex';
+    $('webcamErrMsg').textContent = t('webcamErr');
   }
+}
+function snapWebcam() {
+  const v = $('webcamVideo'), c = $('webcamCanvas');
+  c.width = v.videoWidth; c.height = v.videoHeight;
+  c.getContext('2d').drawImage(v, 0, 0);
+  const data = c.toDataURL('image/jpeg', 0.7);
+  $('webcamSnapshot').src = data;
+  $('webcamSnapshot').style.display = 'block';
+  $('webcamVideo').style.display = 'none';
+  $('webcamActions').innerHTML = `<button class="cta secondary" id="retakeBtn">🔁 ${t('retake')}</button><button class="cta" id="usePhotoBtn">✓ ${t('use')}</button>`;
+  $('retakeBtn').addEventListener('click', openWebcam);
+  $('usePhotoBtn').addEventListener('click', () => {
+    pendingPhoto = data;
+    closeWebcam();
+    renderPhotoRow();
+  });
+}
+function closeWebcam() {
+  if (webcamStream) { webcamStream.getTracks().forEach(t => t.stop()); webcamStream = null; }
+  $('webcamOverlay').classList.add('hidden');
+}
+$('webcamClose').addEventListener('click', closeWebcam);
+$('webcamOverlay').addEventListener('click', e => {
+  if (e.target === $('webcamOverlay')) closeWebcam();
 });
 
-let tapMode = false;
-function enableTapToDrop(challenge, photo) {
-  if (tapMode) return; tapMode = true;
-  map.once('click', e => {
-    commitDrop(e.latlng.lat, e.latlng.lng, challenge, photo);
-    tapMode = false;
-  });
-}
-
 /* ================================================================
- * HISTORY SHEET
+ * ADD/EDIT LOCATION FLOW
  * ================================================================ */
-function openHistorySheet(clusterKey) {
-  map.closePopup();
-  const pinsArr = clusterIndex.get(clusterKey) || [];
-  const myPins = pinsArr.filter(p => p.mine).sort((a,b) => b.ts - a.ts);
-  $('historySub').textContent = t('historySub').replace('{n}', myPins.length);
-
-  const list = $('historyList'); list.innerHTML = '';
-  myPins.forEach(pin => {
-    const ch = CHALLENGES.find(c => c.id === pin.challengeId);
-    const time = new Date(pin.ts).toLocaleString(lang==='fr'?'fr-FR':'en-US',
-      { dateStyle: 'medium', timeStyle: 'short' });
-    const item = document.createElement('div');
-    item.className = 'hist-item';
-    const photoHtml = pin.photo
-      ? `<div class="hist-photo"><img src="${escapeHtml(pin.photo)}" alt=""/></div>`
-      : `<div class="hist-photo empty">${ch ? ch.em : '💩'}</div>`;
-    item.innerHTML = `
-      ${photoHtml}
-      <div class="hist-info">
-        <div class="hist-title">${ch ? ch.em : '💩'} ${ch ? escapeHtml(chName(ch)) : ''}</div>
-        <div class="hist-time">${time}</div>
-        ${pin.locationName ? `<div class="hist-loc">📍 ${escapeHtml(pin.locationName)}</div>` : ''}
-      </div>`;
-    list.appendChild(item);
-  });
-
-  openSheet('historySheet');
-}
-
-/* ================================================================
- * TOAST / CONFETTI / ACHIEVEMENT
- * ================================================================ */
-function toast(msg, kind) {
-  const el = document.createElement('div');
-  el.className = 'toast' + (kind ? ' '+kind : '');
-  el.textContent = msg;
-  document.body.appendChild(el);
-  setTimeout(() => el.remove(), 2300);
-}
-function confetti() {
-  const ems = ['💩','🎉','✨','🧻','⭐','🏆'];
-  for (let i = 0; i < 16; i++) {
-    const c = document.createElement('div'); c.className = 'confetti';
-    c.textContent = ems[Math.floor(Math.random()*ems.length)];
-    c.style.left = (50+(Math.random()-0.5)*40)+'vw';
-    c.style.bottom = '120px';
-    c.style.animationDelay = (Math.random()*0.4)+'s';
-    document.body.appendChild(c);
-    setTimeout(() => c.remove(), 1900);
-  }
-}
-function showAchievement(challenge) {
-  $('achEmoji').textContent = challenge.em;
-  $('achName').textContent = chName(challenge);
-  const el = $('ach'); el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
-}
-
-/* ================================================================
- * AUTH
- * ================================================================ */
-let authMode = 'signin'; // or 'signup'
-
-function updateAuthToggleText() {
-  if (authMode === 'signin') {
-    $('authToggleText').textContent = t('noAccount');
-    $('authToggleLink').textContent = t('createAccount');
-    $('authTitle').textContent = t('signInTitle');
-    $('emailAuthBtn').textContent = t('signIn');
+function openLocSheet(id) {
+  editingLocId = id;
+  if (id) {
+    const loc = savedLocations.find(l => l.id === id);
+    $('addLocTitle').textContent = t('editLocation');
+    $('locNameInput').value = loc.name;
+    pickedEmoji = loc.emoji;
+    addLocCoords = [loc.lat, loc.lng];
   } else {
-    $('authToggleText').textContent = t('haveAccount');
-    $('authToggleLink').textContent = t('signInLink');
-    $('authTitle').textContent = t('createAccount');
-    $('emailAuthBtn').textContent = t('createAccount');
+    $('addLocTitle').textContent = t('addLocation');
+    $('locNameInput').value = '';
+    pickedEmoji = '🏠';
+    const c = userGpsCoords || [map.getCenter().lat, map.getCenter().lng];
+    addLocCoords = c;
+  }
+  renderEmojiPicker();
+  openSheet('addLocSheet');
+  setTimeout(() => initMiniMap(), 60);
+}
+function initMiniMap() {
+  const el = $('miniMap');
+  if (miniMap) try { miniMap.remove(); } catch(e){}
+  miniMap = L.map(el, { zoomControl: false }).setView(addLocCoords, 15);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+    { maxZoom: 19, attribution:'© OSM © CARTO' }).addTo(miniMap);
+  miniMarker = L.marker(addLocCoords, { draggable: true }).addTo(miniMap);
+  miniMarker.on('dragend', () => {
+    const ll = miniMarker.getLatLng();
+    addLocCoords = [ll.lat, ll.lng];
+    $('coordDisplay').textContent = `${ll.lat.toFixed(5)}, ${ll.lng.toFixed(5)}`;
+  });
+  miniMap.on('click', e => {
+    addLocCoords = [e.latlng.lat, e.latlng.lng];
+    miniMarker.setLatLng(addLocCoords);
+    $('coordDisplay').textContent = `${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`;
+  });
+  $('coordDisplay').textContent = `${addLocCoords[0].toFixed(5)}, ${addLocCoords[1].toFixed(5)}`;
+}
+$('useGpsBtn').addEventListener('click', async () => {
+  try {
+    const c = await locateUser(true);
+    addLocCoords = c;
+    if (miniMap && miniMarker) {
+      miniMarker.setLatLng(c);
+      miniMap.flyTo(c, 16, { duration: 0.6 });
+      $('coordDisplay').textContent = `${c[0].toFixed(5)}, ${c[1].toFixed(5)}`;
+    }
+  } catch(e){}
+});
+$('saveLocBtn').addEventListener('click', async () => {
+  const name = $('locNameInput').value.trim();
+  if (!name) { toast(t('locNeedsName'), 'warn'); return; }
+  if (!addLocCoords) return;
+  const data = { name, emoji: pickedEmoji, lat: addLocCoords[0], lng: addLocCoords[1] };
+  if (editingLocId) {
+    const i = savedLocations.findIndex(l => l.id === editingLocId);
+    if (i >= 0) savedLocations[i] = { ...savedLocations[i], ...data };
+  } else {
+    data.id = 'l_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
+    data.createdAt = Date.now();
+    savedLocations.push(data);
+  }
+  saveLocal();
+  if (FIREBASE_ON && currentUser && db) {
+    try {
+      const { setDoc, doc } = await import("https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js");
+      const id = editingLocId || data.id;
+      await setDoc(doc(db, 'users', currentUser.uid, 'locations', id), data);
+    } catch(e) { console.error(e); }
+  }
+  toast(t('locSaved'), 'win');
+  renderLocationsList(); renderDropLocRow();
+  closeSheets();
+  setTimeout(() => openSheet('locationsSheet'), 250);
+});
+async function deleteSavedLoc(id) {
+  if (!confirm(t('confirmDelete'))) return;
+  savedLocations = savedLocations.filter(l => l.id !== id);
+  saveLocal();
+  if (FIREBASE_ON && currentUser && db) {
+    try {
+      const { deleteDoc, doc } = await import("https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js");
+      await deleteDoc(doc(db, 'users', currentUser.uid, 'locations', id));
+    } catch(e) { console.error(e); }
+  }
+  renderLocationsList(); renderDropLocRow();
+}
+$('addLocOpenBtn').addEventListener('click', () => openLocSheet(null));
+
+/* ================================================================
+ * AUTH — with FIXES for state sync
+ * ================================================================ */
+let isSignUp = false;
+function updateAuthToggleText() {
+  const togText = $('authToggleText'), togLink = $('authToggleLink'), title = $('authTitle'), btn = $('emailAuthBtn');
+  if (isSignUp) {
+    togText.textContent = t('haveAccount');
+    togLink.textContent = t('signIn');
+    title.textContent = t('createAccount');
+    btn.textContent = t('signUp');
+  } else {
+    togText.textContent = t('noAccount');
+    togLink.textContent = t('createAccount');
+    title.textContent = t('signInTitle');
+    btn.textContent = t('signIn');
   }
 }
+
+function updateUserBtn() {
+  const lbl = $('userBtnLabel');
+  const av = $('userBtn').querySelector('.av-sm');
+  if (!currentUser) {
+    lbl.textContent = t('signIn');
+    if (av) av.textContent = '👤';
+    return;
+  }
+  if (currentUser.isAnonymous) {
+    lbl.textContent = t('guest');
+    if (av) av.textContent = '👻';
+  } else {
+    const name = userProfile?.displayName || currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : '?');
+    lbl.textContent = name;
+    if (av) {
+      if (currentUser.photoURL) {
+        av.innerHTML = `<img src="${currentUser.photoURL}" style="width:100%;height:100%;border-radius:50%;" alt="" />`;
+      } else {
+        av.textContent = initialsOf(name);
+      }
+    }
+  }
+}
+
+/**
+ * CRITICAL: Centralized UI sync — call after EVERY auth action.
+ * Fixes the stale-label bug where linkWithCredential / linkWithPopup
+ * doesn't fire onAuthStateChanged because the UID stays the same.
+ */
+async function refreshAuthUI() {
+  if (FIREBASE_ON && auth) {
+    try {
+      if (auth.currentUser) {
+        await auth.currentUser.reload();
+        currentUser = auth.currentUser;
+      } else {
+        currentUser = null;
+      }
+    } catch(e) { /* ignore */ }
+  }
+  updateUserBtn();
+  // Show signOutBtnAnonym ONLY when user is anonymous
+  const anonBtn = $('signOutBtnAnonym');
+  if (anonBtn) {
+    anonBtn.style.display = (currentUser && currentUser.isAnonymous) ? 'flex' : 'none';
+  }
+  // Show "anonymous" warning block in profile sheet
+  const upBlock = $('upgradeAnonBlock');
+  if (upBlock) upBlock.style.display = (currentUser && currentUser.isAnonymous) ? 'block' : 'none';
+  const tag = $('profileAnonTag');
+  if (tag) tag.style.display = (currentUser && currentUser.isAnonymous) ? 'inline-block' : 'none';
+  // Update profile sheet
+  if (currentUser && !currentUser.isAnonymous) {
+    const name = userProfile?.displayName || currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : '?');
+    $('profileName').textContent = name;
+    $('profileEmail').textContent = currentUser.email || '';
+    if (currentUser.photoURL) $('profileAv').innerHTML = `<img src="${currentUser.photoURL}" style="width:100%;height:100%;border-radius:50%;" alt="" />`;
+    else $('profileAv').textContent = initialsOf(name);
+  } else if (currentUser && currentUser.isAnonymous) {
+    $('profileName').textContent = t('guest');
+    $('profileEmail').textContent = '—';
+    $('profileAv').textContent = '👻';
+  }
+  refreshActiveQuestBadge();
+}
+
+$('userBtn').addEventListener('click', () => {
+  if (currentUser && !currentUser.isAnonymous) {
+    refreshAuthUI();
+    openSheet('profileSheet');
+  } else {
+    isSignUp = false;
+    updateAuthToggleText();
+    $('authError').textContent = '';
+    openSheet('authSheet');
+  }
+});
 
 $('authToggleLink').addEventListener('click', () => {
-  authMode = authMode === 'signin' ? 'signup' : 'signin';
+  isSignUp = !isSignUp;
   updateAuthToggleText();
-  $('authError').classList.remove('show');
+  $('authError').textContent = '';
 });
 
-function showAuthError(err) {
-  const code = err && err.code || '';
-  let msg = t('authError');
-  if (code === 'auth/invalid-email') msg = t('invalidEmail');
-  else if (code === 'auth/weak-password') msg = t('weakPassword');
-  else if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') msg = t('wrongPassword');
-  else if (code === 'auth/email-already-in-use') msg = t('emailInUse');
-  else if (code === 'auth/user-not-found') msg = t('userNotFound');
-  else if (err && err.message) msg = err.message;
+async function showAuthErr(e) {
+  const code = (e && e.code) || '';
+  let msg = t('authErrGeneric');
+  if (code.includes('email-already-in-use')) msg = t('authErrEmailUsed');
+  else if (code.includes('invalid-email')) msg = t('authErrInvalidEmail');
+  else if (code.includes('weak-password')) msg = t('authErrWeakPwd');
+  else if (code.includes('user-not-found') || code.includes('wrong-password') || code.includes('invalid-credential')) msg = t('authErrBadCreds');
+  else if (code.includes('popup-closed') || code.includes('cancelled')) return;
   $('authError').textContent = msg;
-  $('authError').classList.add('show');
 }
 
+/* Email sign-in / sign-up — handles anonymous-upgrade via linkWithCredential */
 $('emailAuthBtn').addEventListener('click', async () => {
-  if (!FIREBASE_ON) { toast(t('offlineBanner'), 'warn'); return; }
-  const email = $('emailInput').value.trim();
-  const password = $('passwordInput').value;
-  if (!email || !password) { showAuthError({ code:'auth/invalid-email' }); return; }
-  $('authError').classList.remove('show');
+  $('authError').textContent = '';
+  const email = $('emailInput').value.trim(), pwd = $('passwordInput').value;
+  if (!email || !pwd) { $('authError').textContent = t('authErrFillBoth'); return; }
+  if (!FIREBASE_ON || !auth) {
+    toast(t('offlineNoAuth'), 'warn'); return;
+  }
   try {
-    if (authMode === 'signup') {
-      // If user is anonymous, link credentials instead of creating new account
-      if (currentUser && currentUser.isAnonymous) {
-        const cred = EmailAuthProvider.credential(email, password);
-        await linkWithCredential(currentUser, cred);
+    const fbAuth = await import("https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js");
+    if (isSignUp) {
+      // Sign up — if anonymous, link credential; otherwise create new account
+      if (auth.currentUser && auth.currentUser.isAnonymous) {
+        const cred = fbAuth.EmailAuthProvider.credential(email, pwd);
+        const result = await fbAuth.linkWithCredential(auth.currentUser, cred);
+        try { await fbAuth.updateProfile(result.user, { displayName: email.split('@')[0] }); } catch(e){}
       } else {
-        await createUserWithEmailAndPassword(auth, email, password);
+        const cred = await fbAuth.createUserWithEmailAndPassword(auth, email, pwd);
+        try { await fbAuth.updateProfile(cred.user, { displayName: email.split('@')[0] }); } catch(e){}
       }
     } else {
-      await signInWithEmailAndPassword(auth, email, password);
+      await fbAuth.signInWithEmailAndPassword(auth, email, pwd);
     }
+    await refreshAuthUI();
     closeSheets();
-    toast(t('signedIn'), 'win');
-  } catch (e) { showAuthError(e); }
+    toast(isSignUp ? t('accountCreated') : t('signedIn'), 'win');
+  } catch (e) {
+    console.error(e);
+    showAuthErr(e);
+  }
 });
 
+/* Google sign-in — also handles anonymous link */
 $('googleBtn').addEventListener('click', async () => {
-  if (!FIREBASE_ON) { toast(t('offlineBanner'), 'warn'); return; }
-  const provider = new GoogleAuthProvider();
+  $('authError').textContent = '';
+  if (!FIREBASE_ON || !auth) { toast(t('offlineNoAuth'), 'warn'); return; }
   try {
-    if (currentUser && currentUser.isAnonymous) {
-      await linkWithPopup(currentUser, provider);
+    const fbAuth = await import("https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js");
+    const provider = new fbAuth.GoogleAuthProvider();
+    if (auth.currentUser && auth.currentUser.isAnonymous) {
+      await fbAuth.linkWithPopup(auth.currentUser, provider);
     } else {
-      await signInWithPopup(auth, provider);
+      await fbAuth.signInWithPopup(auth, provider);
     }
+    await refreshAuthUI();
     closeSheets();
     toast(t('signedIn'), 'win');
   } catch (e) {
-    if (e.code === 'auth/popup-blocked') {
-      try { await signInWithRedirect(auth, provider); } catch (e2) { showAuthError(e2); }
-    } else { showAuthError(e); }
+    if (e?.code === 'auth/credential-already-in-use' || e?.code === 'auth/email-already-in-use') {
+      // Anonymous user tried to link a Google account that already exists — just sign them in
+      try {
+        const fbAuth = await import("https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js");
+        const provider = new fbAuth.GoogleAuthProvider();
+        await fbAuth.signInWithPopup(auth, provider);
+        await refreshAuthUI();
+        closeSheets();
+        toast(t('signedIn'), 'win');
+        return;
+      } catch(e2) { showAuthErr(e2); return; }
+    }
+    showAuthErr(e);
   }
 });
 
-$('anonBtn').addEventListener('click', async () => {
-  if (!FIREBASE_ON) { closeSheets(); return; }
+/* "Sign out (guest mode)" — only when anonymous */
+$('signOutBtnAnonym').addEventListener('click', async () => {
+  if (!currentUser?.isAnonymous) return;
+  if (!FIREBASE_ON || !auth) return;
   try {
-    await signInAnonymously(auth);
+    const fbAuth = await import("https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js");
+    await fbAuth.signOut(auth);
+    // Stay signed-out: user is now nobody. Sheet will offer sign in.
+    await refreshAuthUI();
     closeSheets();
-    toast(t('signedIn'), 'win');
-  } catch(e) { showAuthError(e); }
+    toast(t('signedOut'), 'win');
+  } catch(e) { console.error(e); }
 });
 
-$('signOutBtn').addEventListener('click', async () => {
-  if (!FIREBASE_ON) return;
+/* "Continue without account" — anonymous */
+$('anonBtn').addEventListener('click', async () => {
+  if (!FIREBASE_ON || !auth) { closeSheets(); return; }
   try {
-    await signOut(auth);
-    toast(t('signedOut'));
+    const fbAuth = await import("https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js");
+    if (!auth.currentUser) {
+      await fbAuth.signInAnonymously(auth);
+    }
+    await refreshAuthUI();
     closeSheets();
-  } catch(e) { showAuthError(e); }
+  } catch(e) { console.error(e); }
+});
+
+/* PROFILE SHEET */
+$('signOutBtn').addEventListener('click', async () => {
+  if (!FIREBASE_ON || !auth) return;
+  try {
+    const fbAuth = await import("https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js");
+    await fbAuth.signOut(auth);
+    await refreshAuthUI();
+    closeSheets();
+    toast(t('signedOut'), 'win');
+  } catch(e) { console.error(e); }
 });
 
 $('upgradeAnonBtn').addEventListener('click', async () => {
-  if (!FIREBASE_ON || !currentUser || !currentUser.isAnonymous) return;
-  const email = $('upgradeEmail').value.trim();
-  const password = $('upgradePassword').value;
-  if (!email || !password) return;
+  const email = $('upgradeEmail').value.trim(), pwd = $('upgradePassword').value;
+  if (!email || !pwd) { toast(t('authErrFillBoth'), 'warn'); return; }
+  if (!FIREBASE_ON || !auth || !auth.currentUser) return;
   try {
-    const cred = EmailAuthProvider.credential(email, password);
-    await linkWithCredential(currentUser, cred);
-    toast(t('accountSaved'), 'win');
+    const fbAuth = await import("https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js");
+    const cred = fbAuth.EmailAuthProvider.credential(email, pwd);
+    const result = await fbAuth.linkWithCredential(auth.currentUser, cred);
+    try { await fbAuth.updateProfile(result.user, { displayName: email.split('@')[0] }); } catch(e){}
+    await refreshAuthUI();
     closeSheets();
-  } catch(e) {
-    toast(e.message || t('authError'), 'err');
+    toast(t('accountSaved'), 'win');
+  } catch (e) {
+    console.error(e); showAuthErr(e);
+    toast(t('authErrGeneric'), 'err');
   }
 });
 
 $('linkGoogleBtn').addEventListener('click', async () => {
-  if (!FIREBASE_ON || !currentUser) return;
-  const provider = new GoogleAuthProvider();
+  if (!FIREBASE_ON || !auth || !auth.currentUser) return;
   try {
-    await linkWithPopup(currentUser, provider);
-    toast(t('accountSaved'), 'win');
+    const fbAuth = await import("https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js");
+    const provider = new fbAuth.GoogleAuthProvider();
+    await fbAuth.linkWithPopup(auth.currentUser, provider);
+    await refreshAuthUI();
     closeSheets();
-  } catch(e) {
-    if (e.code === 'auth/credential-already-in-use') {
-      toast(t('emailInUse'), 'err');
-    } else {
-      toast(e.message || t('authError'), 'err');
-    }
-  }
+    toast(t('accountSaved'), 'win');
+  } catch (e) { console.error(e); toast(t('authErrGeneric'), 'err'); }
 });
-
-function updateUserBtn() {
-  const btn = $('userBtn');
-  const av = $('userAvatar');
-  const lbl = $('userBtnLabel');
-  if (currentUser && !currentUser.isAnonymous) {
-    const name = currentUser.displayName || currentUser.email?.split('@')[0] || '';
-    if (currentUser.photoURL) {
-      av.innerHTML = `<img src="${escapeHtml(currentUser.photoURL)}" alt=""/>`;
-    } else {
-      av.textContent = initialsOf(name);
-    }
-    lbl.textContent = name.length > 12 ? name.slice(0,12)+'…' : name;
-  } else if (currentUser && currentUser.isAnonymous) {
-    av.textContent = '👤';
-    lbl.textContent = 'Anon';
-  } else {
-    av.textContent = '?';
-    lbl.textContent = t('signIn');
-  }
-}
-
-$('userBtn').addEventListener('click', () => {
-  // On ouvre toujours une interface, mais on adapte le contenu
-  if (currentUser && !currentUser.isAnonymous) {
-    openSheet('profileSheet'); // Utilisateur réel
-  } else {
-    // Pour l'anonyme, on peut soit ouvrir l'authSheet 
-    // soit une version simplifiée du profil avec un bouton "Quitter le mode invité"
-    openSheet('authSheet'); 
-  }
-});
-
-$('signOutBtnAnonym')?.addEventListener('click', async () => {
-  await signOut(auth);
-  toast(t('signedOut'));
-  closeSheets();
-});
-
-function openProfileSheet() {
-  const name = currentUser.displayName || currentUser.email?.split('@')[0] || (lang==='fr'?'Utilisateur':'User');
-  $('profileName').textContent = name;
-  $('profileEmail').textContent = currentUser.email || '';
-  if (currentUser.photoURL) {
-    $('profileAv').innerHTML = `<img src="${escapeHtml(currentUser.photoURL)}" alt=""/>`;
-  } else {
-    $('profileAv').textContent = initialsOf(name);
-  }
-  if (currentUser.isAnonymous) {
-    $('profileAnonTag').style.display = 'inline-block';
-    $('upgradeAnonBlock').style.display = 'block';
-    $('profileEmail').textContent = '';
-  } else {
-    $('profileAnonTag').style.display = 'none';
-    $('upgradeAnonBlock').style.display = 'none';
-  }
-  openSheet('profileSheet');
-}
 
 /* ================================================================
- * PERSIST USER PREFS
- * ================================================================ */
-async function persistUserPrefs() {
-  saveLocal();
-  if (!FIREBASE_ON || !currentUser) return;
-  try {
-    await setDoc(doc(db, 'users', currentUser.uid), {
-      xp, completed: [...completed], plan, lang, mapStyleId,
-      displayName: currentUser.displayName || null,
-      photoURL: currentUser.photoURL || null,
-      updatedAt: serverTimestamp()
-    }, { merge: true });
-  } catch(e) { console.warn('User pref save failed', e); }
-}
-
-/* ================================================================
- * FIRESTORE LISTENERS
+ * SUBSCRIPTIONS — Pins, Locations, User doc, Quests
  * ================================================================ */
 function unsubAll() {
-  if (pinsUnsub) { pinsUnsub(); pinsUnsub = null; }
-  if (locationsUnsub) { locationsUnsub(); locationsUnsub = null; }
-  if (userDocUnsub) { userDocUnsub(); userDocUnsub = null; }
+  [pinsUnsub, locationsUnsub, userDocUnsub, questsUnsub].forEach(u => { try { u && u(); } catch(e){} });
+  pinsUnsub = locationsUnsub = userDocUnsub = questsUnsub = null;
 }
 
-function subscribeUserData() {
-  if (!currentUser) return;
-
-  // User doc
-  userDocUnsub = onSnapshot(doc(db, 'users', currentUser.uid), snap => {
-    if (snap.exists()) {
-      const d = snap.data();
-      if (typeof d.xp === 'number') xp = d.xp;
-      if (Array.isArray(d.completed)) {
-        completed.clear();
-        d.completed.forEach(id => completed.add(id));
-      }
-      if (d.plan === 'premium' || d.plan === 'free') plan = d.plan;
-      if (d.lang === 'en' || d.lang === 'fr') {
-        if (d.lang !== lang) { lang = d.lang; applyLang(); }
-      }
-      if (d.mapStyleId && MAP_STYLES.find(s => s.id === d.mapStyleId)) {
-        if (d.mapStyleId !== mapStyleId) applyMapStyle(d.mapStyleId);
-      }
-      updateMyStats();
-      renderChallengeGrid(); renderChallengePanel();
-      $('planBtn').innerHTML = (plan==='premium'?'⭐ ':'🆓 ')+t(plan);
-    }
-  });
-
-  // Saved locations
-  const locQ = collection(db, 'users', currentUser.uid, 'locations');
-  locationsUnsub = onSnapshot(locQ, snap => {
-    savedLocations = [];
-    snap.forEach(d => savedLocations.push({ id: d.id, ...d.data() }));
-    renderLocationsList();
-    renderDropLocRow();
-  });
-
-  // Pins (last N, real-time)
-  const pinQ = query(
-    collection(db, 'pins'),
-    orderBy('ts', 'desc'),
-    limit(PIN_LOAD_LIMIT)
-  );
-  pinsUnsub = onSnapshot(pinQ, snap => {
+async function subscribePins() {
+  if (!FIREBASE_ON || !db) return;
+  const { collection, query, orderBy, limit, onSnapshot } = await import("https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js");
+  const q = query(collection(db, 'pins'), orderBy('ts', 'desc'), limit(PIN_LOAD_LIMIT));
+  pinsUnsub = onSnapshot(q, snap => {
     allPins = [];
+    markersById.forEach(m => { try { map.removeLayer(m); } catch(e){} });
+    clusterMarkers.forEach(m => { try { map.removeLayer(m); } catch(e){} });
+    markersById.clear(); clusterMarkers.clear(); clusterIndex.clear();
     snap.forEach(d => {
       const data = d.data();
-      allPins.push({
-        id: d.id,
-        lat: data.lat, lng: data.lng,
-        ts: typeof data.ts === 'number' ? data.ts : Date.now(),
-        challengeId: data.challengeId,
-        photo: data.photo || null,
-        locationName: data.locationName || null,
-        displayName: data.displayName || null,
-        photoURL: data.photoURL || null,
-        uid: data.uid || null,
-        mine: data.uid === currentUser.uid
-      });
+      const pin = { ...data, id: d.id, mine: data.uid === currentUser?.uid };
+      allPins.push(pin);
     });
-    // Update lastDropTs from my latest pin
-    const myLatest = allPins.filter(p => p.mine).reduce((a,b) => !a || b.ts > a.ts ? b : a, null);
-    if (myLatest) {
-      lastDropTs = Math.max(lastDropTs, myLatest.ts);
-      if (rateLimitRemainMs() > 0) startCooldownIndicator();
+    allPins.forEach(renderPin);
+    renderQuestList();
+    if (viewedQuestId) {
+      const q = allQuests.find(qu => qu.id === viewedQuestId);
+      if (q && $('questDetailSheet').classList.contains('open')) {
+        renderLeaderboard(viewedQuestId);
+      }
     }
-    renderAllMarkers();
+    refreshActiveQuestBadge();
   });
 }
 
-/* ================================================================
- * AUTH STATE
- * ================================================================ */
-if (FIREBASE_ON && auth) {
-  // Handle redirect result (when popup is blocked)
-  getRedirectResult(auth).catch(()=>{});
-
-  onAuthStateChanged(auth, async (user) => {
-    unsubAll();
-    if (user) {
-      currentUser = user;
-      // Ensure user doc exists; merge displayName/photoURL
-      try {
-        const ref = doc(db, 'users', user.uid);
-        const cur = await getDoc(ref);
-        if (!cur.exists()) {
-          await setDoc(ref, {
-            displayName: user.displayName || null,
-            photoURL: user.photoURL || null,
-            xp, completed: [...completed], plan, lang, mapStyleId,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp()
-          });
-        } else {
-          // Update display name/photo if Google etc.
-          await setDoc(ref, {
-            displayName: user.displayName || cur.data().displayName || null,
-            photoURL: user.photoURL || cur.data().photoURL || null,
-            updatedAt: serverTimestamp()
-          }, { merge: true });
-        }
-      } catch(e) { console.warn(e); }
-      subscribeUserData();
-      updateUserBtn();
-    } else {
-      currentUser = null;
-      allPins = []; savedLocations = [];
-      renderAllMarkers(); renderLocationsList(); renderDropLocRow();
-      updateUserBtn();
-      // Auto sign-in anonymously after sign-out so the app stays usable
-      //try { await signInAnonymously(auth); } catch(e) { console.warn(e); }
-    }
+async function subscribeLocations() {
+  if (!FIREBASE_ON || !db || !currentUser || currentUser.isAnonymous) return;
+  const { collection, onSnapshot } = await import("https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js");
+  locationsUnsub = onSnapshot(collection(db, 'users', currentUser.uid, 'locations'), snap => {
+    savedLocations = [];
+    snap.forEach(d => savedLocations.push({ ...d.data(), id: d.id }));
+    savedLocations.sort((a,b) => (a.createdAt||0) - (b.createdAt||0));
+    renderLocationsList(); renderDropLocRow();
   });
-} else {
-  // Offline mode: load from localStorage and seed
-  const saved = loadLocal();
-  if (saved) {
-    if (Array.isArray(saved.pins)) {
-      saved.pins.forEach(p => allPins.push({ ...p, mine: true }));
+}
+
+async function subscribeUserDoc() {
+  if (!FIREBASE_ON || !db || !currentUser) return;
+  const { doc, onSnapshot, setDoc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js");
+  const ref = doc(db, 'users', currentUser.uid);
+  // Ensure user doc exists
+  try {
+    const snap = await getDoc(ref);
+    if (!snap.exists()) {
+      await setDoc(ref, {
+        displayName: currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : null),
+        email: currentUser.email || null,
+        plan: 'free', xp: 0, completed: [],
+        createdAt: Date.now()
+      });
     }
-    if (typeof saved.xp === 'number') xp = saved.xp;
-    if (Array.isArray(saved.completed)) saved.completed.forEach(id => completed.add(id));
-    if (saved.plan === 'premium' || saved.plan === 'free') plan = saved.plan;
-    if (saved.lang === 'en' || saved.lang === 'fr') lang = saved.lang;
-    if (saved.mapStyleId && MAP_STYLES.find(s => s.id === saved.mapStyleId)) mapStyleId = saved.mapStyleId;
-    if (Array.isArray(saved.savedLocations)) savedLocations = saved.savedLocations;
-    if (typeof saved.lastDropTs === 'number') lastDropTs = saved.lastDropTs;
+  } catch(e) { console.error(e); }
+  userDocUnsub = onSnapshot(ref, snap => {
+    const data = snap.data();
+    if (!data) return;
+    userProfile = data;
+    if (data.plan) plan = data.plan;
+    if (typeof data.xp === 'number') xp = data.xp;
+    if (Array.isArray(data.completed)) {
+      completed.clear(); data.completed.forEach(c => completed.add(c));
+    }
+    if (data.lang) lang = data.lang;
+    if (data.mapStyleId) {
+      mapStyleId = data.mapStyleId;
+      applyMapStyle(mapStyleId);
+    }
+    applyLang();
+  });
+}
+
+async function subscribeQuests() {
+  // Custom quests are stored in Firestore (when online) or localStorage (offline).
+  // We always merge with DEFAULT_QUESTS.
+  if (FIREBASE_ON && db) {
+    const { collection, onSnapshot } = await import("https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js");
+    questsUnsub = onSnapshot(collection(db, 'quests'), snap => {
+      const customs = [];
+      snap.forEach(d => customs.push({ ...d.data(), id: d.id }));
+      allQuests = [...DEFAULT_QUESTS, ...customs];
+      renderQuestList(); renderDropQuestRow();
+      if (viewedQuestId && $('questDetailSheet').classList.contains('open')) {
+        const q = allQuests.find(qu => qu.id === viewedQuestId);
+        if (q) openQuestDetail(q);
+      }
+    });
+  } else {
+    // Offline: load local custom quests
+    const local = loadLocal();
+    const customs = (local?.customQuests) || [];
+    allQuests = [...DEFAULT_QUESTS, ...customs];
+    renderQuestList(); renderDropQuestRow();
   }
 }
 
+async function persistUserPrefs() {
+  if (!FIREBASE_ON || !db || !currentUser || currentUser.isAnonymous) {
+    saveLocal();
+    return;
+  }
+  try {
+    const { doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js");
+    await updateDoc(doc(db, 'users', currentUser.uid), {
+      lang, mapStyleId, plan, xp, completed: [...completed]
+    });
+  } catch(e) { /* ignore */ }
+}
+
 /* ================================================================
- * WIRE UP TOPBAR & MISC
+ * EVENT LISTENERS — Top buttons, FABs, Quest UI
  * ================================================================ */
 $('langBtn').addEventListener('click', () => {
-  lang = lang === 'en' ? 'fr' : 'en';
+  lang = lang === 'fr' ? 'en' : 'fr';
   applyLang();
-  // Update existing markers
-  renderAllMarkers();
   persistUserPrefs();
 });
-$('planBtn').addEventListener('click', () => {
-  if (plan === 'free') openSheet('premiumSheet');
-  else { plan = 'free'; applyLang(); toast(t('nowFree')); persistUserPrefs(); }
-});
+$('planBtn').addEventListener('click', () => openSheet('premiumSheet'));
 $('upgradeBtn').addEventListener('click', () => {
-  plan = 'premium'; applyLang(); closeSheets(); confetti();
-  toast(t('nowPremium'), 'win'); persistUserPrefs();
-});
-$('trophyBtn').addEventListener('click', () => {
-  renderChallengePanel(); openSheet('chSheet');
-});
-$('locationsFab').addEventListener('click', () => {
-  if (!FIREBASE_ON || (currentUser && !currentUser.isAnonymous) || !FIREBASE_ON) {
-    renderLocationsList(); openSheet('locationsSheet');
-  } else {
-    renderLocationsList(); openSheet('locationsSheet');
-  }
-});
-$('addLocOpenBtn').addEventListener('click', () => {
+  plan = 'premium';
+  applyLang();
+  persistUserPrefs();
   closeSheets();
-  setTimeout(() => openAddLocSheet(null), 200);
+  toast(t('welcomePremium'), 'win');
+});
+
+$('dropBtn').addEventListener('click', () => {
+  pendingChallenge = null; pendingPhoto = null; pendingLocation = 'here'; pendingQuest = null;
+  renderChallengeGrid(); renderDropLocRow(); renderDropQuestRow(); renderPhotoRow();
+  updateConfirmDropState();
+  openSheet('dropSheet');
+});
+
+$('trophyBtn').addEventListener('click', () => {
+  renderChallengePanel();
+  openSheet('chSheet');
+});
+
+$('locationsFab').addEventListener('click', () => {
+  renderLocationsList();
+  openSheet('locationsSheet');
+});
+
+$('questsFab').addEventListener('click', () => {
+  renderQuestList();
+  openSheet('questsSheet');
+});
+
+$('createQuestBtn').addEventListener('click', () => {
+  if (plan !== 'premium') {
+    $('premiumBlock').style.display = 'block';
+    $('createQuestForm').style.display = 'none';
+  } else {
+    $('premiumBlock').style.display = 'none';
+    $('createQuestForm').style.display = 'block';
+  }
+  pickedQuestEmoji = '🎯';
+  renderQuestEmojiPicker();
+  openSheet('createQuestSheet');
+});
+
+$('premiumFromQuest').addEventListener('click', () => {
+  closeSheets();
+  setTimeout(() => openSheet('premiumSheet'), 250);
+});
+
+$('saveQuestBtn').addEventListener('click', saveCustomQuest);
+
+$('participateBtn').addEventListener('click', () => {
+  const q = allQuests.find(x => x.id === viewedQuestId);
+  if (!q) return;
+  pendingQuest = q;
+  pendingChallenge = null; pendingPhoto = null; pendingLocation = 'here';
+  renderChallengeGrid(); renderDropLocRow(); renderDropQuestRow(); renderPhotoRow();
+  updateConfirmDropState();
+  closeSheets();
+  setTimeout(() => openSheet('dropSheet'), 250);
+});
+
+$('deleteQuestBtn').addEventListener('click', () => {
+  if (viewedQuestId) deleteCustomQuest(viewedQuestId);
 });
 
 /* ================================================================
  * INIT
  * ================================================================ */
-applyMapStyle(mapStyleId);
-applyLang();
-updateMyStats();
-tickCounter();
-rotateFunFact();
-if (rateLimitRemainMs() > 0) startCooldownIndicator();
-
-(async function init() {
-  // Show offline banner if applicable
-  if (!FIREBASE_ON) {
-    setTimeout(() => toast(t('offlineBanner'), 'warn'), 600);
+async function init() {
+  // Load local prefs first
+  const local = loadLocal();
+  if (local) {
+    if (local.plan) plan = local.plan;
+    if (local.lang) lang = local.lang;
+    if (local.mapStyleId) mapStyleId = local.mapStyleId;
+    if (typeof local.xp === 'number') xp = local.xp;
+    if (Array.isArray(local.completed)) local.completed.forEach(c => completed.add(c));
+    if (Array.isArray(local.savedLocations)) savedLocations = local.savedLocations;
+    if (local.lastDropTs) lastDropTs = local.lastDropTs;
+    if (Array.isArray(local.pins)) {
+      allPins = local.pins.map(p => ({ ...p, mine: true }));
+    }
   }
-  try {
-    const [lat, lng] = await locateUser(true);
-    if (!FIREBASE_ON && allPins.filter(p => !p.mine).length === 0) seedDemoPins([lat, lng]);
-    setTimeout(() => toast(t('foundYou'), 'win'), 400);
-  } catch {
-    if (!FIREBASE_ON && allPins.filter(p => !p.mine).length === 0) seedDemoPins([48.8566, 2.3522]);
-    setTimeout(() => toast(t('locationDenied'), 'warn'), 400);
-  }
-  setTimeout(() => {
-    if (allPins.filter(p => p.mine).length === 0) toast(t('welcome'));
-  }, 2200);
 
-  // Render initial markers in offline mode
-  if (!FIREBASE_ON) renderAllMarkers();
-})();
+  applyMapStyle(mapStyleId);
+  applyLang();
+
+  // Always subscribe to quests (default + custom)
+  subscribeQuests();
+
+  if (FIREBASE_ON && auth) {
+    const fbAuth = await import("https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js");
+    fbAuth.onAuthStateChanged(auth, async user => {
+      unsubAll();
+      currentUser = user;
+      if (user) {
+        await subscribeUserDoc();
+        if (!user.isAnonymous) await subscribeLocations();
+        await subscribePins();
+        await subscribeQuests();
+      } else {
+        // Sign in anonymously by default for new sessions
+        try { await fbAuth.signInAnonymously(auth); } catch(e) { console.error(e); }
+        return;
+      }
+      await refreshAuthUI();
+      allPins.forEach(renderPin);
+    });
+  } else {
+    // Offline mode — show local pins
+    allPins.forEach(renderPin);
+    refreshAuthUI();
+  }
+
+  // Try to locate user (silent)
+  setTimeout(() => locateUser(true).catch(()=>{}), 600);
+}
+init();
 </script>
 </body>
 </html>
