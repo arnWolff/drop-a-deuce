@@ -483,6 +483,11 @@
     .ticker-fact{font-size:9px} .stats{padding:6px 10px} .stats-row{gap:10px}
     .pill.user .avatar { width: 22px; height: 22px; font-size: 11px; }
   }
+
+  /* Avatar emoji picker re-uses .emoji-picker but we want bigger emojis */
+  #avatarPicker .emoji-pick { font-size: 26px; }
+  .cta.danger { background: var(--red); color: white; border-color: var(--brown-1); }
+  .cta.danger:hover { filter: brightness(1.05); }
 </style>
 </head>
 <body>
@@ -648,6 +653,19 @@
     </div>
   </div>
 
+  <!-- Pseudonym -->
+  <div class="section-title" data-i18n="nicknameLbl">Pseudonyme</div>
+  <div class="field" style="margin-bottom:14px;">
+    <input type="text" id="nicknameInput" maxlength="24" data-i18n-placeholder="nicknamePlaceholder" placeholder="Ton pseudo..." />
+  </div>
+
+  <!-- Avatar picker -->
+  <div class="section-title" data-i18n="avatarLbl">Avatar</div>
+  <div class="emoji-picker" id="avatarPicker"></div>
+
+  <button class="cta" id="saveProfileBtn" style="margin-bottom:14px;" data-i18n="saveProfile">Enregistrer</button>
+
+  <!-- Anonymous-user upgrade block -->
   <div id="upgradeAnonBlock" style="display:none;">
     <div class="auth-banner">
       <span style="font-size:18px;">⚠️</span>
@@ -671,8 +689,9 @@
     </button>
   </div>
 
-  <div style="margin-top:14px;">
+  <div style="margin-top:14px; display:flex; flex-direction:column; gap:10px;">
     <button class="cta secondary" id="signOutBtn" data-i18n="signOut">Se déconnecter</button>
+    <button class="cta danger" id="deleteAccountBtn" data-i18n="deleteAccount">🗑️ Supprimer mon compte</button>
   </div>
 </div>
 
@@ -846,6 +865,13 @@ const CHALLENGES = [
 
 const LOCATION_EMOJIS = ['🏠','🏢','🏖️','🏔️','✈️','🏨','🚂','🌳','🍳','🚽','🌃','🌅','🌊','🌍','🏛️','⛺','🛏️','📍','❤️','🎯'];
 
+const AVATAR_EMOJIS = [
+  '🍑','💩','🚽','🧻','🧼','🪠','🦠','🌭',
+  '🐢','🦝','🦔','🐼','🐸','🦊','🐰','🐙',
+  '😎','🤠','👻','🤖','🐉','👽','🧙','🧞',
+  '🍔','🌮','🥑','🌶️','🧀','🍕','🍩','🥐'
+];
+
 const I18N = {
   en: {
     appName:'Drop a Deuce', tagline:'The fun way to map your #2',
@@ -914,7 +940,20 @@ const I18N = {
     viewHistory:'View {n} drops at this spot',
     // misc
     offlineBanner:'⚡ Offline mode — set up Firebase to enable cloud sync.',
-    loading:'Loading…'
+    loading:'Loading…',
+    // auth + profile additions
+    welcomeAnon:'Welcome! 🍑 You\'re playing as a guest. Set a nickname & avatar in your profile, or sign in to save your drops forever 💩',
+    nicknameLbl:'Nickname', nicknamePlaceholder:'Pick a fun name…',
+    avatarLbl:'Avatar', saveProfile:'Save', nicknameSaved:'Profile saved ✨',
+    deleteAccount:'Delete my account',
+    deleteAccountWarn:'⚠️ This will permanently delete ALL your drops, places, and XP. There is no going back. Are you absolutely sure?',
+    deleteAccountTypeConfirm:'Type DELETE to confirm:',
+    deleteAccountSuccess:'Account deleted. Bye! 👋',
+    mergeDataPrompt:'⚠️ This Google account already exists.\n\nClick OK to MERGE your guest data (pins, XP) into it, or Cancel to just sign in fresh (your guest data will be lost).',
+    mergeEmailPrompt:'⚠️ This email already has an account.\n\nClick OK to MERGE your guest data into it, or Cancel.',
+    migrating:'📦 Moving your data over…',
+    migrationDone:'Data merged! 🎉 Welcome back!',
+    needRecentLogin:'Please sign out and back in, then try again 🔐'
   },
   fr: {
     appName:'Pose ta pêche', tagline:'La façon fun de cartographier ta #2',
@@ -983,7 +1022,20 @@ const I18N = {
     viewHistory:'Voir les {n} dépôts ici',
     // misc
     offlineBanner:'⚡ Mode hors-ligne — configure Firebase pour le sync cloud.',
-    loading:'Chargement…'
+    loading:'Chargement…',
+    // auth + profil additions
+    welcomeAnon:'Bienvenue ! 🍑 Tu joues en mode invité. Choisis un pseudo & un avatar dans ton profil, ou connecte-toi pour sauvegarder tes pêches à jamais 💩',
+    nicknameLbl:'Pseudonyme', nicknamePlaceholder:'Choisis un pseudo rigolo…',
+    avatarLbl:'Avatar', saveProfile:'Enregistrer', nicknameSaved:'Profil enregistré ✨',
+    deleteAccount:'Supprimer mon compte',
+    deleteAccountWarn:'⚠️ Cela va supprimer DÉFINITIVEMENT tous tes dépôts, lieux et XP. Aucun retour possible. Vraiment sûr·e ?',
+    deleteAccountTypeConfirm:'Tape SUPPRIMER pour confirmer :',
+    deleteAccountSuccess:'Compte supprimé. Adieu ! 👋',
+    mergeDataPrompt:'⚠️ Ce compte Google existe déjà.\n\nClique OK pour FUSIONNER tes données invité (pins, XP) dedans, ou Annuler pour juste te connecter (tes données invité seront perdues).',
+    mergeEmailPrompt:'⚠️ Cet email a déjà un compte.\n\nClique OK pour FUSIONNER tes données invité dedans, ou Annuler.',
+    migrating:'📦 Migration de tes données…',
+    migrationDone:'Données fusionnées ! 🎉 Bon retour !',
+    needRecentLogin:'Déconnecte-toi puis reconnecte-toi, puis réessaie 🔐'
   }
 };
 
@@ -992,11 +1044,16 @@ const I18N = {
  * ================================================================ */
 
 let lang = 'fr', plan = 'free', mapStyleId = 'voyager';
+let migrating = false;            // suppress auto-anon during account migration
+let pickedAvatarEmoji = null;     // currently-edited avatar in profile sheet
+const ANON_WELCOMED_KEY = 'deuce_anon_welcomed';
 let xp = 0;
 const completed = new Set();
 
 let currentUser = null;       // Firebase user object (or null)
 let userProfile = null;       // Firestore user doc data
+let myAvatarEmoji = null;     // current user's chosen emoji avatar
+let myDisplayName = null;     // current user's pseudonym (mirrors auth profile)
 let savedLocations = [];      // [{id, name, emoji, lat, lng}]
 let allPins = [];             // all pins from firestore (or local in offline mode)
 let myPinsList = [];          // pins where uid === currentUser.uid (computed)
@@ -1217,12 +1274,17 @@ function makeIcon(emoji, badge, mine, count) {
 }
 
 function authorPopupHtml(pin) {
-  if (pin.mine) return `<div class="popup-author"><span class="av">👤</span> ${t('yourPin')}</div>`;
+  if (pin.mine) return `<div class="popup-author"><span class="av">${myAvatarEmoji || '👤'}</span> ${escapeHtml(myDisplayName || t('yourPin'))}</div>`;
   const name = pin.displayName || t('anonPin');
-  const av = pin.photoURL
-    ? `<span class="av"><img src="${escapeHtml(pin.photoURL)}" alt=""/></span>`
-    : `<span class="av">${escapeHtml(initialsOf(name))}</span>`;
-  return `<div class="popup-author">${av} ${escapeHtml(name)}</div>`;
+  let avHtml;
+  if (pin.photoURL && !pin.avatarEmoji) {
+    avHtml = `<span class="av"><img src="${escapeHtml(pin.photoURL)}" alt=""/></span>`;
+  } else if (pin.avatarEmoji) {
+    avHtml = `<span class="av">${pin.avatarEmoji}</span>`;
+  } else {
+    avHtml = `<span class="av">${escapeHtml(initialsOf(name))}</span>`;
+  }
+  return `<div class="popup-author">${avHtml} ${escapeHtml(name)}</div>`;
 }
 
 function popupHtml(pin, clusterPins=null) {
@@ -1899,8 +1961,9 @@ async function commitDrop(lat, lng, challenge, photo, locationName=null) {
     challengeId: challenge.id,
     photo: photo || null,
     locationName: locationName || null,
-    displayName: currentUser?.displayName || null,
+    displayName: myDisplayName || currentUser?.displayName || null,
     photoURL: currentUser?.photoURL || null,
+    avatarEmoji: myAvatarEmoji || null,
     uid: currentUser?.uid || null
   };
 
@@ -2083,17 +2146,53 @@ $('emailAuthBtn').addEventListener('click', async () => {
   const password = $('passwordInput').value;
   if (!email || !password) { showAuthError({ code:'auth/invalid-email' }); return; }
   $('authError').classList.remove('show');
+
   try {
     if (authMode === 'signup') {
-      // If user is anonymous, link credentials instead of creating new account
+      // Anonymous user wants a real account → try to LINK first
       if (currentUser && currentUser.isAnonymous) {
-        const cred = EmailAuthProvider.credential(email, password);
-        await linkWithCredential(currentUser, cred);
+        try {
+          const cred = EmailAuthProvider.credential(email, password);
+          await linkWithCredential(currentUser, cred);
+          closeSheets(); toast(t('signedIn'), 'win');
+          return;
+        } catch (e) {
+          if (e.code === 'auth/email-already-in-use'
+              || e.code === 'auth/credential-already-in-use') {
+            // Offer to merge into the existing account
+            if (confirm(t('mergeEmailPrompt'))) {
+              const ok = await migrateAnonTo(() => signInWithEmailAndPassword(auth, email, password));
+              if (!ok) showAuthError({ code:'auth/wrong-password' });
+            } else {
+              try {
+                await currentUser.delete();
+              } catch(_) { await signOut(auth); }
+              try {
+                await signInWithEmailAndPassword(auth, email, password);
+                closeSheets(); toast(t('signedIn'), 'win');
+              } catch(e2) { showAuthError(e2); }
+            }
+            return;
+          }
+          throw e;
+        }
       } else {
+        // Not anonymous — normal create
         await createUserWithEmailAndPassword(auth, email, password);
       }
     } else {
-      await signInWithEmailAndPassword(auth, email, password);
+      // SIGN-IN mode: if currently anonymous, we *also* need migration logic
+      if (currentUser && currentUser.isAnonymous) {
+        if (confirm(t('mergeEmailPrompt'))) {
+          const ok = await migrateAnonTo(() => signInWithEmailAndPassword(auth, email, password));
+          if (!ok) return;
+        } else {
+          try { await currentUser.delete(); } catch(_) { await signOut(auth); }
+          await signInWithEmailAndPassword(auth, email, password);
+        }
+      } else {
+        await signInWithEmailAndPassword(auth, email, password);
+      }
     }
     closeSheets();
     toast(t('signedIn'), 'win');
@@ -2103,12 +2202,46 @@ $('emailAuthBtn').addEventListener('click', async () => {
 $('googleBtn').addEventListener('click', async () => {
   if (!FIREBASE_ON) { toast(t('offlineBanner'), 'warn'); return; }
   const provider = new GoogleAuthProvider();
-  try {
-    if (currentUser && currentUser.isAnonymous) {
+
+  // Anonymous user: try to LINK first, then fall back to migration
+  if (currentUser && currentUser.isAnonymous) {
+    try {
       await linkWithPopup(currentUser, provider);
-    } else {
-      await signInWithPopup(auth, provider);
+      closeSheets();
+      toast(t('signedIn'), 'win');
+      return;
+    } catch (e) {
+      // The Google account already exists → offer to merge
+      if (e.code === 'auth/credential-already-in-use'
+          || e.code === 'auth/email-already-in-use'
+          || e.code === 'auth/account-exists-with-different-credential') {
+        if (confirm(t('mergeDataPrompt'))) {
+          await migrateAnonTo(() => signInWithPopup(auth, provider));
+        } else {
+          // User said "no merge" — wipe anon and just sign in
+          try {
+            await currentUser.delete();
+          } catch(_) { await signOut(auth); }
+          try {
+            const r = await signInWithPopup(auth, provider);
+            closeSheets();
+            toast(t('signedIn'), 'win');
+          } catch(e2) { showAuthError(e2); }
+        }
+        return;
+      }
+      if (e.code === 'auth/popup-blocked') {
+        try { await signInWithRedirect(auth, provider); } catch(e2) { showAuthError(e2); }
+        return;
+      }
+      showAuthError(e);
+      return;
     }
+  }
+
+  // Already signed-out (or non-anon): plain sign-in
+  try {
+    await signInWithPopup(auth, provider);
     closeSheets();
     toast(t('signedIn'), 'win');
   } catch (e) {
@@ -2171,17 +2304,21 @@ function updateUserBtn() {
   const btn = $('userBtn');
   const av = $('userAvatar');
   const lbl = $('userBtnLabel');
+
   if (currentUser && !currentUser.isAnonymous) {
-    const name = currentUser.displayName || currentUser.email?.split('@')[0] || '';
-    if (currentUser.photoURL) {
+    const name = myDisplayName || currentUser.displayName || currentUser.email?.split('@')[0] || '';
+    if (currentUser.photoURL && !myAvatarEmoji) {
       av.innerHTML = `<img src="${escapeHtml(currentUser.photoURL)}" alt=""/>`;
+    } else if (myAvatarEmoji) {
+      av.textContent = myAvatarEmoji;
     } else {
       av.textContent = initialsOf(name);
     }
     lbl.textContent = name.length > 12 ? name.slice(0,12)+'…' : name;
   } else if (currentUser && currentUser.isAnonymous) {
-    av.textContent = '👤';
-    lbl.textContent = 'Anon';
+    const anonName = myDisplayName || 'Invité';
+    av.textContent = myAvatarEmoji || '👤';
+    lbl.textContent = anonName.length > 12 ? anonName.slice(0,12)+'…' : anonName;
   } else {
     av.textContent = '?';
     lbl.textContent = t('signIn');
@@ -2189,13 +2326,10 @@ function updateUserBtn() {
 }
 
 $('userBtn').addEventListener('click', () => {
-  // On ouvre toujours une interface, mais on adapte le contenu
-  if (currentUser && !currentUser.isAnonymous) {
-    openSheet('profileSheet'); // Utilisateur réel
+  if (currentUser) {
+    openProfileSheet();
   } else {
-    // Pour l'anonyme, on peut soit ouvrir l'authSheet 
-    // soit une version simplifiée du profil avec un bouton "Quitter le mode invité"
-    openSheet('authSheet'); 
+    openSheet('authSheet');
   }
 });
 
@@ -2206,14 +2340,28 @@ $('signOutBtnAnonym')?.addEventListener('click', async () => {
 });
 
 function openProfileSheet() {
-  const name = currentUser.displayName || currentUser.email?.split('@')[0] || (lang==='fr'?'Utilisateur':'User');
+  if (!currentUser) { openSheet('authSheet'); return; }
+
+  const name = myDisplayName || currentUser.displayName || currentUser.email?.split('@')[0]
+    || (currentUser.isAnonymous ? (lang==='fr'?'Invité':'Guest') : (lang==='fr'?'Utilisateur':'User'));
+
   $('profileName').textContent = name;
   $('profileEmail').textContent = currentUser.email || '';
-  if (currentUser.photoURL) {
+  $('nicknameInput').value = name;
+
+  // Avatar preview in big circle
+  if (currentUser.photoURL && !myAvatarEmoji) {
     $('profileAv').innerHTML = `<img src="${escapeHtml(currentUser.photoURL)}" alt=""/>`;
+  } else if (myAvatarEmoji) {
+    $('profileAv').textContent = myAvatarEmoji;
   } else {
     $('profileAv').textContent = initialsOf(name);
   }
+
+  pickedAvatarEmoji = myAvatarEmoji || null;
+  renderAvatarPicker();
+
+  // Anonymous-specific blocks
   if (currentUser.isAnonymous) {
     $('profileAnonTag').style.display = 'inline-block';
     $('upgradeAnonBlock').style.display = 'block';
@@ -2222,7 +2370,104 @@ function openProfileSheet() {
     $('profileAnonTag').style.display = 'none';
     $('upgradeAnonBlock').style.display = 'none';
   }
+
   openSheet('profileSheet');
+}
+
+function renderAvatarPicker() {
+  const p = $('avatarPicker'); if (!p) return;
+  p.innerHTML = '';
+  // "no emoji" option (use photo or initials)
+  const none = document.createElement('div');
+  none.className = 'emoji-pick' + (!pickedAvatarEmoji ? ' selected' : '');
+  none.textContent = '🚫';
+  none.title = 'Default';
+  none.addEventListener('click', () => { pickedAvatarEmoji = null; renderAvatarPicker(); });
+  p.appendChild(none);
+
+  AVATAR_EMOJIS.forEach(e => {
+    const el = document.createElement('div');
+    el.className = 'emoji-pick' + (e === pickedAvatarEmoji ? ' selected' : '');
+    el.textContent = e;
+    el.addEventListener('click', () => {
+      pickedAvatarEmoji = e;
+      renderAvatarPicker();
+    });
+    p.appendChild(el);
+  });
+}
+
+async function saveProfileChanges() {
+  if (!currentUser) return;
+  const newName = $('nicknameInput').value.trim().slice(0, 24);
+
+  try {
+    // Firebase Auth profile
+    if (newName && newName !== currentUser.displayName) {
+      await updateProfile(currentUser, { displayName: newName });
+    }
+    // Firestore user doc
+    await setDoc(doc(db, 'users', currentUser.uid), {
+      displayName: newName || null,
+      avatarEmoji: pickedAvatarEmoji || null,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+
+    myDisplayName = newName || null;
+    myAvatarEmoji = pickedAvatarEmoji || null;
+    updateUserBtn();
+    toast(t('nicknameSaved'), 'win');
+  } catch(e) {
+    console.error(e);
+    toast('❌ ' + (e.message || 'Save failed'), 'err');
+  }
+}
+
+async function deleteMyAccount() {
+  if (!currentUser) return;
+  if (!confirm(t('deleteAccountWarn'))) return;
+  const typed = prompt(t('deleteAccountTypeConfirm'));
+  const expected = lang === 'fr' ? 'SUPPRIMER' : 'DELETE';
+  if (typed !== expected) return;
+
+  migrating = true; // suppress auto-anon while we tear things down
+
+  try {
+    const uid = currentUser.uid;
+
+    // Pins
+    const pinsSnap = await getDocs(query(collection(db, 'pins'), where('uid', '==', uid)));
+    await Promise.all(pinsSnap.docs.map(d => deleteDoc(d.ref).catch(e => console.warn(e))));
+
+    // Locations
+    const locSnap = await getDocs(collection(db, 'users', uid, 'locations'));
+    await Promise.all(locSnap.docs.map(d => deleteDoc(d.ref).catch(e => console.warn(e))));
+
+    // User doc
+    await deleteDoc(doc(db, 'users', uid)).catch(e => console.warn(e));
+
+    // Local cache
+    localStorage.removeItem(SK);
+    localStorage.removeItem(ANON_WELCOMED_KEY);
+
+    // Auth user
+    await currentUser.delete();
+
+    migrating = false;
+    closeSheets();
+    toast(t('deleteAccountSuccess'));
+
+    // Sign back in as a fresh anonymous user so the app stays usable
+    try { await signInAnonymously(auth); } catch(_) {}
+  } catch(e) {
+    migrating = false;
+    if (e.code === 'auth/requires-recent-login') {
+      toast(t('needRecentLogin'), 'err');
+    } else {
+      console.error(e);
+      toast('❌ ' + (e.message || 'Delete failed'), 'err');
+    }
+  }
 }
 
 /* ================================================================
@@ -2239,6 +2484,109 @@ async function persistUserPrefs() {
       updatedAt: serverTimestamp()
     }, { merge: true });
   } catch(e) { console.warn('User pref save failed', e); }
+}
+
+/* ================================================================
+ * ANONYMOUS → REAL ACCOUNT MIGRATION
+ * Snapshots all anonymous data, deletes the anonymous account,
+ * signs into the target account (Google or email), then recreates
+ * the data under the new uid and merges with any existing data.
+ * ================================================================ */
+async function migrateAnonTo(signInTarget) {
+  if (!currentUser || !currentUser.isAnonymous) return false;
+
+  migrating = true;
+  toast(t('migrating'));
+
+  const anonUser = currentUser;
+  const anonUid  = anonUser.uid;
+  let newUser = null;
+
+  try {
+    // 1. SNAPSHOT all anon data
+    const pinsSnap = await getDocs(query(collection(db, 'pins'), where('uid', '==', anonUid)));
+    const anonPins = [];
+    pinsSnap.forEach(d => anonPins.push({ id: d.id, ...d.data() }));
+
+    const locSnap = await getDocs(collection(db, 'users', anonUid, 'locations'));
+    const anonLocs = [];
+    locSnap.forEach(d => anonLocs.push({ id: d.id, ...d.data() }));
+
+    const userSnap = await getDoc(doc(db, 'users', anonUid));
+    const anonDoc = userSnap.exists() ? userSnap.data() : null;
+
+    // 2. DELETE all anon data while still authed as anon (rules require it)
+    await Promise.all(anonPins.map(p =>
+      deleteDoc(doc(db, 'pins', p.id)).catch(e => console.warn('pin del', e))));
+    await Promise.all(anonLocs.map(l =>
+      deleteDoc(doc(db, 'users', anonUid, 'locations', l.id)).catch(e => console.warn('loc del', e))));
+    await deleteDoc(doc(db, 'users', anonUid)).catch(e => console.warn('user del', e));
+
+    // 3. DELETE the anonymous Firebase Auth user (auto signs out)
+    try { await anonUser.delete(); }
+    catch(e) { console.warn('anon delete failed, signing out instead', e); await signOut(auth); }
+
+    // 4. SIGN IN as the real account
+    const result = await signInTarget();
+    newUser = result?.user || auth.currentUser;
+    if (!newUser) throw new Error('Sign-in returned no user');
+
+    // 5. RECREATE pins with new uid
+    await Promise.all(anonPins.map(p => {
+      const { id, uid, ...data } = p;
+      return addDoc(collection(db, 'pins'), {
+        ...data,
+        uid: newUser.uid,
+        displayName: newUser.displayName || data.displayName || null,
+        photoURL: newUser.photoURL || data.photoURL || null,
+        createdAt: serverTimestamp()
+      }).catch(e => console.warn('pin recreate', e));
+    }));
+
+    // 6. RECREATE locations
+    await Promise.all(anonLocs.map(l => {
+      const { id, ...data } = l;
+      return addDoc(collection(db, 'users', newUser.uid, 'locations'), {
+        ...data,
+        createdAt: serverTimestamp()
+      }).catch(e => console.warn('loc recreate', e));
+    }));
+
+    // 7. MERGE user doc — keep highest XP, union of completed challenges, premium wins
+    const existingSnap = await getDoc(doc(db, 'users', newUser.uid));
+    const existing = existingSnap.exists() ? existingSnap.data() : {};
+    const mergedCompleted = new Set([
+      ...(existing.completed || []),
+      ...(anonDoc?.completed || [])
+    ]);
+    await setDoc(doc(db, 'users', newUser.uid), {
+      xp: Math.max(existing.xp || 0, anonDoc?.xp || 0),
+      completed: [...mergedCompleted],
+      plan: (existing.plan === 'premium' || anonDoc?.plan === 'premium') ? 'premium' : 'free',
+      avatarEmoji: existing.avatarEmoji || anonDoc?.avatarEmoji || null,
+      displayName: newUser.displayName || existing.displayName || anonDoc?.displayName || null,
+      photoURL:    newUser.photoURL    || existing.photoURL    || null,
+      lang:        existing.lang        || anonDoc?.lang        || lang,
+      mapStyleId:  existing.mapStyleId  || anonDoc?.mapStyleId  || mapStyleId,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+
+    migrating = false;
+    closeSheets();
+    toast(t('migrationDone'), 'win');
+    confetti();
+    return true;
+
+  } catch (e) {
+    console.error('Migration failed', e);
+    migrating = false;
+    toast('❌ ' + (e.message || 'Migration failed'), 'err');
+    // Recovery: make sure SOME user is signed in
+    if (!auth.currentUser) {
+      try { await signInAnonymously(auth); } catch(ee) {}
+    }
+    return false;
+  }
 }
 
 /* ================================================================
@@ -2269,9 +2617,12 @@ function subscribeUserData() {
       if (d.mapStyleId && MAP_STYLES.find(s => s.id === d.mapStyleId)) {
         if (d.mapStyleId !== mapStyleId) applyMapStyle(d.mapStyleId);
       }
+      myAvatarEmoji = d.avatarEmoji || null;
+      myDisplayName = d.displayName || null;
       updateMyStats();
       renderChallengeGrid(); renderChallengePanel();
       $('planBtn').innerHTML = (plan==='premium'?'⭐ ':'🆓 ')+t(plan);
+      updateUserBtn();
     }
   });
 
@@ -2303,11 +2654,11 @@ function subscribeUserData() {
         locationName: data.locationName || null,
         displayName: data.displayName || null,
         photoURL: data.photoURL || null,
+        avatarEmoji: data.avatarEmoji || null,
         uid: data.uid || null,
         mine: data.uid === currentUser.uid
       });
     });
-    // Update lastDropTs from my latest pin
     const myLatest = allPins.filter(p => p.mine).reduce((a,b) => !a || b.ts > a.ts ? b : a, null);
     if (myLatest) {
       lastDropTs = Math.max(lastDropTs, myLatest.ts);
@@ -2327,6 +2678,7 @@ if (FIREBASE_ON && auth) {
   onAuthStateChanged(auth, async (user) => {
     unsubAll();
     if (user) {
+      const wasFirstAnon = user.isAnonymous && !localStorage.getItem(ANON_WELCOMED_KEY);
       currentUser = user;
       // Ensure user doc exists; merge displayName/photoURL
       try {
@@ -2336,12 +2688,12 @@ if (FIREBASE_ON && auth) {
           await setDoc(ref, {
             displayName: user.displayName || null,
             photoURL: user.photoURL || null,
+            avatarEmoji: null,
             xp, completed: [...completed], plan, lang, mapStyleId,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp()
           });
         } else {
-          // Update display name/photo if Google etc.
           await setDoc(ref, {
             displayName: user.displayName || cur.data().displayName || null,
             photoURL: user.photoURL || cur.data().photoURL || null,
@@ -2351,13 +2703,24 @@ if (FIREBASE_ON && auth) {
       } catch(e) { console.warn(e); }
       subscribeUserData();
       updateUserBtn();
+
+      // Welcome the very first anonymous session
+      if (wasFirstAnon) {
+        localStorage.setItem(ANON_WELCOMED_KEY, '1');
+        setTimeout(() => toast(t('welcomeAnon'), 'win'), 1200);
+      }
     } else {
       currentUser = null;
+      myAvatarEmoji = null;
+      myDisplayName = null;
       allPins = []; savedLocations = [];
       renderAllMarkers(); renderLocationsList(); renderDropLocRow();
       updateUserBtn();
-      // Auto sign-in anonymously after sign-out so the app stays usable
-      //try { await signInAnonymously(auth); } catch(e) { console.warn(e); }
+      // Auto sign-in anonymously so the app always has a user — UNLESS we're
+      // mid-migration, in which case the migration code will handle sign-in.
+      if (!migrating) {
+        try { await signInAnonymously(auth); } catch(e) { console.warn('Auto-anon failed', e); }
+      }
     }
   });
 } else {
@@ -2409,6 +2772,8 @@ $('addLocOpenBtn').addEventListener('click', () => {
   closeSheets();
   setTimeout(() => openAddLocSheet(null), 200);
 });
+$('saveProfileBtn').addEventListener('click', saveProfileChanges);
+$('deleteAccountBtn').addEventListener('click', deleteMyAccount);
 
 /* ================================================================
  * INIT
