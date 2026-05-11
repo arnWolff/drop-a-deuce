@@ -746,6 +746,74 @@
 }
 .ios-step-txt { font-size: 13px; line-height: 1.35; }
 .ios-step-txt b { font-weight: 800; color: var(--brown-1); }
+/* ===== KINGDOM LABELS ===== */
+.kingdom-label {
+  background: var(--cream);
+  border: 2px solid var(--kc, var(--brown-1));
+  border-radius: 10px;
+  padding: 4px 10px;
+  font-family: 'Bagel Fat One', cursive;
+  font-size: 11px;
+  color: var(--kc, var(--brown-1));
+  text-align: center;
+  box-shadow: 2px 2px 0 rgba(61,40,23,0.3);
+  white-space: nowrap;
+  pointer-events: none;
+  line-height: 1.15;
+}
+.kingdom-label small {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  opacity: 0.75;
+  color: var(--brown-2);
+  display: block;
+  margin-top: 1px;
+}
+
+/* ===== FART MARKERS ===== */
+.fart-marker {
+  display: flex; flex-direction: column; align-items: center;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+.fart-marker .fart-em {
+  font-size: 34px; line-height: 1;
+  animation: fart-pulse 1.6s ease-in-out infinite;
+}
+.fart-marker .fart-timer {
+  background: var(--brown-1); color: var(--cream);
+  font-family: 'Bagel Fat One', cursive; font-size: 10px;
+  padding: 1px 7px; border-radius: 999px; margin-top: -4px;
+}
+@keyframes fart-pulse {
+  0%,100% { transform: scale(1) rotate(-4deg); }
+  50%     { transform: scale(1.18) rotate(4deg); }
+}
+.fart-cloud { animation: fart-cloud-pulse 3s ease-in-out infinite; }
+@keyframes fart-cloud-pulse {
+  0%,100% { stroke-opacity: 0.6; fill-opacity: 0.12; }
+  50%     { stroke-opacity: 1;   fill-opacity: 0.22; }
+}
+
+/* ===== FART FAB (right of drop FAB) ===== */
+.fart-fab {
+  position: fixed; right: 14px; bottom: 28px; z-index: 999;
+  background: var(--cream); border: 2px solid var(--brown-1); border-radius: 50%;
+  width: 54px; height: 54px; font-size: 26px; cursor: pointer;
+  box-shadow: 3px 3px 0 var(--brown-1);
+  display: flex; align-items: center; justify-content: center;
+  transition: transform .1s, box-shadow .1s;
+  animation: fart-fab-wiggle 4s ease-in-out infinite;
+}
+.fart-fab:active { transform: translate(3px,3px); box-shadow: 0 0 0 var(--brown-1); }
+@keyframes fart-fab-wiggle {
+  0%,90%,100% { transform: rotate(0); }
+  93% { transform: rotate(-10deg); }
+  96% { transform: rotate(10deg); }
+}
+
+/* TP color in stats */
+.stats .num.tp { color: var(--gold-deep); }
 </style>
 </head>
 <body>
@@ -793,6 +861,7 @@
     <div class="stats-item"><span class="num" id="myToday">0</span><span class="lbl" data-i18n="today">Aujourd'hui</span></div>
     <div class="stats-item"><span class="num" id="myTotal">0</span><span class="lbl" data-i18n="total">Total</span></div>
     <div class="stats-item"><span class="num lvl" id="lvlNum">1</span><span class="lbl" data-i18n="level">Niv</span></div>
+    <div class="stats-item"><span class="num tp" id="tpNum">0</span><span class="lbl">🧻 TP</span></div>
   </div>
 </div>
 
@@ -824,6 +893,7 @@
 <div class="fab-wrap">
   <div class="fab-label" id="fabLabel" data-i18n="tap">Tape quand c'est le moment</div>
   <button class="fab" id="dropBtn">💩</button>
+  <button class="fart-fab" id="fartBtn" aria-label="Drop a stink cloud" title="Drop a stink cloud">💨</button>
 </div>
 
 <!-- ===== SHEETS ===== -->
@@ -1173,6 +1243,19 @@ const FREE_DAILY_LIMIT = 3;
 const CLUSTER_PRECISION = 4; // ~11m at equator (degrees rounded to 4dp)
 const PIN_LOAD_LIMIT = 300;
 
+// === KINGDOM / EMPIRE ===
+const KINGDOM_MIN_PINS = 3;        // pins needed before a kingdom appears
+const KINGDOM_OPACITY = 0.18;
+const TRIBUTE_TP_BONUS = 5;        // TP bonus invader gets for daring to drop inside
+const TP_PER_DROP = 3;             // TP every drop awards
+const TP_PER_INVASION = 5;         // bonus TP for invading someone else's kingdom
+
+// === FARTS / STINK CLOUDS ===
+const FART_COST_TP = 10;
+const FART_DURATION_MS = 60 * 60 * 1000; // 1 hour
+const FART_RADIUS_M = 200;
+const FART_CLAIM_TP = 15;          // TP awarded to the first drop inside an active fart
+
 const MAP_STYLES = [
   { id:'voyager',   em:'🎨', en:['Colorful','Bright & vivid'],       fr:['Colorée','Vive et joyeuse'],
     url:'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
@@ -1188,10 +1271,7 @@ const MAP_STYLES = [
     attr:'© OpenStreetMap © OpenTopoMap', maxZoom:17 },
   { id:'satellite', em:'🛰️', en:['Satellite','From space 🚀'],        fr:['Satellite','Vue du ciel 🚀'],
     url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    attr:'© Esri', maxZoom:18 },
-  { id:'watercolor',em:'🎭', en:['Watercolor','Artistic & dreamy'],   fr:['Aquarelle','Artistique & poétique'],
-    url:'https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg',
-    attr:'© Stadia © Stamen © OSM', maxZoom:16 }
+    attr:'© Esri', maxZoom:18 }
 ];
 
 const CHALLENGES = [
@@ -1324,7 +1404,16 @@ const I18N = {
     aiCustomLbl:'✏️ Or your own idea',
     aiCustomPlaceholder:'e.g. cyberpunk neon throne…',
     aiGenerate:'🎨 Go',
-    aiKept:'Locked in! ✨'
+    aiKept:'Locked in! ✨',
+    stinkCloud:'Stink Cloud',
+    left:'left',
+    firstInWins:'First to drop here wins {tp} 🧻',
+    fartDropped:'💨 Stink cloud deployed!',
+    braveSoul:'💨 Brave Soul! +{tp} 🧻',
+    invaded:'👑 Invaded {name}\'s kingdom! +{tp} 🧻',
+    needTp:'Not enough 🧻 — you need {n}',
+    signInToFart:'Sign in to deploy farts 💨',
+    tapMapForFart:'Tap the map to drop your stink cloud'
   },
   fr: {
     appName:'Pose ta pêche', tagline:'La façon fun de cartographier ta #2',
@@ -1428,7 +1517,16 @@ const I18N = {
     aiCustomLbl:'✏️ Ou ton idée',
     aiCustomPlaceholder:'ex: trône cyberpunk néon…',
     aiGenerate:'🎨 Go',
-    aiKept:'C\'est dans la boîte ! ✨'
+    aiKept:'C\'est dans la boîte ! ✨',
+    stinkCloud:'Nuage Puant',
+    left:'restant',
+    firstInWins:'Le premier à poser ici gagne {tp} 🧻',
+    fartDropped:"💨 Caisse lâchée !",
+    braveSoul:'💨 Âme Téméraire ! +{tp} 🧻',
+    invaded:"👑 Royaume de {name} envahi ! +{tp} 🧻",
+    needTp:"Pas assez de 🧻 — il en faut {n}",
+    signInToFart:'Connecte-toi pour lâcher des caisses 💨',
+    tapMapForFart:'Tape la carte pour lâcher ta caisse'
   }
 };
 
@@ -1449,6 +1547,11 @@ function hasAnonData() {
 }
 let xp = 0;
 const completed = new Set();
+
+let tp = 0;                                // toilet paper currency
+const kingdomLayers = new Map();           // uid -> { polygon, label, hull, area, ownerName }
+const fartLayers = new Map();              // fartId -> { circle, marker }
+let fartTickTimer = null;                  // refreshes the on-screen "Xm left" countdowns
 
 let currentUser = null;       // Firebase user object (or null)
 let userProfile = null;       // Firestore user doc data
@@ -1494,7 +1597,7 @@ function saveLocal() {
   try {
     localStorage.setItem(SK, JSON.stringify({
       pins: allPins.filter(p => p.mine),
-      xp, completed: [...completed], plan, lang, mapStyleId,
+      xp, completed: [...completed], plan, lang, mapStyleId, tp,
       savedLocations, lastDropTs
     }));
   } catch(e) {}
@@ -1800,18 +1903,295 @@ function escapeHtml(s) {
 function rebuildClusterIndex() {
   clusterIndex.clear();
   allPins.forEach(p => {
+    if (p.kind === 'fart') return;       // farts are rendered separately
     const k = clusterKeyFor(p.lat, p.lng);
     if (!clusterIndex.has(k)) clusterIndex.set(k, []);
     clusterIndex.get(k).push(p);
   });
 }
 
+/* ================================================================
+ * GEOMETRY UTILITIES (convex hull, point-in-polygon, area)
+ * ================================================================ */
+
+// Andrew's monotone chain — O(n log n)
+function convexHull(points) {
+  if (points.length < 3) return points.slice();
+  const pts = points.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const cross = (O, A, B) => (A[0]-O[0])*(B[1]-O[1]) - (A[1]-O[1])*(B[0]-O[0]);
+  const lower = [];
+  for (const p of pts) {
+    while (lower.length >= 2 && cross(lower[lower.length-2], lower[lower.length-1], p) <= 0) lower.pop();
+    lower.push(p);
+  }
+  const upper = [];
+  for (let i = pts.length-1; i >= 0; i--) {
+    const p = pts[i];
+    while (upper.length >= 2 && cross(upper[upper.length-2], upper[upper.length-1], p) <= 0) upper.pop();
+    upper.push(p);
+  }
+  upper.pop(); lower.pop();
+  return lower.concat(upper);
+}
+
+function pointInPolygon(pt, poly) {
+  const [x, y] = pt;
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, yi] = poly[i], [xj, yj] = poly[j];
+    if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) inside = !inside;
+  }
+  return inside;
+}
+
+// Rough km² for a small polygon in lat/lng. Good enough for territory display.
+function polygonAreaKm2(poly) {
+  if (poly.length < 3) return 0;
+  let area = 0;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    area += (poly[j][1] + poly[i][1]) * (poly[j][0] - poly[i][0]);
+  }
+  area = Math.abs(area / 2);
+  const midLat = poly.reduce((s, p) => s + p[0], 0) / poly.length;
+  return area * 111 * 111 * Math.cos(midLat * Math.PI / 180);
+}
+
+// Haversine distance in meters
+function distMeters(lat1, lng1, lat2, lng2) {
+  const R = 6371000;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 +
+            Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+// Stable per-user color
+function userColor(uid) {
+  if (!uid) return '#8a6240';
+  let h = 0;
+  for (let i = 0; i < uid.length; i++) h = (h * 31 + uid.charCodeAt(i)) >>> 0;
+  return `hsl(${h % 360}, 65%, 45%)`;
+}
+
+function kingdomTitle(areaKm2) {
+  if (areaKm2 < 0.1) return { en: 'Squire 🛡️',   fr: 'Écuyer 🛡️' };
+  if (areaKm2 < 1)   return { en: 'Baron 🏘️',    fr: 'Baron 🏘️' };
+  if (areaKm2 < 5)   return { en: 'Duke 🏰',     fr: 'Duc 🏰' };
+  if (areaKm2 < 25)  return { en: 'King 👑',     fr: 'Roi 👑' };
+  return                  { en: 'Emperor 👑✨', fr: 'Empereur 👑✨' };
+}
+
+/* ================================================================
+ * KINGDOMS
+ * ================================================================ */
+function clearKingdoms() {
+  kingdomLayers.forEach(k => {
+    if (k.polygon) map.removeLayer(k.polygon);
+    if (k.label)   map.removeLayer(k.label);
+  });
+  kingdomLayers.clear();
+}
+
+function renderKingdoms() {
+  clearKingdoms();
+
+  // Group regular (non-fart) pins by uid
+  const byUid = new Map();
+  allPins.forEach(p => {
+    if (p.kind === 'fart') return;
+    if (!p.uid) return;
+    if (!byUid.has(p.uid)) byUid.set(p.uid, { pts: [], sample: p });
+    byUid.get(p.uid).pts.push([p.lat, p.lng]);
+  });
+
+  byUid.forEach((bucket, uid) => {
+    if (bucket.pts.length < KINGDOM_MIN_PINS) return;
+    const hull = convexHull(bucket.pts);
+    if (hull.length < 3) return;
+    const area = polygonAreaKm2(hull);
+    const title = kingdomTitle(area);
+    const mine = currentUser && uid === currentUser.uid;
+    const color = mine ? '#f4c430' : userColor(uid);
+
+    const polygon = L.polygon(hull, {
+      color, fillColor: color,
+      fillOpacity: KINGDOM_OPACITY,
+      weight: 2,
+      dashArray: mine ? null : '6,5',
+      interactive: false
+    }).addTo(map);
+
+    const cx = hull.reduce((s,p) => s + p[0], 0) / hull.length;
+    const cy = hull.reduce((s,p) => s + p[1], 0) / hull.length;
+    const ownerName = mine
+      ? (myDisplayName || t('yourPin'))
+      : (bucket.sample.displayName || t('anonPin'));
+    const titleStr = title[lang] || title.en;
+    const html = `<div class="kingdom-label" style="--kc:${color}">
+      ${titleStr}<br><small>${escapeHtml(ownerName)} · ${area.toFixed(2)} km²</small>
+    </div>`;
+    const label = L.marker([cx, cy], {
+      icon: L.divIcon({ className:'', html, iconSize:[140,42], iconAnchor:[70,21] }),
+      interactive: false
+    }).addTo(map);
+
+    kingdomLayers.set(uid, { polygon, label, hull, area, ownerName });
+  });
+}
+
+// Return the SMALLEST kingdom containing (lat,lng), or null. Smaller = more specific overlap.
+function findKingdomAt(lat, lng) {
+  let best = null;
+  kingdomLayers.forEach((k, uid) => {
+    if (pointInPolygon([lat, lng], k.hull)) {
+      if (!best || k.area < best.area) best = { uid, ...k };
+    }
+  });
+  return best;
+}
+
+/* ================================================================
+ * FARTS / STINK CLOUDS
+ * ================================================================ */
+function clearFarts() {
+  fartLayers.forEach(f => {
+    if (f.circle) map.removeLayer(f.circle);
+    if (f.marker) map.removeLayer(f.marker);
+  });
+  fartLayers.clear();
+}
+
+function renderFarts() {
+  clearFarts();
+  const now = Date.now();
+  allPins.forEach(p => {
+    if (p.kind !== 'fart') return;
+    if (p.expiresAt && p.expiresAt < now) return;
+    if (p.claimedBy) return;
+
+    const mine = currentUser && p.uid === currentUser.uid;
+    const color = mine ? '#7cb342' : '#8e6a4d';
+
+    const circle = L.circle([p.lat, p.lng], {
+      radius: p.radiusM || FART_RADIUS_M,
+      color, fillColor: color, fillOpacity: 0.15,
+      weight: 2, dashArray: '4,4',
+      interactive: false, className: 'fart-cloud'
+    }).addTo(map);
+
+    const remainMin = Math.max(0, Math.ceil((p.expiresAt - now) / 60000));
+    const html = `<div class="fart-marker">
+      <span class="fart-em">💨</span>
+      <span class="fart-timer">${remainMin}m</span>
+    </div>`;
+    const marker = L.marker([p.lat, p.lng], {
+      icon: L.divIcon({ className:'', html, iconSize:[60,60], iconAnchor:[30,30] })
+    }).addTo(map);
+
+    const popup = `<div class="popup-card"><div class="popup-body">
+      <div class="popup-title">💨 ${t('stinkCloud')}</div>
+      <div class="popup-meta">⏰ ${remainMin}m ${t('left')}</div>
+      <div class="popup-meta">🎯 ${t('firstInWins').replace('{tp}', FART_CLAIM_TP)}</div>
+      <div class="popup-author">
+        <span class="av">${p.avatarEmoji || '👤'}</span>
+        ${escapeHtml(p.displayName || t('anonPin'))}
+      </div>
+    </div></div>`;
+    marker.bindPopup(popup);
+
+    fartLayers.set(p.id, { circle, marker });
+  });
+
+  // Re-tick timers every 30s
+  if (!fartTickTimer) {
+    fartTickTimer = setInterval(() => {
+      const anyFart = allPins.some(p => p.kind === 'fart' && !p.claimedBy && p.expiresAt > Date.now());
+      if (anyFart) renderFarts();
+      else { clearInterval(fartTickTimer); fartTickTimer = null; }
+    }, 30000);
+  }
+}
+
+// Locate an active, unclaimed, foreign fart this drop falls inside
+function findClaimableFartAt(lat, lng) {
+  const now = Date.now();
+  for (const p of allPins) {
+    if (p.kind !== 'fart') continue;
+    if (p.claimedBy) continue;
+    if (p.expiresAt && p.expiresAt < now) continue;
+    if (currentUser && p.uid === currentUser.uid) continue; // can't claim your own fart
+    const d = distMeters(lat, lng, p.lat, p.lng);
+    if (d <= (p.radiusM || FART_RADIUS_M)) return p;
+  }
+  return null;
+}
+
+async function dropFart(lat, lng, fartType = 'stink') {
+  if (!currentUser) { toast(t('signInToFart'), 'warn'); return false; }
+  if (tp < FART_COST_TP) { toast(t('needTp').replace('{n}', FART_COST_TP), 'warn'); return false; }
+
+  const ts = Date.now();
+  const fartData = {
+    lat, lng, ts,
+    kind: 'fart',
+    fartType,
+    expiresAt: ts + FART_DURATION_MS,
+    radiusM: FART_RADIUS_M,
+    claimedBy: null,
+    uid: currentUser.uid,
+    displayName: myDisplayName || currentUser.displayName || null,
+    avatarEmoji: myAvatarEmoji || null
+  };
+
+  if (FIREBASE_ON) {
+    try {
+      await addDoc(collection(db, 'pins'), { ...fartData, createdAt: serverTimestamp() });
+    } catch (e) {
+      toast('❌ ' + (e.message || 'Fart failed'), 'err');
+      return false;
+    }
+  } else {
+    allPins.push({ id: 'local_fart_'+ts, ...fartData, mine: true });
+    renderAllMarkers();
+    saveLocal();
+  }
+
+  tp -= FART_COST_TP;
+  persistUserPrefs();
+  updateMyStats();
+  toast(t('fartDropped'), 'win');
+  confetti();
+  map.flyTo([lat, lng], 15, { duration: 0.7 });
+  return true;
+}
+
+async function claimFart(fart) {
+  if (!FIREBASE_ON || !currentUser) return;
+  try {
+    await updateDoc(doc(db, 'pins', fart.id), {
+      claimedBy: currentUser.uid,
+      claimedAt: serverTimestamp(),
+      claimedName: myDisplayName || currentUser.displayName || null
+    });
+  } catch (e) {
+    console.warn('fart claim failed', e);
+  }
+}
+
 function renderAllMarkers() {
-  // remove old markers
+  // Remove old markers
   clusterMarkers.forEach(m => map.removeLayer(m));
   clusterMarkers.clear();
   markersById.clear();
 
+  // 1. Draw kingdoms (under markers)
+  renderKingdoms();
+
+  // 2. Draw farts (under markers)
+  renderFarts();
+
+  // 3. Cluster regular pins (existing logic)
   rebuildClusterIndex();
 
   clusterIndex.forEach((pinsArr, key) => {
@@ -1823,46 +2203,10 @@ function renderAllMarkers() {
     const marker = L.marker([rep.lat, rep.lng], {
       icon: makeIcon('💩', ch ? ch.em : '', anyMine, totalCount)
     }).addTo(map);
-
-    marker.bindPopup(popupHtml(rep, pinsArr), {
-      autoPan: true,
-      autoPanPaddingTopLeft:    [40, 110],
-      autoPanPaddingBottomRight:[40, 60],
-      maxWidth: 260
-    });
-
-    // SLIDE the marker to the center of the map on click
-    marker.on('click', () => {
-      map.panTo(marker.getLatLng(), { animate: true, duration: 0.45, easeLinearity: 0.3 });
-    });
-
-    // Wire up popup interactions when it actually opens
-    marker.on('popupopen', (e) => {
-      const popupEl = e.popup.getElement();
-      if (!popupEl) return;
-
-      // Photo → lightbox
-      const photo = popupEl.querySelector('.popup-photo');
-      if (photo) {
-        photo.addEventListener('click', () => {
-          const metaParts = [];
-          if (ch) metaParts.push(`${ch.em} ${escapeHtml(chName(ch))}`);
-          metaParts.push(new Date(rep.ts).toLocaleString(lang==='fr'?'fr-FR':'en-US',
-            { dateStyle: 'medium', timeStyle: 'short' }));
-          openLightbox(photo.src, metaParts.join(' · '));
-        });
-      }
-
-      // History button → cluster sheet (always when count > 1 now)
-      const histBtn = popupEl.querySelector('.popup-history-btn');
-      if (histBtn) histBtn.addEventListener('click', () => openHistorySheet(key));
-    });
-
+    marker.bindPopup(popupHtml(rep, pinsArr));
     clusterMarkers.set(key, marker);
-    pinsArr.forEach(p => p.id && markersById.set(p.id, marker));
+    pinsArr.forEach(p => markersById.set(p.id, marker));
   });
-
-  updateMyStats();
 }
 
 function updateMyStats() {
@@ -1872,6 +2216,7 @@ function updateMyStats() {
   $('myTotal').textContent = myPins.length;
   $('lvlNum').textContent = level();
   $('challengeCount').textContent = completed.size;
+  const tpEl = $('tpNum'); if (tpEl) tpEl.textContent = tp;
 }
 
 function todayMineCount() {
@@ -2434,6 +2779,36 @@ $('dropBtn').addEventListener('click', () => {
   openSheet('dropSheet');
 });
 
+$('fartBtn').addEventListener('click', async () => {
+  if (!FIREBASE_ON) { toast(t('offlineBanner'), 'warn'); return; }
+  if (!currentUser) { toast(t('signInToFart'), 'warn'); return; }
+  if (tp < FART_COST_TP) { toast(t('needTp').replace('{n}', FART_COST_TP), 'warn'); return; }
+
+  // Use current GPS, or fall back to tap-to-drop on the map
+  if (userGpsCoords) {
+    await dropFart(userGpsCoords[0], userGpsCoords[1]);
+    return;
+  }
+  toast(t('locating'));
+  if (!navigator.geolocation) { toast(t('tapMapForFart'), 'warn'); enableTapToFart(); return; }
+  navigator.geolocation.getCurrentPosition(
+    pos => dropFart(pos.coords.latitude, pos.coords.longitude),
+    () => { toast(t('tapMapForFart'), 'warn'); enableTapToFart(); },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+});
+
+let fartTapMode = false;
+function enableTapToFart() {
+  if (fartTapMode) return; fartTapMode = true;
+  const handler = async (e) => {
+    map.off('click', handler);
+    fartTapMode = false;
+    await dropFart(e.latlng.lat, e.latlng.lng);
+  };
+  map.on('click', handler);
+}
+
 function rateLimitRemainMs() {
   if (!lastDropTs) return 0;
   return Math.max(0, RATE_LIMIT_MS - (Date.now() - lastDropTs));
@@ -2465,6 +2840,12 @@ async function commitDrop(lat, lng, challenge, photo, locationName=null) {
     toast(t('rateLimit').replace('{s}', Math.ceil(remain/1000)), 'warn');
     return;
   }
+
+  // Empire & fart detection BEFORE writing
+  const kingdom = findKingdomAt(lat, lng);
+  const isInvasion = kingdom && currentUser && kingdom.uid !== currentUser.uid;
+  const claimedFart = findClaimableFartAt(lat, lng);
+
   lastDropTs = Date.now();
   startCooldownIndicator();
   saveLocal();
@@ -2478,24 +2859,36 @@ async function commitDrop(lat, lng, challenge, photo, locationName=null) {
     displayName: myDisplayName || currentUser?.displayName || null,
     photoURL: currentUser?.photoURL || null,
     avatarEmoji: myAvatarEmoji || null,
-    uid: currentUser?.uid || null
+    uid: currentUser?.uid || null,
+    kind: 'pin',
+    invadedUid: isInvasion ? kingdom.uid : null
   };
 
   if (FIREBASE_ON && currentUser) {
     try {
-      const docRef = await addDoc(collection(db, 'pins'), {
-        ...pinData,
-        createdAt: serverTimestamp()
-      });
-      // Optimistic add (snapshot will reconcile)
-      // Don't push manually — onSnapshot will deliver it
+      await addDoc(collection(db, 'pins'), { ...pinData, createdAt: serverTimestamp() });
+
+      // Write a tribute notification doc so the kingdom owner can be alerted
+      if (isInvasion) {
+        addDoc(collection(db, 'tributes'), {
+          fromUid: currentUser.uid,
+          fromName: myDisplayName || currentUser.displayName || null,
+          toUid: kingdom.uid,
+          amount: TRIBUTE_TP_BONUS,
+          kingdomArea: kingdom.area,
+          lat, lng, ts,
+          createdAt: serverTimestamp()
+        }).catch(e => console.warn('tribute write', e));
+      }
+
+      // Claim a foreign fart that we just dropped inside
+      if (claimedFart) await claimFart(claimedFart);
     } catch (e) {
       console.error(e);
       toast('❌ ' + (e.message || 'Drop failed'), 'err');
       return;
     }
   } else {
-    // Offline mode
     const pin = { id: 'local_'+ts, ...pinData, mine: true };
     allPins.push(pin);
     renderAllMarkers();
@@ -2506,15 +2899,22 @@ async function commitDrop(lat, lng, challenge, photo, locationName=null) {
   map.flyTo([lat, lng], 16, { duration: 0.8 });
   confetti();
 
-  // XP & completion (local; synced to firestore via user doc)
+  // XP & TP & completion
   const oldLevel = level();
   xp += challenge.xp;
+  tp += TP_PER_DROP;
+  if (isInvasion)   tp += TP_PER_INVASION;
+  if (claimedFart)  tp += FART_CLAIM_TP;
   const isFirst = !completed.has(challenge.id);
   completed.add(challenge.id);
   persistUserPrefs();
   flash($('globalTotal')); flash($('globalToday'));
+  updateMyStats();
+
   setTimeout(() => toast(t('dropped').replace('{xp}', challenge.xp), 'win'), 250);
-  if (isFirst) setTimeout(() => showAchievement(challenge), 700);
+  if (isInvasion)  setTimeout(() => toast(t('invaded').replace('{name}', kingdom.ownerName).replace('{tp}', TP_PER_INVASION), 'win'), 900);
+  if (claimedFart) setTimeout(() => toast(t('braveSoul').replace('{tp}', FART_CLAIM_TP), 'win'), 1500);
+  if (isFirst)     setTimeout(() => showAchievement(challenge), 700);
   if (level() > oldLevel) setTimeout(() => toast(t('levelUp')+' LVL '+level(), 'win'), 1800);
 }
 
@@ -3214,10 +3614,10 @@ async function persistUserPrefs() {
   if (!FIREBASE_ON || !currentUser) return;
   try {
     await setDoc(doc(db, 'users', currentUser.uid), {
-      xp, completed: [...completed], plan, lang, mapStyleId,
+      xp, completed: [...completed], plan, lang, mapStyleId, tp,
       displayName: currentUser.displayName || null,
       photoURL: currentUser.photoURL || null,
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
     }, { merge: true });
   } catch(e) { console.warn('User pref save failed', e); }
 }
@@ -3297,6 +3697,7 @@ async function migrateAnonTo(signInTarget) {
     ]);
     await setDoc(doc(db, 'users', newUser.uid), {
       xp: Math.max(existing.xp || 0, anonDoc?.xp || 0),
+      tp: Math.max(existing.tp || 0, anonDoc?.tp || 0),
       completed: [...mergedCompleted],
       plan: (existing.plan === 'premium' || anonDoc?.plan === 'premium') ? 'premium' : 'free',
       avatarEmoji: existing.avatarEmoji || anonDoc?.avatarEmoji || null,
@@ -3346,6 +3747,7 @@ function subscribeUserData() {
         completed.clear();
         d.completed.forEach(id => completed.add(id));
       }
+      if (typeof d.tp === 'number') tp = d.tp;
       if (d.plan === 'premium' || d.plan === 'free') plan = d.plan;
       if (d.lang === 'en' || d.lang === 'fr') {
         if (d.lang !== lang) { lang = d.lang; applyLang(); }
