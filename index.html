@@ -22,6 +22,8 @@
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" crossorigin="anonymous" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" crossorigin="anonymous"></script>
+<!-- AI photo magic (lazy: only fires when user toggles HD mode) -->
+<script src="https://js.puter.com/v2/" defer></script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -582,6 +584,80 @@
     border-radius: 999px; padding: 6px 12px; font-size: 11px; font-weight: 800;
     color: var(--brown-1); display: inline-flex; align-items: center; gap: 6px; }
 
+  /* ===== AI MAGIC ===== */
+  .photo-ai-btn { padding: 10px 12px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-deep));
+    border: 2px solid var(--brown-1); border-radius: 12px; font-family: inherit;
+    font-weight: 800; font-size: 11px; color: var(--brown-1); cursor: pointer;
+    box-shadow: 2px 2px 0 var(--brown-1); white-space: nowrap; }
+  .photo-ai-btn:active { transform: translate(2px,2px); box-shadow: 0 0 0 var(--brown-1); }
+
+  .ai-hd-toggle { display:flex; align-items:center; gap:10px; padding:10px 12px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-deep));
+    border: 2px solid var(--brown-1); border-radius: 14px; margin-bottom: 14px;
+    box-shadow: 2px 2px 0 var(--brown-1); }
+  .ai-hd-toggle .info { flex: 1; min-width: 0; }
+  .ai-hd-toggle .lbl { font-weight: 800; font-size: 13px; color: var(--brown-1); }
+  .ai-hd-toggle .hint { font-size: 10px; color: var(--brown-2); margin-top: 1px; }
+  .ai-hd-toggle .switch { width: 44px; height: 24px; background: var(--cream);
+    border: 2px solid var(--brown-1); border-radius: 999px; position: relative;
+    cursor: pointer; flex-shrink: 0; transition: background .2s; }
+  .ai-hd-toggle .switch::after { content:''; position:absolute; top:1px; left:1px;
+    width:18px; height:18px; background: var(--brown-1); border-radius:50%;
+    transition: transform .2s; }
+  .ai-hd-toggle .switch.on { background: var(--green); }
+  .ai-hd-toggle .switch.on::after { transform: translateX(20px); background: white; }
+
+  .ai-styles-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+    margin-bottom: 14px; }
+  .ai-style-card { background: var(--bg); border: 2px solid var(--brown-1);
+    border-radius: 14px; padding: 10px 4px; text-align: center; cursor: pointer;
+    font-family: inherit; color: var(--brown-1); box-shadow: 2px 2px 0 var(--brown-1);
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    transition: transform .15s, background .15s; }
+  .ai-style-card:active { transform: translate(2px,2px); box-shadow: 0 0 0 var(--brown-1); }
+  .ai-style-card.selected { background: var(--gold); transform: scale(1.04); }
+  .ai-style-card .em { font-size: 24px; line-height: 1; }
+  .ai-style-card .nm { font-size: 9px; font-weight: 700; line-height: 1.15; }
+
+  .ai-custom-row { display: flex; gap: 8px; margin-bottom: 14px; }
+  .ai-custom-row input { flex: 1; padding: 10px 12px; border: 2px solid var(--brown-1);
+    border-radius: 12px; background: var(--cream); font-family: inherit; font-size: 13px;
+    color: var(--brown-1); min-width: 0; }
+  .ai-custom-row input:focus { outline: none; box-shadow: 0 0 0 3px rgba(244,196,48,0.3); }
+  .ai-custom-row button { padding: 10px 14px; border: 2px solid var(--brown-1);
+    border-radius: 12px; background: var(--cream); font-family: inherit; font-weight: 800;
+    font-size: 12px; color: var(--brown-1); cursor: pointer;
+    box-shadow: 2px 2px 0 var(--brown-1); white-space: nowrap; }
+  .ai-custom-row button:active { transform: translate(2px,2px); box-shadow: 0 0 0 var(--brown-1); }
+
+  .ai-preview { display: none; margin-bottom: 14px; }
+  .ai-preview.show { display: block; }
+  .ai-preview-img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 14px;
+    border: 3px solid var(--brown-1); box-shadow: 4px 4px 0 var(--brown-1);
+    background: var(--bg); display: block; }
+  .ai-loading { width: 100%; aspect-ratio: 1; border-radius: 14px;
+    border: 3px solid var(--brown-1);
+    background: linear-gradient(135deg, var(--cream), var(--bg));
+    display: flex; align-items: center; justify-content: center; flex-direction: column;
+    gap: 12px; font-weight: 700; color: var(--brown-2); position: relative; overflow: hidden; }
+  .ai-loading::before { content:''; position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(244,196,48,0.3), transparent);
+    animation: ai-shimmer 1.6s infinite; }
+  @keyframes ai-shimmer { 0%{transform:translateX(-100%)} 100%{transform:translateX(100%)} }
+  .ai-loading-em { font-size: 48px; animation: ai-spin 2s ease-in-out infinite; }
+  @keyframes ai-spin { 0%,100%{transform:rotate(-10deg)} 50%{transform:rotate(10deg) scale(1.1)} }
+
+  .ai-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .ai-actions button { padding: 12px 6px; border: 2px solid var(--brown-1);
+    border-radius: 12px; font-family: inherit; font-weight: 800; font-size: 11px;
+    cursor: pointer; box-shadow: 2px 2px 0 var(--brown-1);
+    transition: transform .1s, box-shadow .1s; }
+  .ai-actions button:active { transform: translate(2px,2px); box-shadow: 0 0 0 var(--brown-1); }
+  .ai-actions .keep { background: var(--green); color: white; }
+  .ai-actions .retry { background: var(--gold); color: var(--brown-1); }
+  .ai-actions .cancel { background: var(--cream); color: var(--brown-1); }
+
   /* ===== SMALL SCREENS ===== */
   @media (max-width: 380px) {
     .logo{font-size:16px} .logo .logo-img { width: 26px; height: 26px; }
@@ -987,6 +1063,44 @@
   </div>
 </div>
 
+<!-- AI MAGIC SHEET -->
+<div class="sheet" id="aiSheet">
+  <div class="sheet-handle"></div>
+  <h2 data-i18n="aiTitle">AI Photo Magic ✨</h2>
+  <p class="sub" data-i18n="aiSub">Tap a style to reimagine your throne!</p>
+
+  <div class="ai-hd-toggle">
+    <span style="font-size:22px;">🪄</span>
+    <div class="info">
+      <div class="lbl" data-i18n="aiHdMode">HD Mode</div>
+      <div class="hint" data-i18n="aiHdHint">Transforms your real photo (Puter sign-in)</div>
+    </div>
+    <div class="switch" id="aiHdSwitch"></div>
+  </div>
+
+  <div class="ai-styles-grid" id="aiStylesGrid"></div>
+
+  <div class="section-title" data-i18n="aiCustomLbl">✏️ Or your own idea</div>
+  <div class="ai-custom-row">
+    <input type="text" id="aiCustomInput" maxlength="120" placeholder="e.g. cyberpunk neon throne…" />
+    <button id="aiCustomBtn" type="button" data-i18n="aiGenerate">🎨 Go</button>
+  </div>
+
+  <div class="ai-preview" id="aiPreview">
+    <img class="ai-preview-img" id="aiPreviewImg" alt="" style="display:none;" />
+    <div class="ai-loading" id="aiLoading" style="display:none;">
+      <div class="ai-loading-em">✨</div>
+      <div data-i18n="aiGenerating">Channeling AI magic…</div>
+    </div>
+  </div>
+
+  <div class="ai-actions" id="aiActions" style="display:none;">
+    <button class="cancel" id="aiCancelBtn" type="button" data-i18n="aiCancel">↩️ Original</button>
+    <button class="retry" id="aiRetryBtn" type="button" data-i18n="aiRetry">🎲 Retry</button>
+    <button class="keep" id="aiKeepBtn" type="button" data-i18n="aiKeep">✅ Keep</button>
+  </div>
+</div>
+
 <!-- ACHIEVEMENT POPUP -->
 <div class="ach" id="ach">
   <span class="em" id="achEmoji">🏆</span>
@@ -1198,7 +1312,19 @@ const I18N = {
     iosStep1:       'Tap the <b>Share</b> button at the bottom of Safari',
     iosStep2:       'Choose <b>"Add to Home Screen"</b>',
     iosStep3:       'Tap <b>Add</b> — done and done!',
-    gotIt:          'Got it!'
+    gotIt:          'Got it!',
+    // AI photo magic ✨
+    aiMagic:'✨ AI Magic', aiTitle:'AI Photo Magic ✨',
+    aiSub:'Tap a style to reimagine your throne!',
+    aiHdMode:'🪄 HD Mode', aiHdHint:'Transforms your real photo (Puter sign-in)',
+    aiGenerating:'✨ Channeling AI magic…',
+    aiKeep:'✅ Keep', aiRetry:'🎲 Retry', aiCancel:'↩️ Original',
+    aiError:'❌ AI hiccup. Try another style?',
+    aiNeedPhoto:'Take a photo first 📸',
+    aiCustomLbl:'✏️ Or your own idea',
+    aiCustomPlaceholder:'e.g. cyberpunk neon throne…',
+    aiGenerate:'🎨 Go',
+    aiKept:'Locked in! ✨'
   },
   fr: {
     appName:'Pose ta pêche', tagline:'La façon fun de cartographier ta #2',
@@ -1290,7 +1416,19 @@ const I18N = {
     iosStep1:       'Touche le bouton <b>Partager</b> en bas de Safari',
     iosStep2:       'Choisis <b>« Sur l\'écran d\'accueil »</b>',
     iosStep3:       'Tape <b>Ajouter</b>, et c\'est dans la poche !',
-    gotIt:          'Compris !'
+    gotIt:          'Compris !',
+    // Magie photo IA ✨
+    aiMagic:'✨ Magie IA', aiTitle:'Magie Photo IA ✨',
+    aiSub:'Tape un style pour réimaginer ton trône !',
+    aiHdMode:'🪄 Mode HD', aiHdHint:'Transforme ta vraie photo (connexion Puter)',
+    aiGenerating:"✨ Invocation de l'IA…",
+    aiKeep:'✅ Garder', aiRetry:'🎲 Réessayer', aiCancel:'↩️ Original',
+    aiError:'❌ Couac IA. Essaie un autre style ?',
+    aiNeedPhoto:"Prends d'abord une photo 📸",
+    aiCustomLbl:'✏️ Ou ton idée',
+    aiCustomPlaceholder:'ex: trône cyberpunk néon…',
+    aiGenerate:'🎨 Go',
+    aiKept:'C\'est dans la boîte ! ✨'
   }
 };
 
@@ -2100,9 +2238,13 @@ function renderPhotoRow() {
       : `<button class="photo-retake" id="retakePhoto" type="button">🔄 ${t('retake')}</button>`;
     row.innerHTML = `<div class="photo-preview-wrap">
       <div class="photo-preview"><img src="${pendingPhoto}" alt=""/><button class="x" id="rmPhoto" type="button">×</button></div>
-      ${retakeEl}
+      <div style="flex:1; display:flex; flex-direction:column; gap:6px; min-width:0;">
+        ${retakeEl}
+        <button class="photo-ai-btn" id="aiMagicBtn" type="button">${t('aiMagic')}</button>
+      </div>
     </div>`;
     $('rmPhoto').addEventListener('click', () => { pendingPhoto = null; renderPhotoRow(); });
+    $('aiMagicBtn').addEventListener('click', openAiSheet);
     if (!isMobile) {
       $('retakePhoto').addEventListener('click', () => {
         pendingPhoto = null; renderPhotoRow(); openWebcamModal();
@@ -2413,6 +2555,193 @@ function enableTapToDrop(challenge, photo) {
     tapMode = false;
   });
 }
+
+/* ================================================================
+ * AI PHOTO MAGIC ✨
+ * Pollinations (txt2img, free, no auth) + Puter.js (img2img, sign-in)
+ * ================================================================ */
+const AI_STYLES = [
+  { id:'renaissance', em:'🎨', en:'Renaissance', fr:'Renaissance',
+    prompt:'Renaissance oil painting, ornate golden ceramic toilet throne in a grand cathedral hall, dramatic chiaroscuro lighting, baroque masterpiece, Caravaggio style' },
+  { id:'haunted', em:'👻', en:'Haunted', fr:'Hanté',
+    prompt:'Gothic horror haunted bathroom, candlelit, foggy, eerie atmosphere, dark cinematic, vintage horror movie aesthetic' },
+  { id:'anime', em:'🌸', en:'Anime', fr:'Anime',
+    prompt:'Studio Ghibli anime style cozy magical bathroom, soft pastel colors, hand-drawn watercolor, whimsical' },
+  { id:'pixel', em:'🕹️', en:'8-bit', fr:'8-bit',
+    prompt:'8-bit pixel art bathroom, retro NES video game style, blocky vibrant colors, nostalgic 90s gaming' },
+  { id:'disco', em:'🪩', en:'Disco', fr:'Disco',
+    prompt:'1970s disco bathroom, mirror ball, glitter, funky retro vibe, neon party lights, groovy' },
+  { id:'vangogh', em:'🌻', en:'Van Gogh', fr:'Van Gogh',
+    prompt:'Van Gogh post-impressionist painting, swirling thick brush strokes, vibrant yellows and blues, starry night bathroom' },
+  { id:'wanted', em:'🤠', en:'Wanted', fr:'Recherché',
+    prompt:'Wild West wanted poster, sepia tone, vintage paper texture, old-timey western parchment, weathered' },
+  { id:'scifi', em:'🚀', en:'Sci-Fi', fr:'Sci-Fi',
+    prompt:'Futuristic sci-fi spaceship bathroom, chrome surfaces, neon blue lights, cyberpunk aesthetic, high-tech' }
+];
+
+let aiHdMode = false;             // false = Pollinations | true = Puter.js
+let selectedAiStyle = null;
+let originalPendingPhoto = null;  // backup user's pre-AI photo
+
+const aiName = (s) => s[lang] || s.en;
+
+function renderAiStyles() {
+  const grid = $('aiStylesGrid'); if (!grid) return;
+  grid.innerHTML = '';
+  AI_STYLES.forEach(s => {
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'ai-style-card' + (selectedAiStyle === s.id ? ' selected' : '');
+    card.innerHTML = `<span class="em">${s.em}</span><span class="nm">${aiName(s)}</span>`;
+    card.addEventListener('click', () => {
+      selectedAiStyle = s.id;
+      renderAiStyles();
+      runAiTransform(s.prompt);
+    });
+    grid.appendChild(card);
+  });
+}
+
+function openAiSheet() {
+  if (!pendingPhoto) { toast(t('aiNeedPhoto'), 'warn'); return; }
+  originalPendingPhoto = pendingPhoto;
+  selectedAiStyle = null;
+  $('aiPreview').classList.remove('show');
+  $('aiPreviewImg').style.display = 'none';
+  $('aiPreviewImg').src = '';
+  $('aiLoading').style.display = 'none';
+  $('aiActions').style.display = 'none';
+  $('aiCustomInput').value = '';
+  $('aiCustomInput').placeholder = t('aiCustomPlaceholder');
+  $('aiHdSwitch').classList.toggle('on', aiHdMode);
+  renderAiStyles();
+  $('dropSheet').classList.remove('open');
+  setTimeout(() => $('aiSheet').classList.add('open'), 60);
+}
+
+function returnToDropSheet() {
+  $('aiSheet').classList.remove('open');
+  setTimeout(() => {
+    $('dropSheet').classList.add('open');
+    renderPhotoRow();
+    updateConfirmBtn();
+  }, 60);
+}
+
+async function runAiTransform(prompt) {
+  $('aiPreview').classList.add('show');
+  $('aiPreviewImg').style.display = 'none';
+  $('aiPreviewImg').src = '';
+  $('aiLoading').style.display = 'flex';
+  $('aiActions').style.display = 'none';
+
+  let resultDataUrl = null;
+  try {
+    if (aiHdMode) {
+      resultDataUrl = await puterTransform(originalPendingPhoto, prompt);
+    } else {
+      resultDataUrl = await pollinationsTransform(prompt);
+    }
+  } catch (err) {
+    console.error('AI transform failed:', err);
+    toast(t('aiError'), 'err');
+    $('aiPreview').classList.remove('show');
+    $('aiLoading').style.display = 'none';
+    return;
+  }
+
+  $('aiLoading').style.display = 'none';
+  $('aiPreviewImg').src = resultDataUrl;
+  $('aiPreviewImg').style.display = 'block';
+  $('aiActions').style.display = 'grid';
+  pendingPhoto = resultDataUrl; // staged; "Cancel" reverts to originalPendingPhoto
+}
+
+/* Pollinations: txt2img — generates a new themed scene (free, no auth) */
+function pollinationsTransform(prompt) {
+  return new Promise((resolve, reject) => {
+    const seed = Math.floor(Math.random() * 999999);
+    const fullPrompt = `${prompt}, masterpiece, high quality, no people, no text, no words`;
+    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(fullPrompt)}?width=768&height=768&seed=${seed}&nologo=true&model=flux`;
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        const max = 600;
+        const r = Math.min(max / img.width, max / img.height, 1);
+        canvas.width = img.width * r;
+        canvas.height = img.height * r;
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', 0.7));
+      } catch (e) {
+        // CORS fallback: use raw URL (won't compress but will render in popup)
+        resolve(url);
+      }
+    };
+    img.onerror = () => reject(new Error('Pollinations failed'));
+    img.src = url;
+  });
+}
+
+/* Puter.js: img2img — actually transforms the user's photo (sign-in) */
+async function puterTransform(photoDataUrl, prompt) {
+  if (typeof puter === 'undefined') throw new Error('Puter.js not loaded');
+  const base64 = photoDataUrl.replace(/^data:image\/[a-z]+;base64,/i, '');
+  const image = await puter.ai.txt2img(prompt, {
+    model: 'gemini-2.5-flash-image-preview',
+    input_image: base64
+  });
+  return await new Promise((resolve, reject) => {
+    const finish = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        const max = 600;
+        const w = image.naturalWidth || image.width;
+        const h = image.naturalHeight || image.height;
+        const r = Math.min(max / w, max / h, 1);
+        canvas.width = w * r; canvas.height = h * r;
+        canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', 0.7));
+      } catch (e) { reject(e); }
+    };
+    if (image.complete && (image.naturalWidth || image.width)) finish();
+    else { image.onload = finish; image.onerror = () => reject(new Error('Puter image load failed')); }
+  });
+}
+
+/* AI sheet wiring */
+$('aiHdSwitch').addEventListener('click', () => {
+  aiHdMode = !aiHdMode;
+  $('aiHdSwitch').classList.toggle('on', aiHdMode);
+});
+$('aiCustomBtn').addEventListener('click', () => {
+  const customPrompt = $('aiCustomInput').value.trim();
+  if (!customPrompt) return;
+  selectedAiStyle = null;
+  renderAiStyles();
+  runAiTransform(customPrompt + ', creative bathroom scene, no people, no text');
+});
+$('aiCustomInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') $('aiCustomBtn').click();
+});
+$('aiKeepBtn').addEventListener('click', () => {
+  toast(t('aiKept'), 'win');
+  returnToDropSheet();
+});
+$('aiCancelBtn').addEventListener('click', () => {
+  pendingPhoto = originalPendingPhoto;
+  returnToDropSheet();
+});
+$('aiRetryBtn').addEventListener('click', () => {
+  if (selectedAiStyle) {
+    const s = AI_STYLES.find(x => x.id === selectedAiStyle);
+    if (s) runAiTransform(s.prompt);
+  } else {
+    const customPrompt = $('aiCustomInput').value.trim();
+    if (customPrompt) runAiTransform(customPrompt + ', creative bathroom scene, no people, no text');
+  }
+});
 
 /* ================================================================
  * HISTORY SHEET
