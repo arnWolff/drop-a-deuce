@@ -2272,6 +2272,234 @@ function initMap() {
     setTimeout(initMap, 100);
     return;
   }
+
+  /* ---------------------------------------------------------------------
+   HexCanvasLayer — a single <canvas> Leaflet layer that draws either
+   the H3 territory grid (high zoom) OR clever cluster badges (low zoom).
+   No DOM node per hex/cluster. Hit-tests clusters for tap-to-zoom.
+   --------------------------------------------------------------------- */
+  const HexCanvasLayer = L.Layer.extend({
+    initialize() {
+      this._lastClusters = []; // [{cx, cy, r, lat, lng, count}] for hit-test
+    },
+
+    onAdd(map) {
+      this._map = map;
+      const canvas = L.DomUtil.create('canvas', 'hex-canvas-overlay');
+      canvas.style.position = 'absolute';
+      canvas.style.left = '0';
+      canvas.style.top  = '0';
+      canvas.style.pointerEvents = 'none';
+      canvas.style.willChange = 'transform';
+      this._canvas = canvas;
+
+      // Sit in overlayPane: pans with the map for free during gestures
+      map.getPanes().overlayPane.appendChild(canvas);
+
+      map.on('move',   this._schedule, this);
+      map.on('zoom',   this._schedule, this);
+      map.on('moveend zoomend resize viewreset', this._reset, this);
+
+      this._reset();
+    },
+
+    onRemove(map) {
+      map.off('move',   this._schedule, this);
+      map.off('zoom',   this._schedule, this);
+      map.off('moveend zoomend resize viewreset', this._reset, this);
+      if (this._canvas) L.DomUtil.remove(this._canvas);
+      this._canvas = null;
+    },
+
+    /* Place the canvas at the top-left of the current viewport (in layer
+      coords) and resize to match the map. Then redraw. */
+    _reset() {
+      if (!this._canvas || !this._map) return;
+      const map  = this._map;
+      const size = map.getSize();
+      // Cap DPR at 2 — Retina is nice but on phones, more = wasted GPU
+      const dpr  = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+
+      if (this._canvas.width  !== size.x * dpr ||
+          this._canvas.height !== size.y * dpr) {
+        this._canvas.width  = size.x * dpr;
+        this._canvas.height = size.y * dpr;
+        this._canvas.style.width  = size.x + 'px';
+        this._canvas.style.height = size.y + 'px';
+      }
+
+      const topLeft = map.containerPointToLayerPoint([0, 0]);
+      L.DomUtil.setPosition(this._canvas, topLeft);
+      this._draw();
+    },
+
+    _schedule() {
+      if (hexUpdatePending) return;
+      hexUpdatePending = true;
+      requestAnimationFrame(() => {
+        hexUpdatePending = false;
+        // Reposition + redraw together — keeps the canvas perfectly registered
+        // with the map during inertia/fly animations.
+        this._reset();
+      });
+    },
+
+    _draw() {
+      const ctx = this._canvas.getContext('2d');
+      const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      const size = this._map.getSize();
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, size.x, size.y);
+      this._lastClusters.length = 0;
+
+      const zoom = this._map.getZoom();
+      if (zoom >= HEX_MIN_ZOOM) {
+        if (state.showZones) this._drawHexes(ctx);
+      } else {
+        this._drawClusters(ctx);
+      }
+    },
+
+    /* HIGH ZOOM — fixed H3 grid, one fill per occupied cell */
+    _drawHexes(ctx) {
+      if (typeof h3 === 'undefined') return;
+      const map = this._map;
+      const bounds = map.getBounds().pad(0.1);
+
+      // Aggregate visible pins into fixed-res cells
+      const cells = new Map();
+      for (const p of state.pins) {
+        const mine = state.user && p.uid === state.user.uid;
+        if (!mine && !state.showOthers) continue;
+        if (!bounds.contains([p.lat, p.lng])) continue;
+        const cell = h3.latLngToCell(p.lat, p.lng, HEX_FIXED_RES);
+        let info = cells.get(cell);
+        if (!info) { info = { count: 0, mine: false }; cells.set(cell, info); }
+        info.count++;
+        if (mine) info.mine = true;
+      }
+      if (cells.size > HEX_MAX_CELLS) return;
+
+      cells.forEach((info, cell) => {
+        const boundary = cellBoundary(cell);
+        if (!boundary || boundary.length < 6) return;
+
+        const intensity = Math.min(1, info.count / 5);
+        const rgb   = info.mine ? '255,107,157' : '255,138,101';
+        const alpha = 0.16 + intensity * 0.30;
+
+        ctx.beginPath();
+        for (let i = 0; i < boundary.length; i++) {
+          const pt = map.latLngToContainerPoint(boundary[i]);
+          if (i === 0) ctx.moveTo(pt.x, pt.y);
+          else         ctx.lineTo(pt.x, pt.y);
+        }
+        ctx.closePath();
+
+        ctx.fillStyle   = `rgba(${rgb},${alpha})`;
+        ctx.fill();
+
+        ctx.lineJoin    = 'round';
+        ctx.lineWidth   = 1.25;
+        ctx.strokeStyle = `rgba(${rgb},${Math.min(0.75, alpha + 0.30)})`;
+        ctx.stroke();
+      });
+    },
+
+    /* LOW ZOOM — friendly bubble clusters in screen space */
+    _drawClusters(ctx) {
+      const map  = this._map;
+      const bounds = map.getBounds().pad(0.05);
+      const grid = new Map();
+
+      for (const p of state.pins) {
+        const mine = state.user && p.uid === state.user.uid;
+        if (!mine && !state.showOthers) continue;
+        if (!bounds.contains([p.lat, p.lng])) continue;
+
+        const pt = map.latLngToContainerPoint([p.lat, p.lng]);
+        const gx = Math.floor(pt.x / CLUSTER_GRID_PX);
+        const gy = Math.floor(pt.y / CLUSTER_GRID_PX);
+        const key = gx + ':' + gy;
+
+        let info = grid.get(key);
+        if (!info) {
+          info = { count: 0, mine: 0, sumX: 0, sumY: 0, sumLat: 0, sumLng: 0 };
+          grid.set(key, info);
+        }
+        info.count++;
+        info.sumX += pt.x; info.sumY += pt.y;
+        info.sumLat += p.lat; info.sumLng += p.lng;
+        if (mine) info.mine++;
+      }
+
+      grid.forEach((info) => {
+        const cx = info.sumX / info.count;
+        const cy = info.sumY / info.count;
+        const lat = info.sumLat / info.count;
+        const lng = info.sumLng / info.count;
+        const isMine = info.mine === info.count;     // all mine
+        const mixed  = info.mine > 0 && !isMine;
+
+        // Radius: gentle log-ish growth, hard cap so it never overflows
+        const r = Math.min(30, 16 + Math.sqrt(info.count) * 3.2);
+
+        // Soft outer glow
+        const glowGrad = ctx.createRadialGradient(cx, cy, r, cx, cy, r + 14);
+        glowGrad.addColorStop(0, isMine ? 'rgba(255,107,157,0.40)'
+                                        : 'rgba(255,138,101,0.38)');
+        glowGrad.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = glowGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r + 14, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Main bubble — gradient fill for that brand feel
+        const grad = ctx.createLinearGradient(cx, cy - r, cx, cy + r);
+        if (isMine) { grad.addColorStop(0, '#ff8ab4'); grad.addColorStop(1, '#ff5a8d'); }
+        else if (mixed) { grad.addColorStop(0, '#ffa07a'); grad.addColorStop(1, '#ff6b9d'); }
+        else { grad.addColorStop(0, '#ffb38a'); grad.addColorStop(1, '#ff7a4d'); }
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        // Crisp white ring
+        ctx.lineWidth   = 2.5;
+        ctx.strokeStyle = '#ffffff';
+        ctx.stroke();
+
+        // Count label
+        const label = info.count > 999 ? '999+' : String(info.count);
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `800 ${info.count > 99 ? 12 : 14}px system-ui,-apple-system,Segoe UI,Roboto,sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.shadowColor = 'rgba(0,0,0,0.18)';
+        ctx.shadowBlur  = 2;
+        ctx.fillText(label, cx, cy + 0.5);
+        ctx.shadowBlur  = 0;
+
+        // Remember for hit-testing on tap
+        this._lastClusters.push({ cx, cy, r: r + 4, lat, lng, count: info.count });
+      });
+    },
+
+    /* Returns the cluster hit by a container point, or null. */
+    hitTestCluster(containerPoint) {
+      const x = containerPoint.x, y = containerPoint.y;
+      // Scan last drawn (small list, fast)
+      for (let i = this._lastClusters.length - 1; i >= 0; i--) {
+        const c = this._lastClusters[i];
+        const dx = x - c.cx, dy = y - c.cy;
+        if (dx * dx + dy * dy <= c.r * c.r) return c;
+      }
+      return null;
+    },
+  });
+
   map = L.map('map', {
     zoomControl: false,
     attributionControl: true,
@@ -2439,7 +2667,8 @@ function refreshAllMarkers() {
    Drawn into ONE canvas (no per-hex Leaflet object). Phone-friendly.
    ===================================================================== */
 
-let hexCanvas = null;                  // HexCanvasLayer instance (added once)
+let hexCanvas = null;                  // HexCanvasLayer instance
+let HexCanvasLayer;                    // Declare it, but don't define it yet
 const boundaryCache = new Map();       // h3 cell -> [[lat,lng],...] memoized
 let hexUpdatePending = false;          // rAF coalescing flag
 
@@ -2447,233 +2676,6 @@ const HEX_FIXED_RES   = 9;             // Locked H3 resolution — never changes
 const HEX_MIN_ZOOM    = 14;            // Hexes only render at this zoom and above
 const CLUSTER_GRID_PX = 64;            // Pixel size of the low-zoom cluster grid
 const HEX_MAX_CELLS   = 800;           // safety net
-
-/* ---------------------------------------------------------------------
-   HexCanvasLayer — a single <canvas> Leaflet layer that draws either
-   the H3 territory grid (high zoom) OR clever cluster badges (low zoom).
-   No DOM node per hex/cluster. Hit-tests clusters for tap-to-zoom.
-   --------------------------------------------------------------------- */
-const HexCanvasLayer = L.Layer.extend({
-  initialize() {
-    this._lastClusters = []; // [{cx, cy, r, lat, lng, count}] for hit-test
-  },
-
-  onAdd(map) {
-    this._map = map;
-    const canvas = L.DomUtil.create('canvas', 'hex-canvas-overlay');
-    canvas.style.position = 'absolute';
-    canvas.style.left = '0';
-    canvas.style.top  = '0';
-    canvas.style.pointerEvents = 'none';
-    canvas.style.willChange = 'transform';
-    this._canvas = canvas;
-
-    // Sit in overlayPane: pans with the map for free during gestures
-    map.getPanes().overlayPane.appendChild(canvas);
-
-    map.on('move',   this._schedule, this);
-    map.on('zoom',   this._schedule, this);
-    map.on('moveend zoomend resize viewreset', this._reset, this);
-
-    this._reset();
-  },
-
-  onRemove(map) {
-    map.off('move',   this._schedule, this);
-    map.off('zoom',   this._schedule, this);
-    map.off('moveend zoomend resize viewreset', this._reset, this);
-    if (this._canvas) L.DomUtil.remove(this._canvas);
-    this._canvas = null;
-  },
-
-  /* Place the canvas at the top-left of the current viewport (in layer
-     coords) and resize to match the map. Then redraw. */
-  _reset() {
-    if (!this._canvas || !this._map) return;
-    const map  = this._map;
-    const size = map.getSize();
-    // Cap DPR at 2 — Retina is nice but on phones, more = wasted GPU
-    const dpr  = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-
-    if (this._canvas.width  !== size.x * dpr ||
-        this._canvas.height !== size.y * dpr) {
-      this._canvas.width  = size.x * dpr;
-      this._canvas.height = size.y * dpr;
-      this._canvas.style.width  = size.x + 'px';
-      this._canvas.style.height = size.y + 'px';
-    }
-
-    const topLeft = map.containerPointToLayerPoint([0, 0]);
-    L.DomUtil.setPosition(this._canvas, topLeft);
-    this._draw();
-  },
-
-  _schedule() {
-    if (hexUpdatePending) return;
-    hexUpdatePending = true;
-    requestAnimationFrame(() => {
-      hexUpdatePending = false;
-      // Reposition + redraw together — keeps the canvas perfectly registered
-      // with the map during inertia/fly animations.
-      this._reset();
-    });
-  },
-
-  _draw() {
-    const ctx = this._canvas.getContext('2d');
-    const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-    const size = this._map.getSize();
-
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, size.x, size.y);
-    this._lastClusters.length = 0;
-
-    const zoom = this._map.getZoom();
-    if (zoom >= HEX_MIN_ZOOM) {
-      if (state.showZones) this._drawHexes(ctx);
-    } else {
-      this._drawClusters(ctx);
-    }
-  },
-
-  /* HIGH ZOOM — fixed H3 grid, one fill per occupied cell */
-  _drawHexes(ctx) {
-    if (typeof h3 === 'undefined') return;
-    const map = this._map;
-    const bounds = map.getBounds().pad(0.1);
-
-    // Aggregate visible pins into fixed-res cells
-    const cells = new Map();
-    for (const p of state.pins) {
-      const mine = state.user && p.uid === state.user.uid;
-      if (!mine && !state.showOthers) continue;
-      if (!bounds.contains([p.lat, p.lng])) continue;
-      const cell = h3.latLngToCell(p.lat, p.lng, HEX_FIXED_RES);
-      let info = cells.get(cell);
-      if (!info) { info = { count: 0, mine: false }; cells.set(cell, info); }
-      info.count++;
-      if (mine) info.mine = true;
-    }
-    if (cells.size > HEX_MAX_CELLS) return;
-
-    cells.forEach((info, cell) => {
-      const boundary = cellBoundary(cell);
-      if (!boundary || boundary.length < 6) return;
-
-      const intensity = Math.min(1, info.count / 5);
-      const rgb   = info.mine ? '255,107,157' : '255,138,101';
-      const alpha = 0.16 + intensity * 0.30;
-
-      ctx.beginPath();
-      for (let i = 0; i < boundary.length; i++) {
-        const pt = map.latLngToContainerPoint(boundary[i]);
-        if (i === 0) ctx.moveTo(pt.x, pt.y);
-        else         ctx.lineTo(pt.x, pt.y);
-      }
-      ctx.closePath();
-
-      ctx.fillStyle   = `rgba(${rgb},${alpha})`;
-      ctx.fill();
-
-      ctx.lineJoin    = 'round';
-      ctx.lineWidth   = 1.25;
-      ctx.strokeStyle = `rgba(${rgb},${Math.min(0.75, alpha + 0.30)})`;
-      ctx.stroke();
-    });
-  },
-
-  /* LOW ZOOM — friendly bubble clusters in screen space */
-  _drawClusters(ctx) {
-    const map  = this._map;
-    const bounds = map.getBounds().pad(0.05);
-    const grid = new Map();
-
-    for (const p of state.pins) {
-      const mine = state.user && p.uid === state.user.uid;
-      if (!mine && !state.showOthers) continue;
-      if (!bounds.contains([p.lat, p.lng])) continue;
-
-      const pt = map.latLngToContainerPoint([p.lat, p.lng]);
-      const gx = Math.floor(pt.x / CLUSTER_GRID_PX);
-      const gy = Math.floor(pt.y / CLUSTER_GRID_PX);
-      const key = gx + ':' + gy;
-
-      let info = grid.get(key);
-      if (!info) {
-        info = { count: 0, mine: 0, sumX: 0, sumY: 0, sumLat: 0, sumLng: 0 };
-        grid.set(key, info);
-      }
-      info.count++;
-      info.sumX += pt.x; info.sumY += pt.y;
-      info.sumLat += p.lat; info.sumLng += p.lng;
-      if (mine) info.mine++;
-    }
-
-    grid.forEach((info) => {
-      const cx = info.sumX / info.count;
-      const cy = info.sumY / info.count;
-      const lat = info.sumLat / info.count;
-      const lng = info.sumLng / info.count;
-      const isMine = info.mine === info.count;     // all mine
-      const mixed  = info.mine > 0 && !isMine;
-
-      // Radius: gentle log-ish growth, hard cap so it never overflows
-      const r = Math.min(30, 16 + Math.sqrt(info.count) * 3.2);
-
-      // Soft outer glow
-      const glowGrad = ctx.createRadialGradient(cx, cy, r, cx, cy, r + 14);
-      glowGrad.addColorStop(0, isMine ? 'rgba(255,107,157,0.40)'
-                                      : 'rgba(255,138,101,0.38)');
-      glowGrad.addColorStop(1, 'rgba(255,255,255,0)');
-      ctx.fillStyle = glowGrad;
-      ctx.beginPath();
-      ctx.arc(cx, cy, r + 14, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Main bubble — gradient fill for that brand feel
-      const grad = ctx.createLinearGradient(cx, cy - r, cx, cy + r);
-      if (isMine) { grad.addColorStop(0, '#ff8ab4'); grad.addColorStop(1, '#ff5a8d'); }
-      else if (mixed) { grad.addColorStop(0, '#ffa07a'); grad.addColorStop(1, '#ff6b9d'); }
-      else { grad.addColorStop(0, '#ffb38a'); grad.addColorStop(1, '#ff7a4d'); }
-
-      ctx.beginPath();
-      ctx.arc(cx, cy, r, 0, Math.PI * 2);
-      ctx.fillStyle = grad;
-      ctx.fill();
-
-      // Crisp white ring
-      ctx.lineWidth   = 2.5;
-      ctx.strokeStyle = '#ffffff';
-      ctx.stroke();
-
-      // Count label
-      const label = info.count > 999 ? '999+' : String(info.count);
-      ctx.fillStyle = '#ffffff';
-      ctx.font = `800 ${info.count > 99 ? 12 : 14}px system-ui,-apple-system,Segoe UI,Roboto,sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.shadowColor = 'rgba(0,0,0,0.18)';
-      ctx.shadowBlur  = 2;
-      ctx.fillText(label, cx, cy + 0.5);
-      ctx.shadowBlur  = 0;
-
-      // Remember for hit-testing on tap
-      this._lastClusters.push({ cx, cy, r: r + 4, lat, lng, count: info.count });
-    });
-  },
-
-  /* Returns the cluster hit by a container point, or null. */
-  hitTestCluster(containerPoint) {
-    const x = containerPoint.x, y = containerPoint.y;
-    // Scan last drawn (small list, fast)
-    for (let i = this._lastClusters.length - 1; i >= 0; i--) {
-      const c = this._lastClusters[i];
-      const dx = x - c.cx, dy = y - c.cy;
-      if (dx * dx + dy * dy <= c.r * c.r) return c;
-    }
-    return null;
-  },
-});
 
 /* Memoized cellToBoundary — the cell -> latlng pairs never change. */
 function cellBoundary(cell) {
