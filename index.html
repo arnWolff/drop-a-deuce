@@ -1095,6 +1095,202 @@ html.theme-dark .hex-canvas-overlay { mix-blend-mode: screen; }
 }
 
 /* =====================================================================
+   HEX INSPECTOR SHEET
+   ===================================================================== */
+.hex-summary {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  margin: 4px 0 6px;
+}
+.hex-summary .chip { font-weight: 700; }
+
+.hex-pins {
+  display: flex; flex-direction: column;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.hex-pin-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-md);
+}
+.hex-pin-row .ava {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: var(--peach-grad);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; color: #fff; font-weight: 800;
+  overflow: hidden; flex-shrink: 0;
+}
+.hex-pin-row .ava img { width: 100%; height: 100%; object-fit: cover; }
+.hex-pin-row .info { flex: 1; min-width: 0; }
+.hex-pin-row .who {
+  font-weight: 700; font-size: 14px; color: var(--ink);
+  display: flex; align-items: center; gap: 6px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.hex-pin-row .meta { color: var(--ink-3); font-size: 12px; margin-top: 1px; font-weight: 500; }
+.hex-pin-row .note {
+  color: var(--ink-2); font-size: 12px; margin-top: 4px; font-weight: 500;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.hex-pin-row .ax {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: transform .12s var(--ease-out);
+}
+.hex-pin-row .ax:active { transform: scale(.9); }
+.hex-pin-row .mine-tag {
+  background: var(--peach-grad);
+  color: #fff;
+  font-size: 9px; font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 999px;
+  letter-spacing: .04em;
+}
+
+.hex-amen {
+  display: flex; flex-direction: column;
+  gap: 14px;
+}
+.hex-amen-group {
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+.hex-amen-head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.hex-amen-head .em { font-size: 22px; line-height: 1; }
+.hex-amen-head .lbl { font-weight: 800; font-size: 14px; color: var(--ink); flex: 1; }
+.hex-amen-head .cnt {
+  background: var(--peach-grad-soft);
+  color: var(--peach-2);
+  font-weight: 800; font-size: 11px;
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+.hex-amen-rows { display: flex; flex-direction: column; }
+.hex-amen-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+}
+.hex-amen-row:first-child { border-top: none; }
+.hex-amen-row .em {
+  font-size: 22px; width: 36px; text-align: center; flex-shrink: 0; line-height: 1;
+}
+.hex-amen-row .info { flex: 1; min-width: 0; }
+.hex-amen-row .nm {
+  font-weight: 700; font-size: 14px; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.hex-amen-row .sub {
+  color: var(--ink-3); font-size: 11px; margin-top: 2px; font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.hex-amen-row .sub .d {
+  color: var(--peach-2); font-weight: 800;
+  margin-right: 6px;
+}
+.hex-amen-row .acts { display: flex; gap: 6px; flex-shrink: 0; }
+.hex-amen-row .ax {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform .12s var(--ease-out);
+}
+.hex-amen-row .ax.drop {
+  background: var(--peach-grad);
+  border-color: transparent;
+  color: #fff;
+}
+.hex-amen-row .ax:active { transform: scale(.88); }
+
+.hex-empty {
+  background: var(--surface-2);
+  border: 1.5px dashed var(--border-2);
+  border-radius: var(--r-md);
+  padding: 18px 14px;
+  text-align: center;
+  color: var(--ink-2); font-size: 13px; font-weight: 600;
+  line-height: 1.4;
+}
+
+.hex-skel { display: flex; flex-direction: column; gap: 8px; }
+.hex-skel-row {
+  height: 56px;
+  background: linear-gradient(90deg,
+    var(--surface-2) 0%, var(--border) 50%, var(--surface-2) 100%);
+  background-size: 200% 100%;
+  border-radius: var(--r-md);
+  animation: hex-skel 1.2s linear infinite;
+}
+@keyframes hex-skel {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.hex-load-msg {
+  text-align: center;
+  margin-top: 10px;
+  color: var(--ink-3);
+  font-size: 12px; font-weight: 600;
+  font-style: italic;
+}
+
+.hex-retry {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1.5px dashed var(--border-2);
+  border-radius: var(--r-md);
+  padding: 18px 14px;
+  text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  cursor: pointer;
+  transition: transform .12s var(--ease-out);
+}
+.hex-retry:active { transform: scale(.98); }
+.hex-retry .msg { color: var(--ink-2); font-size: 13px; font-weight: 600; }
+.hex-retry .btn-mini {
+  background: var(--peach-grad); color: #fff;
+  font-weight: 800; font-size: 12px;
+  padding: 8px 18px; border-radius: 999px;
+  letter-spacing: .04em;
+}
+
+.hex-toilet-joke {
+  background: linear-gradient(135deg, #ffe9c7, #ffd1dc);
+  border-radius: var(--r-md);
+  padding: 10px 14px;
+  font-size: 13px; font-weight: 700;
+  color: var(--ink);
+  text-align: center;
+  margin-bottom: 4px;
+  animation: hex-wiggle 2.5s ease-in-out infinite;
+}
+@keyframes hex-wiggle {
+  0%, 100% { transform: rotate(-.4deg); }
+  50%      { transform: rotate(.4deg); }
+}
+html.theme-dark .hex-toilet-joke {
+  background: linear-gradient(135deg, #5a3b2a, #5a2a3e);
+  color: #ffeec7;
+}
+
+/* =====================================================================
    TOASTS, ACHIEVEMENTS, MISC
    ===================================================================== */
 .toast-stack {
@@ -1691,6 +1887,19 @@ html.theme-dark .hex-canvas-overlay { mix-blend-mode: screen; }
   </div>
 </div>
 
+<!-- HEX INSPECTOR SHEET -->
+<div class="sheet" id="hexSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-head">
+    <div class="title-block">
+      <h2 data-i18n="hexTitle">This zone</h2>
+      <div class="sub" id="hexSheetSub">Hex —</div>
+    </div>
+    <button class="sheet-close" data-close type="button">✕</button>
+  </div>
+  <div class="sheet-body" id="hexSheetBody"><!-- rendered by renderHexSheet() --></div>
+</div>
+
 <!-- toast stack & achievement popup -->
 <div class="toast-stack" id="toastStack"></div>
 <div class="ach" id="achPopup">
@@ -1853,6 +2062,25 @@ const I18N = {
     zonesHint: 'Highlight each peach\'s territory',
     zonesOn: '⬡ Zones on',
     zonesOff: '⬡ Zones off',
+    // Hex inspector
+    hexTitle: 'This zone',
+    hexSub: 'Hex {idx} · res 9',
+    hexDropsHere: 'Peaches dropped here',
+    hexAmenitiesHere: 'Stuff around',
+    hexLoading: 'Sniffing the neighborhood…',
+    hexLoading2: 'Asking the locals…',
+    hexLoading3: 'Counting the toilets 🚽…',
+    hexLoading4: 'Doing the maths…',
+    hexNoPins: 'No peaches here yet — be the legend 🥇',
+    hexNoAmenities: '🏜️ Empty as a Tuesday. Just vibes here.',
+    hexNetFail: '📡 Couldn\'t reach the world map. Tap to retry.',
+    hexDropHereBtn: 'Drop a peach here',
+    hexFlyToBtn: 'Show on map',
+    hexBusy: '🔥 Busy zone — {p} peach(es), {a} spot(s)',
+    hexQuiet: '🤫 Quiet zone — just {a} spot(s)',
+    hexGhost: '👻 Ghost town. Quiet. Almost suspicious.',
+    hexToiletJoke: 'A kindred spirit was here 🚽',
+    retry: 'Retry',
   },
   fr: {
     appName: 'Pose ta pêche', tagline: 'Trace ton trône',
@@ -1938,6 +2166,25 @@ const I18N = {
     zonesHint: 'Surligne le territoire de chaque pêche',
     zonesOn: '⬡ Zones activées',
     zonesOff: '⬡ Zones désactivées',
+    // Hex inspector
+    hexTitle: 'Cette zone',
+    hexSub: 'Hex {idx} · rés 9',
+    hexDropsHere: 'Pêches posées ici',
+    hexAmenitiesHere: 'Le coin',
+    hexLoading: 'Flairage du quartier…',
+    hexLoading2: 'On demande aux locaux…',
+    hexLoading3: 'On compte les toilettes 🚽…',
+    hexLoading4: 'On fait les calculs…',
+    hexNoPins: 'Aucune pêche ici — sois la légende 🥇',
+    hexNoAmenities: '🏜️ Vide comme un mardi. Juste l\'ambiance.',
+    hexNetFail: '📡 Pas pu joindre la carte mondiale. Appuie pour réessayer.',
+    hexDropHereBtn: 'Poser une pêche ici',
+    hexFlyToBtn: 'Voir sur la carte',
+    hexBusy: '🔥 Zone animée — {p} pêche(s), {a} spot(s)',
+    hexQuiet: '🤫 Zone calme — juste {a} spot(s)',
+    hexGhost: '👻 Ville fantôme. Calme. Presque louche.',
+    hexToiletJoke: 'Un confrère est passé par là 🚽',
+    retry: 'Réessayer',
   }
 };
 const t = (k) => (I18N[state.lang] && I18N[state.lang][k]) || I18N.en[k] || k;
@@ -2129,7 +2376,7 @@ function confettiBurst() {
 
 
 /* ---------- SHEETS ---------- */
-const SHEETS = ['dropSheet', 'questsSheet', 'placesSheet', 'addPlaceSheet', 'profileSheet', 'iosSheet', 'welcomeSheet'];
+const SHEETS = ['dropSheet', 'questsSheet', 'placesSheet', 'addPlaceSheet', 'profileSheet', 'iosSheet', 'welcomeSheet', 'hexSheet'];
 let currentSheet = null;
 
 /**
@@ -2257,6 +2504,423 @@ function bindSheet(id) {
     document.addEventListener('mousemove', mm);
     document.addEventListener('mouseup', mu);
   });
+}
+
+/* =====================================================================
+   ZONE INSPECTOR — Amenities + pins inside a tapped H3 hex
+   Uses OpenStreetMap Overpass API. Lazy-fetched, hex-strict filtered,
+   in-memory + localStorage cached, abortable, multi-endpoint failover.
+   ===================================================================== */
+
+const AMENITY_CATS = {
+  // amenity=*
+  restaurant:       { em:'🍔', tag:'amenity', en:'Restaurants',     fr:'Restos' },
+  fast_food:        { em:'🍟', tag:'amenity', en:'Fast food',       fr:'Fast-food' },
+  cafe:             { em:'☕', tag:'amenity', en:'Cafés',           fr:'Cafés' },
+  bar:              { em:'🍻', tag:'amenity', en:'Bars',            fr:'Bars' },
+  pub:              { em:'🍺', tag:'amenity', en:'Pubs',            fr:'Pubs' },
+  nightclub:        { em:'💃', tag:'amenity', en:'Nightclubs',      fr:'Boîtes de nuit' },
+  ice_cream:        { em:'🍦', tag:'amenity', en:'Ice cream',       fr:'Glaciers' },
+  school:           { em:'🏫', tag:'amenity', en:'Schools',         fr:'Écoles' },
+  university:       { em:'🎓', tag:'amenity', en:'Universities',    fr:'Universités' },
+  kindergarten:     { em:'🧒', tag:'amenity', en:'Kindergartens',   fr:'Maternelles' },
+  hospital:         { em:'🏥', tag:'amenity', en:'Hospitals',       fr:'Hôpitaux' },
+  clinic:           { em:'🩺', tag:'amenity', en:'Clinics',         fr:'Cliniques' },
+  doctors:          { em:'👨‍⚕️', tag:'amenity', en:'Doctors',        fr:'Médecins' },
+  pharmacy:         { em:'💊', tag:'amenity', en:'Pharmacies',      fr:'Pharmacies' },
+  dentist:          { em:'🦷', tag:'amenity', en:'Dentists',        fr:'Dentistes' },
+  veterinary:       { em:'🐕', tag:'amenity', en:'Vets',            fr:'Véto' },
+  toilets:          { em:'🚽', tag:'amenity', en:'Toilets',         fr:'Toilettes' },
+  police:           { em:'👮', tag:'amenity', en:'Police',          fr:'Police' },
+  fire_station:     { em:'🚒', tag:'amenity', en:'Fire stations',   fr:'Pompiers' },
+  bank:             { em:'🏦', tag:'amenity', en:'Banks',           fr:'Banques' },
+  atm:              { em:'💰', tag:'amenity', en:'ATMs',            fr:'Distributeurs' },
+  post_office:      { em:'📮', tag:'amenity', en:'Post offices',    fr:'Postes' },
+  library:          { em:'📚', tag:'amenity', en:'Libraries',       fr:'Bibliothèques' },
+  cinema:           { em:'🎬', tag:'amenity', en:'Cinemas',         fr:'Cinémas' },
+  theatre:          { em:'🎭', tag:'amenity', en:'Theatres',        fr:'Théâtres' },
+  fuel:             { em:'⛽', tag:'amenity', en:'Petrol',          fr:'Stations-service' },
+  parking:          { em:'🅿️', tag:'amenity', en:'Parking',         fr:'Parkings' },
+  bus_station:      { em:'🚌', tag:'amenity', en:'Bus stations',    fr:'Gares routières' },
+  place_of_worship: { em:'⛪', tag:'amenity', en:'Worship',         fr:'Lieux de culte' },
+  // shop=*
+  bakery:           { em:'🥐', tag:'shop',    en:'Bakeries',        fr:'Boulangeries' },
+  supermarket:      { em:'🛒', tag:'shop',    en:'Supermarkets',    fr:'Supermarchés' },
+  convenience:      { em:'🏪', tag:'shop',    en:'Mini-markets',    fr:'Épiceries' },
+  butcher:          { em:'🥩', tag:'shop',    en:'Butchers',        fr:'Boucheries' },
+  // leisure=*
+  fitness_centre:   { em:'💪', tag:'leisure', en:'Gyms',            fr:'Salles de sport' },
+  swimming_pool:    { em:'🏊', tag:'leisure', en:'Pools',           fr:'Piscines' },
+  playground:       { em:'🎠', tag:'leisure', en:'Playgrounds',     fr:'Aires de jeux' },
+  park:             { em:'🌳', tag:'leisure', en:'Parks',           fr:'Parcs' },
+  // tourism=*
+  hotel:            { em:'🏨', tag:'tourism', en:'Hotels',          fr:'Hôtels' },
+  museum:           { em:'🏛️', tag:'tourism', en:'Museums',         fr:'Musées' },
+  attraction:       { em:'🎡', tag:'tourism', en:'Attractions',     fr:'Attractions' }
+};
+
+const OVERPASS_ENDPOINTS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
+  'https://overpass.openstreetmap.fr/api/interpreter'
+];
+
+const AMENITIES_TTL_MS    = 7 * 24 * 3600 * 1000; // 7 days
+const AMENITIES_CACHE_MAX = 120;                  // ~150 KB max in LS
+const AMENITIES_LS_KEY    = 'peach.amenities.v1';
+const amenitiesCache      = new Map();            // cell -> {ts,data}
+let   amenitiesAbortCtrl  = null;                 // current in-flight request
+let   currentHexCell      = null;                 // cell shown in sheet
+
+function loadAmenitiesCache() {
+  try {
+    const raw = localStorage.getItem(AMENITIES_LS_KEY);
+    if (!raw) return;
+    const obj = JSON.parse(raw);
+    const now = Date.now();
+    for (const [cell, entry] of Object.entries(obj || {})) {
+      if (entry && entry.ts && (now - entry.ts) < AMENITIES_TTL_MS) {
+        amenitiesCache.set(cell, entry);
+      }
+    }
+  } catch (_) {}
+}
+
+function saveAmenitiesCache() {
+  try {
+    const entries = [...amenitiesCache.entries()]
+      .sort((a, b) => b[1].ts - a[1].ts)
+      .slice(0, AMENITIES_CACHE_MAX);
+    localStorage.setItem(AMENITIES_LS_KEY, JSON.stringify(Object.fromEntries(entries)));
+  } catch (_) {} // QuotaExceeded — silently skip; in-memory cache still works
+}
+
+function buildOverpassQuery(bbox) {
+  // bbox = "south,west,north,east"
+  const byTag = { amenity:[], shop:[], leisure:[], tourism:[] };
+  for (const [k, v] of Object.entries(AMENITY_CATS)) byTag[v.tag].push(k);
+  const parts = [];
+  for (const [tag, vals] of Object.entries(byTag)) {
+    if (!vals.length) continue;
+    const re = '^(' + vals.join('|') + ')$';
+    parts.push(`node["${tag}"~"${re}"](${bbox});`);
+    parts.push(`way["${tag}"~"${re}"](${bbox});`);
+  }
+  return `[out:json][timeout:15];(${parts.join('')});out center 150;`;
+}
+
+async function fetchAmenitiesForCell(cell, { force = false } = {}) {
+  // Cache hit
+  if (!force) {
+    const c = amenitiesCache.get(cell);
+    if (c && (Date.now() - c.ts) < AMENITIES_TTL_MS) return c.data;
+  }
+  if (typeof h3 === 'undefined') return [];
+
+  // bbox from hex boundary
+  const boundary = cellBoundary(cell);
+  if (!boundary || boundary.length < 6) return [];
+  let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
+  for (const [lat, lng] of boundary) {
+    if (lat < minLat) minLat = lat; if (lat > maxLat) maxLat = lat;
+    if (lng < minLng) minLng = lng; if (lng > maxLng) maxLng = lng;
+  }
+  const query = buildOverpassQuery(`${minLat},${minLng},${maxLat},${maxLng}`);
+
+  // Cancel previous in-flight
+  if (amenitiesAbortCtrl) { try { amenitiesAbortCtrl.abort(); } catch (_) {} }
+  amenitiesAbortCtrl = new AbortController();
+  const signal = amenitiesAbortCtrl.signal;
+
+  let lastErr = null;
+  for (const url of OVERPASS_ENDPOINTS) {
+    try {
+      const tid = setTimeout(() => { try { amenitiesAbortCtrl && amenitiesAbortCtrl.abort(); } catch (_) {} }, 14000);
+      const res = await fetch(url, {
+        method: 'POST',
+        body: 'data=' + encodeURIComponent(query),
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        signal
+      });
+      clearTimeout(tid);
+      if (!res.ok) { lastErr = new Error('HTTP ' + res.status); continue; }
+      const json = await res.json();
+      const list = (json.elements || []).map(el => {
+        const lat = el.lat ?? (el.center && el.center.lat);
+        const lng = el.lon ?? (el.center && el.center.lon);
+        if (lat == null || lng == null) return null;
+        if (h3.latLngToCell(lat, lng, HEX_FIXED_RES) !== cell) return null; // hex-strict
+        const tags = el.tags || {};
+        const key = tags.amenity || tags.shop || tags.leisure || tags.tourism;
+        if (!key || !AMENITY_CATS[key]) return null;
+        return {
+          id: el.type + '/' + el.id,
+          lat, lng, key,
+          name: tags.name || tags['name:en'] || tags['name:fr'] || null,
+          cuisine: tags.cuisine || null,
+          opening_hours: tags.opening_hours || null,
+          wheelchair: tags.wheelchair || null,
+          website: tags.website || tags['contact:website'] || null,
+          phone: tags.phone || tags['contact:phone'] || null
+        };
+      }).filter(Boolean);
+
+      // De-dupe by id (ways/nodes can occasionally overlap)
+      const seen = new Set(); const deduped = [];
+      for (const a of list) { if (!seen.has(a.id)) { seen.add(a.id); deduped.push(a); } }
+
+      amenitiesCache.set(cell, { ts: Date.now(), data: deduped });
+      saveAmenitiesCache();
+      return deduped;
+    } catch (e) {
+      lastErr = e;
+      if (e && e.name === 'AbortError') throw e; // bubble up, user moved on
+    }
+  }
+  // All endpoints failed — fall back to stale cache if any
+  const stale = amenitiesCache.get(cell);
+  if (stale) return stale.data;
+  throw lastErr || new Error('Overpass unreachable');
+}
+
+/* ---------------------------------------------------------------------
+   HEX SHEET — open / render / interact
+   --------------------------------------------------------------------- */
+
+function metersBetween(lat1, lng1, lat2, lng2) {
+  const R = 6371000, toRad = d => d * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1), dLng = toRad(lng2 - lng1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+function fmtDist(m) { return m < 1000 ? Math.round(m) + ' m' : (m/1000).toFixed(1) + ' km'; }
+
+function openHexSheet(cell, tappedLatLng) {
+  if (!cell) return;
+  currentHexCell = cell;
+  const sheet = $('hexSheet');
+  if (!sheet) return;
+  // Stash tapped point on the sheet element so renderHexSheet can compute distances
+  if (tappedLatLng) sheet.dataset.tapLat = tappedLatLng[0];
+  if (tappedLatLng) sheet.dataset.tapLng = tappedLatLng[1];
+  sheet.dataset.cell = cell;
+  // Quick visual feedback on the map
+  try {
+    const ll = (typeof h3 !== 'undefined') ? h3.cellToLatLng(cell) : null;
+    if (ll && typeof pulseHexAt === 'function') pulseHexAt(ll[0], ll[1]);
+  } catch (_) {}
+  vibrate(10); sfxTap();
+  renderHexSheet(cell);
+  openSheet('hexSheet');
+}
+
+function renderHexSheet(cell) {
+  const body = $('hexSheetBody'); if (!body) return;
+  const subEl = $('hexSheetSub');
+
+  // PINS in this cell (already in app state — instant, no network)
+  const pins = state.pins.filter(p => p.h3_r9 === cell || p.cellH3 === cell);
+
+  // Header sub
+  const shortIdx = cell.slice(-5).toUpperCase();
+  if (subEl) subEl.textContent = t('hexSub').replace('{idx}', shortIdx);
+
+  // 1) Pins section + loading shell for amenities
+  body.innerHTML = `
+    <div class="hex-summary" id="hexSummary">
+      <span class="chip peach">🍑 <span id="hexCntPins">${pins.length}</span></span>
+      <span class="chip purple">📍 <span id="hexCntAmen">…</span></span>
+      <span class="chip mint" id="hexVibe">${escHtml(t('hexLoading'))}</span>
+    </div>
+
+    <div class="section-label">🍑 ${escHtml(t('hexDropsHere'))} <span class="count" id="hexPinsCnt">${pins.length}</span></div>
+    <div class="hex-pins" id="hexPinsList"></div>
+
+    <div class="section-label">🌍 ${escHtml(t('hexAmenitiesHere'))} <span class="count" id="hexAmenCnt">…</span></div>
+    <div class="hex-amen" id="hexAmenList">
+      <div class="hex-skel">
+        <div class="hex-skel-row"></div>
+        <div class="hex-skel-row"></div>
+        <div class="hex-skel-row"></div>
+      </div>
+      <div class="hex-load-msg" id="hexLoadMsg">${escHtml(t('hexLoading'))}</div>
+    </div>
+  `;
+
+  // Render pins list
+  const pinsList = $('hexPinsList');
+  if (!pins.length) {
+    pinsList.innerHTML = `<div class="hex-empty">${escHtml(t('hexNoPins'))}</div>`;
+  } else {
+    const frag = document.createDocumentFragment();
+    pins.sort((a, b) => (b.ts || 0) - (a.ts || 0)).slice(0, 40).forEach(p => {
+      const row = document.createElement('div');
+      row.className = 'hex-pin-row';
+      const ch = chById(p.challengeId);
+      const isMe = state.user && p.uid === state.user.uid;
+      const ava = p.photoURL
+        ? `<img src="${escHtml(p.photoURL)}" alt=""/>`
+        : (p.avatarEmoji ? escHtml(p.avatarEmoji) : (p.displayName ? escHtml(p.displayName[0].toUpperCase()) : '🍑'));
+      const who = isMe ? t('you') : (p.displayName || t('friend'));
+      row.innerHTML = `
+        <div class="ava">${ava}</div>
+        <div class="info">
+          <div class="who">${escHtml(who)} ${isMe ? '<span class="mine-tag">'+escHtml(t('mine'))+'</span>' : ''}</div>
+          <div class="meta">${ch ? ch.em + ' ' + escHtml(chName(ch)) : ''} · ${escHtml(relTime(p.ts))}</div>
+          ${p.note ? `<div class="note">💬 ${escHtml(p.note)}</div>` : ''}
+        </div>
+        <button class="ax" type="button" aria-label="${escHtml(t('hexFlyToBtn'))}">🗺️</button>
+      `;
+      row.querySelector('.ax').addEventListener('click', () => {
+        vibrate(8); sfxTap();
+        closeAllSheets();
+        if (map) map.flyTo([p.lat, p.lng], 17, { duration: 0.6 });
+      });
+      frag.appendChild(row);
+    });
+    pinsList.appendChild(frag);
+  }
+
+  // Cycle a fun loading message
+  const loadMsgs = [t('hexLoading'), t('hexLoading2'), t('hexLoading3'), t('hexLoading4')];
+  let msgIdx = 0;
+  const loadInterval = setInterval(() => {
+    const el = $('hexLoadMsg'); if (!el) { clearInterval(loadInterval); return; }
+    msgIdx = (msgIdx + 1) % loadMsgs.length;
+    el.textContent = loadMsgs[msgIdx];
+  }, 1100);
+
+  // 2) Fetch amenities (lazy)
+  fetchAmenitiesForCell(cell)
+    .then(list => {
+      clearInterval(loadInterval);
+      if (currentHexCell !== cell) return; // user moved on
+      paintAmenities(cell, list, pins);
+    })
+    .catch(err => {
+      clearInterval(loadInterval);
+      if (err && err.name === 'AbortError') return;
+      if (currentHexCell !== cell) return;
+      paintAmenitiesError(cell);
+    });
+}
+
+function paintAmenities(cell, list, pins) {
+  const wrap = $('hexAmenList'); if (!wrap) return;
+  const cntEl = $('hexAmenCnt'); if (cntEl) cntEl.textContent = list.length;
+  const cntChip = $('hexCntAmen'); if (cntChip) cntChip.textContent = list.length;
+
+  // Vibe chip
+  const vibe = $('hexVibe');
+  if (vibe) {
+    if (!pins.length && !list.length)      vibe.textContent = t('hexGhost');
+    else if (pins.length && list.length)   vibe.textContent = t('hexBusy').replace('{p}', pins.length).replace('{a}', list.length);
+    else                                   vibe.textContent = t('hexQuiet').replace('{a}', list.length || pins.length);
+  }
+
+  if (!list.length) {
+    wrap.innerHTML = `<div class="hex-empty">${escHtml(t('hexNoAmenities'))}</div>`;
+    return;
+  }
+
+  // Group by category key
+  const groups = new Map();
+  for (const a of list) {
+    if (!groups.has(a.key)) groups.set(a.key, []);
+    groups.get(a.key).push(a);
+  }
+
+  // Sort groups by count desc; toilets pinned to top for the lulz
+  const order = [...groups.entries()].sort((A, B) => {
+    if (A[0] === 'toilets') return -1;
+    if (B[0] === 'toilets') return  1;
+    return B[1].length - A[1].length;
+  });
+
+  // Tap point for distance display
+  const sheet = $('hexSheet');
+  const tapLat = parseFloat(sheet.dataset.tapLat);
+  const tapLng = parseFloat(sheet.dataset.tapLng);
+  const hasTap = !isNaN(tapLat) && !isNaN(tapLng);
+
+  const frag = document.createDocumentFragment();
+  for (const [key, items] of order) {
+    const meta = AMENITY_CATS[key];
+    const label = (state.lang === 'fr' ? meta.fr : meta.en);
+    const grp = document.createElement('div');
+    grp.className = 'hex-amen-group';
+    grp.innerHTML = `
+      <div class="hex-amen-head">
+        <span class="em">${meta.em}</span>
+        <span class="lbl">${escHtml(label)}</span>
+        <span class="cnt">${items.length}</span>
+      </div>
+      <div class="hex-amen-rows"></div>
+    `;
+    const rows = grp.querySelector('.hex-amen-rows');
+    items.slice(0, 30).forEach(a => {
+      const row = document.createElement('div');
+      row.className = 'hex-amen-row';
+      const name = a.name || (state.lang === 'fr' ? 'Sans nom' : 'Unnamed');
+      const dist = hasTap ? fmtDist(metersBetween(tapLat, tapLng, a.lat, a.lng)) : '';
+      const extras = [];
+      if (a.cuisine) extras.push('🍴 ' + a.cuisine.split(';')[0]);
+      if (a.wheelchair === 'yes') extras.push('♿');
+      if (a.opening_hours) extras.push('🕒');
+      row.innerHTML = `
+        <div class="em">${meta.em}</div>
+        <div class="info">
+          <div class="nm">${escHtml(name)}</div>
+          <div class="sub">${dist ? '<span class="d">'+escHtml(dist)+'</span>' : ''} ${extras.map(escHtml).join(' · ')}</div>
+        </div>
+        <div class="acts">
+          <button class="ax fly" type="button" aria-label="${escHtml(t('hexFlyToBtn'))}">🗺️</button>
+          <button class="ax drop" type="button" aria-label="${escHtml(t('hexDropHereBtn'))}">🍑</button>
+        </div>
+      `;
+      row.querySelector('.fly').addEventListener('click', (e) => {
+        e.stopPropagation();
+        vibrate(8); sfxTap();
+        closeAllSheets();
+        if (map) map.flyTo([a.lat, a.lng], 18, { duration: 0.6 });
+      });
+      row.querySelector('.drop').addEventListener('click', (e) => {
+        e.stopPropagation();
+        vibrate(12); sfxTap();
+        state.draftLoc = { src: 'pick', lat: a.lat, lng: a.lng, name: a.name || label };
+        if (!state.draftChallenge) state.draftChallenge = 'home';
+        closeAllSheets();
+        setTimeout(() => openDrop(), 80);
+      });
+      rows.appendChild(row);
+    });
+    frag.appendChild(grp);
+  }
+  wrap.innerHTML = '';
+  wrap.appendChild(frag);
+
+  // Easter egg: lots of toilets in this app's universe = chef's kiss
+  if ((groups.get('toilets') || []).length >= 1) {
+    const tag = document.createElement('div');
+    tag.className = 'hex-toilet-joke';
+    tag.textContent = t('hexToiletJoke');
+    wrap.insertBefore(tag, wrap.firstChild);
+  }
+}
+
+function paintAmenitiesError(cell) {
+  const wrap = $('hexAmenList'); if (!wrap) return;
+  wrap.innerHTML = `
+    <button class="hex-retry" type="button">
+      <div class="msg">${escHtml(t('hexNetFail'))}</div>
+      <div class="btn-mini">${escHtml(t('retry'))}</div>
+    </button>`;
+  wrap.querySelector('.hex-retry').addEventListener('click', () => {
+    vibrate(10); sfxTap();
+    renderHexSheet(cell); // will refetch (cache may still be cold)
+  });
+  const cntEl = $('hexAmenCnt'); if (cntEl) cntEl.textContent = '—';
+  const cntChip = $('hexCntAmen'); if (cntChip) cntChip.textContent = '—';
 }
 
 /* ---------- MAP ---------- */
@@ -2517,15 +3181,27 @@ function initMap() {
   hexCanvas = new HexCanvasLayer();
   hexCanvas.addTo(map);
 
-  // Tap on a cluster (low zoom) — fly in to expand it into hexes
+  // Map click router:
+  //   - in pickMode  → handled by the boot-time handler (no-op here)
+  //   - low zoom     → cluster hit-test, fly in to expand
+  //   - high zoom    → open the Zone Inspector for the tapped hex
   map.on('click', (e) => {
-    if (state.pickMode) return;                        // pick takes priority
-    if (map.getZoom() >= HEX_MIN_ZOOM) return;         // hexes already shown
-    const hit = hexCanvas && hexCanvas.hitTestCluster(e.containerPoint);
-    if (hit) {
-      vibrate(10); sfxTap();
-      map.flyTo([hit.lat, hit.lng], HEX_MIN_ZOOM + 1, { duration: 0.6 });
+    if (state.pickMode) return; // pick takes priority (handled elsewhere)
+
+    if (map.getZoom() < HEX_MIN_ZOOM) {
+      const hit = hexCanvas && hexCanvas.hitTestCluster(e.containerPoint);
+      if (hit) {
+        vibrate(10); sfxTap();
+        map.flyTo([hit.lat, hit.lng], HEX_MIN_ZOOM + 1, { duration: 0.6 });
+      }
+      return;
     }
+
+    // High zoom: convert tap to fixed-res H3 cell and inspect it
+    if (typeof h3 === 'undefined') return;
+    const { lat, lng } = e.latlng;
+    const cell = h3.latLngToCell(lat, lng, HEX_FIXED_RES);
+    openHexSheet(cell, [lat, lng]);
   });
 
   // Show/hide individual pin markers when the threshold is crossed.
@@ -3987,6 +4663,7 @@ function setupInstall() {
 async function boot() {
   applyTheme();
   applyLang();
+  loadAmenitiesCache();
   initMap();
   wireEvents();
   // Reflect persisted zones state on the side-stack button
