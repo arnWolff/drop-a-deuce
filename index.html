@@ -23,6 +23,7 @@
       integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script defer src="https://unpkg.com/h3-js@4.1.0/dist/h3-js.umd.js"></script>
 <style>
 /* =====================================================================
    DESIGN TOKENS — modern 2026 palette
@@ -974,6 +975,23 @@ html.theme-dark .leaflet-tile-pane { filter: brightness(.85) contrast(1.05) hue-
   100% { transform: rotate(-45deg) translateY(0) scale(1); }
 }
 
+/* =====================================================================
+   HEX ZONE PULSE — fires when a fresh drop lands in a zone
+   ===================================================================== */
+.hex-pulse {
+  position: absolute;
+  border-radius: 50%;
+  border: 3px solid var(--peach-2);
+  pointer-events: none;
+  opacity: 0;
+  z-index: 5;
+}
+.hex-pulse.go { animation: hex-pulse-anim .9s var(--ease-out) forwards; }
+@keyframes hex-pulse-anim {
+  0%   { transform: scale(.3); opacity: .9; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
 .me-marker {
   position: relative;
   width: 22px; height: 22px;
@@ -1320,6 +1338,7 @@ html.theme-dark .leaflet-tile-pane { filter: brightness(.85) contrast(1.05) hue-
   <!-- Side stack -->
   <div class="side-stack" id="sideStack">
     <button class="side-btn" id="meBtn" type="button" aria-label="Locate me">📍</button>
+    <button class="side-btn" id="zonesBtn" type="button" aria-label="Toggle zones">⬡</button>
     <button class="side-btn" id="filterBtn" type="button" aria-label="Filter pins">🌍</button>
   </div>
 
@@ -1582,12 +1601,12 @@ html.theme-dark .leaflet-tile-pane { filter: brightness(.85) contrast(1.05) hue-
       <div class="right"><div class="switch on" id="soundSwitch" data-key="sound"></div></div>
     </div>
     <div class="row">
-      <div class="ic-box">🌍</div>
+      <div class="ic-box">⬡</div>
       <div class="info">
-        <div class="lbl" data-i18n="othersLabel">Show others' pins</div>
-        <div class="hint" data-i18n="othersHint">See everyone's drops on the map</div>
+        <div class="lbl" data-i18n="zonesLabel">Hex zones</div>
+        <div class="hint" data-i18n="zonesHint">Highlight each peach's territory</div>
       </div>
-      <div class="right"><div class="switch on" id="othersSwitch" data-key="showOthers"></div></div>
+      <div class="right"><div class="switch on" id="zonesSwitch" data-key="showZones"></div></div>
     </div>
 
     <div style="height: 16px"></div>
@@ -1821,6 +1840,10 @@ const I18N = {
     deleteFailed: '❌ Delete failed',
     reauthNeeded: 'Please sign in again to confirm',
     deleteCancelled: 'Cancelled — nothing was deleted',
+    zonesLabel: 'Hex zones',
+    zonesHint: 'Highlight each peach\'s territory',
+    zonesOn: '⬡ Zones on',
+    zonesOff: '⬡ Zones off',
   },
   fr: {
     appName: 'Pose ta pêche', tagline: 'Trace ton trône',
@@ -1902,6 +1925,10 @@ const I18N = {
     deleteFailed: '❌ Suppression échouée',
     reauthNeeded: 'Reconnecte-toi pour confirmer',
     deleteCancelled: 'Annulé — rien n\'a été supprimé',
+    zonesLabel: 'Zones hexagonales',
+    zonesHint: 'Surligne le territoire de chaque pêche',
+    zonesOn: '⬡ Zones activées',
+    zonesOff: '⬡ Zones désactivées',
   }
 };
 const t = (k) => (I18N[state.lang] && I18N[state.lang][k]) || I18N.en[k] || k;
@@ -1937,6 +1964,7 @@ const DEFAULTS = {
   haptics: true,
   sound: true,
   showOthers: true,
+  showZones: true,
   nickname: '',
   avatar: '🍑',
   welcomed: false
@@ -1969,6 +1997,7 @@ function saveLS() {
       lang: state.lang, theme: state.theme,
       haptics: state.haptics, sound: state.sound,
       showOthers: state.showOthers,
+      showZones: state.showZones,
       nickname: state.nickname, avatar: state.avatar,
       welcomed: state.welcomed
     };
@@ -2246,6 +2275,16 @@ function initMap() {
     attribution: '© OpenStreetMap'
   }).addTo(map);
 
+  // Hex zone layer — uses a single canvas renderer for cheap drawing
+  hexCanvasRenderer = L.canvas({ padding: 0.2 });
+  hexLayer = L.layerGroup();
+  if (state.showZones) hexLayer.addTo(map);
+
+  // Hide hex layer during gestures; rebuild at gesture end.
+  map.on('movestart zoomstart', onMapGestureStart);
+  map.on('moveend',  onMapGestureEnd);
+  map.on('zoomend',  onMapGestureEnd);
+
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       (p) => {
@@ -2351,6 +2390,196 @@ function refreshAllMarkers() {
   state.pins.forEach(addPinMarker);
 }
 
+/* =====================================================================
+   HEX ZONES — H3 territory layer
+   Strategy: render one hex per pin (clustered by cell at current zoom).
+   Capped automatically by your 200-pin Firestore limit.
+   ===================================================================== */
+
+let hexLayer = null;            // L.layerGroup of all hex polygons
+let hexCanvasRenderer = null;   // shared L.canvas — one renderer, many polys
+const hexPolyByCell = new Map();// cell-id -> L.polygon (for diffed updates)
+const boundaryCache = new Map();// cell-id -> [[lat,lng],...] (memoized)
+let mapInGesture = false;       // pan/zoom in progress?
+let hexUpdatePending = false;   // rAF-coalesced redraw flag
+const HEX_MAX_CELLS = 800;      // hard cap (safety net; you'll never hit it)
+
+/* Zoom → H3 resolution lookup.
+   Aim is ~constant on-screen hex size. OSM zoom 0–19, H3 res 0–15. */
+function h3ResForZoom(zoom) {
+  if (zoom <= 4)  return 2;
+  if (zoom <= 6)  return 3;
+  if (zoom <= 8)  return 4;
+  if (zoom <= 10) return 5;
+  if (zoom <= 12) return 6;
+  if (zoom <= 13) return 7;
+  if (zoom <= 14) return 8;
+  if (zoom <= 15) return 9;
+  if (zoom <= 16) return 10;
+  if (zoom <= 17) return 11;
+  return 12;
+}
+
+/* Memoized cellToBoundary — the cell -> latlng pairs never change. */
+function cellBoundary(cell) {
+  let b = boundaryCache.get(cell);
+  if (!b) {
+    b = h3.cellToBoundary(cell, false); // [[lat,lng], ...]
+    boundaryCache.set(cell, b);
+    // Cap memory if user pans a lot — drop oldest if huge.
+    if (boundaryCache.size > 5000) {
+      const firstKey = boundaryCache.keys().next().value;
+      boundaryCache.delete(firstKey);
+    }
+  }
+  return b;
+}
+
+/* Style a hex based on the cluster info. */
+function hexStyleFor(info) {
+  // Intensity scales with pin count in the cell (capped at 5 for visual reasons)
+  const intensity = Math.min(1, info.count / 5);
+  const mine = info.mine;
+  // "Mine" zones get the pink end of the brand gradient; "theirs" get peach.
+  const color = mine ? '#ff6b9d' : '#ff8a65';
+  return {
+    color,
+    weight: 0,                 // no stroke = cheap on canvas
+    fillColor: color,
+    fillOpacity: 0.14 + intensity * 0.26, // 0.14–0.40
+  };
+}
+
+/* Cluster the currently-visible pins into H3 cells at the right res. */
+function clusterVisiblePins() {
+  if (!map || typeof h3 === 'undefined') return null;
+  const zoom = map.getZoom();
+  const res  = h3ResForZoom(zoom);
+  const bounds = map.getBounds().pad(0.15); // small buffer for smooth panning
+
+  const cells = new Map(); // cell-id -> { count, mine, sample }
+  for (const p of state.pins) {
+    // Respect the "show others" toggle for consistency with pin markers
+    const mine = state.user && p.uid === state.user.uid;
+    if (!mine && !state.showOthers) continue;
+    if (!bounds.contains([p.lat, p.lng])) continue;
+
+    const cell = h3.latLngToCell(p.lat, p.lng, res);
+    let info = cells.get(cell);
+    if (!info) {
+      info = { count: 0, mine: false, sample: p };
+      cells.set(cell, info);
+    }
+    info.count++;
+    if (mine) info.mine = true;
+  }
+  return cells;
+}
+
+/* Differential redraw of the hex layer. */
+function updateHexLayer() {
+  if (!map || !hexLayer || !hexCanvasRenderer) return;
+  if (typeof h3 === 'undefined') return;
+  if (mapInGesture) return;        // skip while user is dragging
+  if (!state.showZones) return;    // toggle off
+
+  const cells = clusterVisiblePins();
+  if (!cells) return;
+
+  // Hard safety cap (you should never hit this with 200-pin Firestore limit)
+  if (cells.size > HEX_MAX_CELLS) {
+    clearHexLayer();
+    return;
+  }
+
+  const wanted = new Set(cells.keys());
+
+  // Remove cells no longer present
+  hexPolyByCell.forEach((poly, cell) => {
+    if (!wanted.has(cell)) {
+      hexLayer.removeLayer(poly);
+      hexPolyByCell.delete(cell);
+    }
+  });
+
+  // Add or restyle the rest
+  cells.forEach((info, cell) => {
+    const style = hexStyleFor(info);
+    const existing = hexPolyByCell.get(cell);
+    if (existing) {
+      existing.setStyle(style);
+      return;
+    }
+    const poly = L.polygon(cellBoundary(cell), {
+      ...style,
+      renderer: hexCanvasRenderer,
+      interactive: false,        // don't steal clicks from pin markers
+      smoothFactor: 0,           // exact hex shape, no Douglas-Peucker
+      bubblingMouseEvents: true,
+    });
+    hexLayer.addLayer(poly);
+    hexPolyByCell.set(cell, poly);
+  });
+}
+
+/* rAF-coalesced scheduler — multiple callers in the same frame = one redraw. */
+function scheduleHexUpdate() {
+  if (hexUpdatePending) return;
+  hexUpdatePending = true;
+  requestAnimationFrame(() => {
+    hexUpdatePending = false;
+    updateHexLayer();
+  });
+}
+
+function clearHexLayer() {
+  if (!hexLayer) return;
+  hexLayer.clearLayers();
+  hexPolyByCell.clear();
+}
+
+/* Map gesture handlers — yank the layer off the map for buttery pans. */
+function onMapGestureStart() {
+  mapInGesture = true;
+  if (state.showZones && hexLayer && map.hasLayer(hexLayer)) {
+    map.removeLayer(hexLayer);
+  }
+}
+function onMapGestureEnd() {
+  mapInGesture = false;
+  if (state.showZones && hexLayer && !map.hasLayer(hexLayer)) {
+    hexLayer.addTo(map);
+  }
+  scheduleHexUpdate();
+}
+
+/* Show/hide the layer in response to the toggle. */
+function setZoneLayerVisibility(visible) {
+  if (!map || !hexLayer) return;
+  if (visible) {
+    if (!map.hasLayer(hexLayer)) hexLayer.addTo(map);
+    scheduleHexUpdate();
+  } else {
+    if (map.hasLayer(hexLayer)) map.removeLayer(hexLayer);
+    clearHexLayer();
+  }
+}
+
+/* Visual reward: ring-pulse the zone where a fresh drop landed. */
+function pulseHexAt(lat, lng) {
+  if (!map) return;
+  const pt = map.latLngToContainerPoint([lat, lng]);
+  const el = document.createElement('div');
+  el.className = 'hex-pulse';
+  el.style.left   = (pt.x - 30) + 'px';
+  el.style.top    = (pt.y - 30) + 'px';
+  el.style.width  = '60px';
+  el.style.height = '60px';
+  document.getElementById('app').appendChild(el);
+  requestAnimationFrame(() => el.classList.add('go'));
+  setTimeout(() => el.remove(), 1000);
+}
+
 
 /* ---------- FIREBASE AUTH FLOW ---------- */
 const FB = () => window.__fb;
@@ -2396,6 +2625,7 @@ function subscribePins() {
       });
     });
     refreshAllMarkers();
+    scheduleHexUpdate();
     recomputeStats();
     renderQuests();
   }, (err) => {
@@ -2764,6 +2994,7 @@ async function deleteAccount() {
     // 7) Refresh every surface.
     closeAllSheets();
     refreshAllMarkers();
+    clearHexLayer();
     renderHeader();
     renderProfile();
     renderQuests();
@@ -3038,6 +3269,7 @@ async function performDrop() {
     lng: state.draftLoc.lng,
     ts,
     challengeId: ch.id,
+    h3_r9: (typeof h3 !== 'undefined') ? h3.latLngToCell(pin.lat, pin.lng, 9) : null,
     note: ($('dropNote').value || '').trim().slice(0, 160),
     photo: state.draftPhoto || null,
     placeName: state.draftLoc.name || null,
@@ -3064,10 +3296,15 @@ async function performDrop() {
   } else {
     state.pins.unshift({ ...pin, id: 'local_' + ts });
     refreshAllMarkers();
+    scheduleHexUpdate();
   }
 
   closeAllSheets();
-  if (map) map.flyTo([pin.lat, pin.lng], 16, { duration: 0.8 });
+  if (map) {
+    map.flyTo([pin.lat, pin.lng], 16, { duration: 0.8 });
+    // Wait for fly to settle, then pulse the zone
+    setTimeout(() => pulseHexAt(pin.lat, pin.lng), 850);
+  }
   vibrate([30, 40, 30]);
   sfxDrop();
   confettiBurst();
@@ -3402,6 +3639,15 @@ function wireEvents() {
   $('meBtn').addEventListener('click', () => { vibrate(10); sfxTap(); locateMe().catch(() => {}); });
   $('filterBtn').addEventListener('click', () => {
     state.showOthers = !state.showOthers;
+    $('zonesBtn').addEventListener('click', () => {
+      state.showZones = !state.showZones;
+      vibrate(10); sfxTap();
+      $('zonesBtn').style.opacity = state.showZones ? '1' : '.55';
+      $('zonesSwitch') && $('zonesSwitch').classList.toggle('on', state.showZones);
+      saveLS();
+      setZoneLayerVisibility(state.showZones);
+      toast(state.showZones ? t('zonesOn') : t('zonesOff'));
+    });
     vibrate(10); sfxTap();
     $('filterBtn').textContent = state.showOthers ? '🌍' : '👤';
     $('othersSwitch') && $('othersSwitch').classList.toggle('on', state.showOthers);
@@ -3501,7 +3747,15 @@ function wireEvents() {
       sw.classList.toggle('on', state[k]);
       saveLS();
       vibrate(8);
-      if (k === 'showOthers') refreshAllMarkers();
+      if (k === 'showOthers') {
+        refreshAllMarkers();
+        scheduleHexUpdate();
+      }
+      if (k === 'showZones') {
+        setZoneLayerVisibility(state.showZones);
+        // Mirror to side-stack button if visible
+        if ($('zonesBtn')) $('zonesBtn').style.opacity = state.showZones ? '1' : '.55';
+      }
     });
   });
 
@@ -3578,6 +3832,8 @@ async function boot() {
   applyLang();
   initMap();
   wireEvents();
+  // Reflect persisted zones state on the side-stack button
+  if ($('zonesBtn')) $('zonesBtn').style.opacity = state.showZones ? '1' : '.55';
   setupInstall();
 
   SHEETS.forEach(bindSheet);
