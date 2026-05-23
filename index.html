@@ -1691,7 +1691,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/fireba
 import {
   getAuth, signInAnonymously, onAuthStateChanged, signOut,
   GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult,
-  linkWithPopup, linkWithRedirect, updateProfile
+  linkWithPopup, linkWithRedirect, updateProfile, signInWithCredential
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
 import {
   getFirestore, doc, getDoc, setDoc,
@@ -1722,7 +1722,7 @@ window.__fb = {
   app, auth, db,
   signInAnonymously, onAuthStateChanged, signOut,
   GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult,
-  linkWithPopup, linkWithRedirect, updateProfile,
+  linkWithPopup, linkWithRedirect, updateProfile, signInWithCredential,
   doc, getDoc, setDoc,
   collection, addDoc, query, orderBy, limit, onSnapshot,
   serverTimestamp, deleteDoc, getDocs, where
@@ -2454,59 +2454,29 @@ async function persistUserProfile() {
 
 async function signInWithGoogle() {
   if (!fbReady()) { toast(t('googleSigninErr'), 'err'); return; }
-  const { auth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, linkWithPopup, linkWithRedirect } = FB();
+  const { auth, GoogleAuthProvider, signInWithRedirect, linkWithRedirect } = FB();
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
+  
   try {
-    let result;
+    toast('Redirecting...', 'win', 3000);
     if (auth.currentUser && auth.currentUser.isAnonymous) {
-      try {
-        result = await linkWithPopup(auth.currentUser, provider);
-      } catch (linkErr) {
-        if (linkErr.code === 'auth/credential-already-in-use' || linkErr.code === 'auth/email-already-in-use') {
-          await migrateAnonToGoogle();
-          return;
-        }
-        if (linkErr.code === 'auth/popup-blocked' || linkErr.code === 'auth/popup-closed-by-user') {
-          toast(t('helpAuthBlocked'), 'warn');
-          await linkWithRedirect(auth.currentUser, provider);
-          return;
-        }
-        throw linkErr;
-      }
+      await linkWithRedirect(auth.currentUser, provider);
     } else {
-      try {
-        result = await signInWithPopup(auth, provider);
-      } catch (popupErr) {
-        if (popupErr.code === 'auth/popup-blocked' || popupErr.code === 'auth/popup-closed-by-user') {
-          toast(t('helpAuthBlocked'), 'warn');
-          await signInWithRedirect(auth, provider);
-          return;
-        }
-        throw popupErr;
-      }
-    }
-    if (result && result.user) {
-      toast('👋 ' + (result.user.displayName || 'Hi'), 'win');
-      sfxWin();
+      await signInWithRedirect(auth, provider);
     }
   } catch (e) {
-    console.error('Google sign-in failed:', e);
+    console.error('Google sign-in redirect failed:', e);
     toast(t('googleSigninErr') + ': ' + (e.message || e.code || ''), 'err');
   }
 }
 
-async function migrateAnonToGoogle() {
-  if (!fbReady()) return;
-  const { auth, db, GoogleAuthProvider, signInWithPopup,
-          collection, query, where, getDocs, doc, getDoc, setDoc, addDoc, deleteDoc, serverTimestamp } = FB();
+async function migrateAnonToGoogle(credential) {
+  if (!fbReady() || !credential) return;
+  const { auth, db, signInWithCredential, collection, query, where, getDocs, doc, getDoc, setDoc, addDoc, deleteDoc, serverTimestamp } = FB();
   const anonUser = auth.currentUser;
-  if (!anonUser || !anonUser.isAnonymous) {
-    const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: 'select_account' });
-    await signInWithPopup(auth, provider);
-    return;
-  }
+  if (!anonUser || !anonUser.isAnonymous) return;
+
   const anonUid = anonUser.uid;
 
   let anonPins = [];
@@ -2532,9 +2502,8 @@ async function migrateAnonToGoogle() {
   await deleteDoc(doc(db, 'users', anonUid)).catch(() => {});
   try { await anonUser.delete(); } catch (_) {}
 
-  const provider = new GoogleAuthProvider();
-  provider.setCustomParameters({ prompt: 'select_account' });
-  const result = await signInWithPopup(auth, provider);
+  // Sign in with the passed credential directly, avoiding a second redirect
+  const result = await signInWithCredential(auth, credential);
   const newUser = result.user;
 
   await Promise.all(anonPins.map((p) => {
@@ -2559,6 +2528,7 @@ async function migrateAnonToGoogle() {
     const ex = await getDoc(doc(db, 'users', newUser.uid));
     if (ex.exists()) existing = ex.data();
   } catch (_) {}
+  
   await setDoc(doc(db, 'users', newUser.uid), {
     displayName: newUser.displayName || existing.displayName || (anonDoc && anonDoc.displayName) || null,
     photoURL: newUser.photoURL || existing.photoURL || null,
@@ -3351,8 +3321,28 @@ async function boot() {
 
   const start = async () => {
     if (!fbReady()) return;
-    const { auth, onAuthStateChanged, getRedirectResult } = FB();
-    try { await getRedirectResult(auth); } catch (_) {}
+    const { auth, onAuthStateChanged, getRedirectResult, GoogleAuthProvider } = FB();
+    
+    // Handle redirect result to merge accounts or log in cleanly
+    try {
+      const result = await getRedirectResult(auth);
+      if (result && result.user) {
+        toast('👋 ' + (result.user.displayName || 'Hi'), 'win');
+        sfxWin();
+      }
+    } catch (error) {
+      console.error('Redirect auth error:', error);
+      // If the Google account is already linked elsewhere, we extract the credential and manually merge
+      if (error.code === 'auth/credential-already-in-use' || error.code === 'auth/email-already-in-use') {
+        const credential = GoogleAuthProvider.credentialFromError(error);
+        if (credential) {
+          toast('Merging accounts...', 'win', 3000);
+          await migrateAnonToGoogle(credential);
+        }
+      } else {
+        toast(t('googleSigninErr') + ': ' + (error.message || error.code || ''), 'err');
+      }
+    }
 
     onAuthStateChanged(auth, async (user) => {
       unsubAll();
