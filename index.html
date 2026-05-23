@@ -1934,6 +1934,7 @@ state.draftPhoto = null;
 state.editingPlace = null;
 state.pickMode = null;
 state.pickResolve = null;
+state.migrating = false;
 
 function loadLS() {
   try { return JSON.parse(localStorage.getItem(LS_KEY) || '{}'); }
@@ -2454,32 +2455,128 @@ async function persistUserProfile() {
 
 async function signInWithGoogle() {
   if (!fbReady()) { toast(t('googleSigninErr'), 'err'); return; }
-  const { auth, GoogleAuthProvider, signInWithRedirect, linkWithRedirect } = FB();
+  const {
+    auth, GoogleAuthProvider,
+    signInWithPopup, signInWithRedirect,
+    linkWithPopup, linkWithRedirect
+  } = FB();
+
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
-  
-  try {
-    toast('Redirection Google...', 'win', 3000);
-    // 1. Manually mark that we expect a redirect back
+
+  // Codes that mean "popup didn't work, switch to redirect"
+  const POPUP_FAIL = new Set([
+    'auth/popup-blocked',
+    'auth/popup-closed-by-user',
+    'auth/cancelled-popup-request',
+    'auth/operation-not-supported-in-this-environment',
+    'auth/web-storage-unsupported'
+  ]);
+
+  const fallbackToRedirect = async (isAnon) => {
+    toast(t('helpAuthBlocked'), 'warn');
     sessionStorage.setItem('awaiting_google', 'yes');
-    
-    if (auth.currentUser && auth.currentUser.isAnonymous) {
+    if (isAnon && auth.currentUser) {
       await linkWithRedirect(auth.currentUser, provider);
     } else {
       await signInWithRedirect(auth, provider);
     }
+  };
+
+  const handleCredentialReuse = async (err) => {
+    const credential = GoogleAuthProvider.credentialFromError(err);
+    if (!credential) return false;
+    toast('Fusion des comptes...', 'win', 3000);
+    await migrateAnonToGoogle(credential);
+    return true;
+  };
+
+  const isAnon = auth.currentUser && auth.currentUser.isAnonymous;
+  let result = null;
+
+  try {
+    if (isAnon) {
+      // Try LINK first so we keep the same UID + all the user's drops
+      try {
+        result = await linkWithPopup(auth.currentUser, provider);
+      } catch (err) {
+        if (err.code === 'auth/credential-already-in-use' ||
+            err.code === 'auth/email-already-in-use') {
+          if (await handleCredentialReuse(err)) return;
+        }
+        if (POPUP_FAIL.has(err.code)) {
+          await fallbackToRedirect(true);
+          return;
+        }
+        throw err;
+      }
+    } else {
+      try {
+        result = await signInWithPopup(auth, provider);
+      } catch (err) {
+        if (POPUP_FAIL.has(err.code)) {
+          await fallbackToRedirect(false);
+          return;
+        }
+        throw err;
+      }
+    }
+
+    if (result && result.user) {
+      // Force the SDK to fetch the latest profile so isAnonymous/displayName
+      // are up to date in the same tick (linkWithPopup does NOT always
+      // refire onAuthStateChanged because the UID didn't change).
+      try { await result.user.reload(); } catch (_) {}
+
+      state.user = auth.currentUser;
+      state.signedInReal = true;
+
+      // Pull Google's name/photo into the user doc
+      try {
+        const { db, doc, setDoc, serverTimestamp } = FB();
+        await setDoc(doc(db, 'users', state.user.uid), {
+          displayName: state.nickname || state.user.displayName || null,
+          photoURL: state.user.photoURL || null,
+          avatarEmoji: state.avatar || null,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+      } catch (_) {}
+
+      // Re-subscribe so listeners point at the (now non-anon) user
+      await ensureUserDoc(state.user);
+      subscribePins();
+      subscribeUserDoc();
+      subscribePlaces();
+
+      // Refresh every surface that shows identity
+      renderHeader();
+      renderProfile();
+      renderQuests();
+
+      toast('👋 ' + (result.user.displayName || 'Welcome'), 'win');
+      sfxWin();
+      vibrate(20);
+    }
   } catch (e) {
     sessionStorage.removeItem('awaiting_google');
-    console.error('Google sign-in redirect failed:', e);
+    console.error('Google sign-in failed:', e);
     toast(t('googleSigninErr') + ': ' + (e.message || e.code || ''), 'err');
   }
 }
 
 async function migrateAnonToGoogle(credential) {
   if (!fbReady() || !credential) return;
-  const { auth, db, signInWithCredential, collection, query, where, getDocs, doc, getDoc, setDoc, addDoc, deleteDoc, serverTimestamp } = FB();
+  const {
+    auth, db, signInWithCredential,
+    collection, query, where, getDocs,
+    doc, getDoc, setDoc, addDoc, deleteDoc, serverTimestamp
+  } = FB();
   const anonUser = auth.currentUser;
   if (!anonUser || !anonUser.isAnonymous) return;
+
+  // Tell the auth state listener: don't sign me back in anonymously while
+  // we're tearing down the old anon user and signing in with Google.
+  state.migrating = true;
 
   const anonUid = anonUser.uid;
 
@@ -2506,8 +2603,12 @@ async function migrateAnonToGoogle(credential) {
   await deleteDoc(doc(db, 'users', anonUid)).catch(() => {});
   try { await anonUser.delete(); } catch (_) {}
 
-  // Sign in with the passed credential directly, avoiding a second redirect
-  const result = await signInWithCredential(auth, credential);
+  let result;
+  try {
+    result = await signInWithCredential(auth, credential);
+  } finally {
+    state.migrating = false;
+  }
   const newUser = result.user;
 
   await Promise.all(anonPins.map((p) => {
@@ -2532,7 +2633,7 @@ async function migrateAnonToGoogle(credential) {
     const ex = await getDoc(doc(db, 'users', newUser.uid));
     if (ex.exists()) existing = ex.data();
   } catch (_) {}
-  
+
   await setDoc(doc(db, 'users', newUser.uid), {
     displayName: newUser.displayName || existing.displayName || (anonDoc && anonDoc.displayName) || null,
     photoURL: newUser.photoURL || existing.photoURL || null,
@@ -2997,7 +3098,14 @@ async function deletePlace(id) {
 /* ---------- RENDER: PROFILE ---------- */
 function renderProfile() {
   const u = state.user;
-  const isAnon = !u || u.isAnonymous;
+
+  // Real sign-in = not anonymous OR has any provider attached that isn't
+  // "anonymous". This handles the brief window where linkWithPopup has
+  // succeeded but the user object hasn't refreshed isAnonymous yet.
+  const hasRealProvider = u && u.providerData &&
+    u.providerData.some(p => p.providerId && p.providerId !== 'anonymous');
+  const isAnon = !u || (u.isAnonymous && !hasRealProvider);
+
   $('profileAvatar').textContent = '';
   if (u && u.photoURL) {
     $('profileAvatar').innerHTML = `<img src="${escHtml(u.photoURL)}" alt=""/>`;
@@ -3358,16 +3466,14 @@ async function boot() {
     onAuthStateChanged(auth, async (user) => {
       unsubAll();
       if (user) {
-        // 2. Force Firebase to fetch the latest state if we just linked an account
         if (wasRedirecting) {
           try { await user.reload(); } catch(_) {}
-          user = auth.currentUser; // Grab the freshly updated user object
+          user = auth.currentUser;
           sessionStorage.removeItem('awaiting_google');
         }
 
         state.user = user;
-        
-        // 3. Bulletproof check: Actually look inside providerData for Google
+
         const hasGoogle = user.providerData && user.providerData.some(p => p.providerId === 'google.com');
         state.signedInReal = !user.isAnonymous || hasGoogle;
 
@@ -3381,7 +3487,11 @@ async function boot() {
       } else {
         state.user = null;
         state.signedInReal = false;
-        await ensureSignedIn();
+        // Don't create a new anon user while migrateAnonToGoogle is between
+        // anonUser.delete() and signInWithCredential.
+        if (!state.migrating) {
+          await ensureSignedIn();
+        }
       }
     });
   };
