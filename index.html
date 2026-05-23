@@ -1691,7 +1691,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/fireba
 import {
   getAuth, signInAnonymously, onAuthStateChanged, signOut,
   GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult,
-  linkWithPopup, linkWithRedirect, updateProfile, signInWithCredential
+  linkWithPopup, linkWithRedirect, updateProfile, signInWithCredential,
+  reauthenticateWithPopup
 } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
 import {
   getFirestore, doc, getDoc, setDoc,
@@ -1723,6 +1724,7 @@ window.__fb = {
   signInAnonymously, onAuthStateChanged, signOut,
   GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult,
   linkWithPopup, linkWithRedirect, updateProfile, signInWithCredential,
+  reauthenticateWithPopup,
   doc, getDoc, setDoc,
   collection, addDoc, query, orderBy, limit, onSnapshot,
   serverTimestamp, deleteDoc, getDocs, where
@@ -1809,6 +1811,16 @@ const I18N = {
     seeMyPins: 'Showing only you',
     pinLimitReached: 'Showing 200 most recent — zoom for detail',
     helpAuthBlocked: 'Pop-up blocked. Trying redirect…',
+    deleteAccount: 'Delete my account',
+    deleteAccountHint: 'Wipes your pins, places & profile. Cannot be undone.',
+    confirmDelete1: '⚠️ Delete your account? Every peach, place and stat will be erased. This cannot be undone.',
+    confirmDelete2: 'Type DELETE to confirm.',
+    confirmDeleteWord: 'DELETE',
+    deleting: 'Deleting your account…',
+    accountDeleted: 'Account deleted ✓',
+    deleteFailed: '❌ Delete failed',
+    reauthNeeded: 'Please sign in again to confirm',
+    deleteCancelled: 'Cancelled — nothing was deleted',
   },
   fr: {
     appName: 'Pose ta pêche', tagline: 'Trace ton trône',
@@ -1880,6 +1892,16 @@ const I18N = {
     seeMyPins: 'Vue de toi seul',
     pinLimitReached: '200 plus récentes — zoome pour détail',
     helpAuthBlocked: 'Popup bloquée. Tentative de redirection…',
+    deleteAccount: 'Supprimer mon compte',
+    deleteAccountHint: 'Efface tes pêches, lieux et profil. Irréversible.',
+    confirmDelete1: '⚠️ Supprimer ton compte ? Chaque pêche, lieu et stat sera effacé. Action irréversible.',
+    confirmDelete2: 'Tape SUPPRIMER pour confirmer.',
+    confirmDeleteWord: 'SUPPRIMER',
+    deleting: 'Suppression du compte…',
+    accountDeleted: 'Compte supprimé ✓',
+    deleteFailed: '❌ Suppression échouée',
+    reauthNeeded: 'Reconnecte-toi pour confirmer',
+    deleteCancelled: 'Annulé — rien n\'a été supprimé',
   }
 };
 const t = (k) => (I18N[state.lang] && I18N[state.lang][k]) || I18N.en[k] || k;
@@ -1935,6 +1957,7 @@ state.editingPlace = null;
 state.pickMode = null;
 state.pickResolve = null;
 state.migrating = false;
+state.deleting = false;
 
 function loadLS() {
   try { return JSON.parse(localStorage.getItem(LS_KEY) || '{}'); }
@@ -2647,6 +2670,124 @@ async function migrateAnonToGoogle(credential) {
   sfxWin();
 }
 
+async function deleteAccount() {
+  if (!fbReady()) return;
+  const {
+    auth, db, GoogleAuthProvider, reauthenticateWithPopup,
+    collection, query, where, getDocs,
+    doc, deleteDoc
+  } = FB();
+
+  const user = auth.currentUser;
+  if (!user) { toast(t('googleSigninErr'), 'err'); return; }
+  if (user.isAnonymous) {
+    toast(t('signinFirst'), 'warn');
+    return;
+  }
+
+  // Step 1: are you sure?
+  if (!confirm(t('confirmDelete1'))) {
+    toast(t('deleteCancelled'));
+    return;
+  }
+  // Step 2: type the magic word
+  const expected = t('confirmDeleteWord');
+  const answer = prompt(t('confirmDelete2'));
+  if (!answer || answer.trim().toUpperCase() !== expected.toUpperCase()) {
+    toast(t('deleteCancelled'));
+    return;
+  }
+
+  const uid = user.uid;
+
+  // Block the listener's "user is null → re-anonymize" path while we tear down.
+  state.deleting = true;
+  state.migrating = true;
+
+  // Show a long-running toast — the deletion can take a few seconds.
+  toast(t('deleting'), 'warn', 5000);
+
+  try {
+    // Stop all snapshot listeners so they don't fire during teardown.
+    unsubAll();
+
+    // 1) Delete every pin owned by this user.
+    try {
+      const pinsSnap = await getDocs(query(collection(db, 'pins'), where('uid', '==', uid)));
+      await Promise.all(pinsSnap.docs.map(d => deleteDoc(d.ref).catch(() => {})));
+    } catch (e) { console.warn('pin delete error:', e); }
+
+    // 2) Delete every saved place under this user.
+    try {
+      const placesSnap = await getDocs(collection(db, 'users', uid, 'locations'));
+      await Promise.all(placesSnap.docs.map(d => deleteDoc(d.ref).catch(() => {})));
+    } catch (e) { console.warn('places delete error:', e); }
+
+    // 3) Delete the user profile doc.
+    try { await deleteDoc(doc(db, 'users', uid)); }
+    catch (e) { console.warn('user doc delete error:', e); }
+
+    // 4) Delete the Firebase Auth account itself. May need a fresh login.
+    try {
+      await user.delete();
+    } catch (e) {
+      if (e.code === 'auth/requires-recent-login') {
+        toast(t('reauthNeeded'), 'warn', 3500);
+        const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({ prompt: 'select_account' });
+        // reauthenticate then retry — auth.currentUser is the same UID until delete() lands.
+        await reauthenticateWithPopup(user, provider);
+        await user.delete();
+      } else {
+        throw e;
+      }
+    }
+
+    // 5) Wipe local cache & in-memory state so nothing leaks into the next session.
+    try { localStorage.removeItem(LS_KEY); } catch (_) {}
+    state.nickname = '';
+    state.avatar = '🍑';
+    state.xp = 0;
+    state.completed = new Set();
+    state.places = [];
+    state.pins = [];
+    state.welcomed = true; // don't bounce them into the welcome sheet right after
+    saveLS();
+
+    // Release the guards BEFORE the auth state listener fires for the new anon user.
+    state.deleting = false;
+    state.migrating = false;
+
+    // 6) Drop them back into a clean anonymous session.
+    await ensureSignedIn();
+
+    // 7) Refresh every surface.
+    closeAllSheets();
+    refreshAllMarkers();
+    renderHeader();
+    renderProfile();
+    renderQuests();
+    renderPlaces();
+
+    toast(t('accountDeleted'), 'win', 3500);
+    sfxWin();
+    vibrate([30, 60, 30]);
+  } catch (e) {
+    state.deleting = false;
+    state.migrating = false;
+    console.error('Account deletion failed:', e);
+    const msg = t('deleteFailed') + ': ' + (e.message || e.code || '');
+    toast(msg, 'err', 4500);
+    sfxErr();
+    // Try to re-establish listeners so the app keeps working.
+    if (auth.currentUser) {
+      subscribePins();
+      subscribeUserDoc();
+      subscribePlaces();
+    }
+  }
+}
+
 async function doSignOut() {
   if (!fbReady()) return;
   const { auth, signOut, signInAnonymously } = FB();
@@ -3159,12 +3300,30 @@ function renderProfile() {
       ${u.email ? `<div style="color:var(--ink-3); font-size:12px; margin-top:2px;">${escHtml(u.email)}</div>` : ''}
     `;
     block.appendChild(card);
+
     const out = document.createElement('button');
     out.className = 'btn ghost block';
     out.type = 'button';
     out.innerHTML = `<span class="ic">🚪</span><span>${escHtml(t('signOut'))}</span>`;
     out.addEventListener('click', async () => { vibrate(10); sfxTap(); await doSignOut(); });
     block.appendChild(out);
+
+    // Destructive action — set apart visually with a small spacer and a hint.
+    const spacer = document.createElement('div');
+    spacer.style.height = '20px';
+    block.appendChild(spacer);
+
+    const hint = document.createElement('div');
+    hint.style.cssText = 'font-size:11px; color:var(--ink-3); font-weight:600; margin-bottom:8px; text-align:center;';
+    hint.textContent = t('deleteAccountHint');
+    block.appendChild(hint);
+
+    const del = document.createElement('button');
+    del.className = 'btn danger block';
+    del.type = 'button';
+    del.innerHTML = `<span class="ic">🗑️</span><span>${escHtml(t('deleteAccount'))}</span>`;
+    del.addEventListener('click', async () => { vibrate(20); sfxTap(); await deleteAccount(); });
+    block.appendChild(del);
   }
 
   recomputeStats();
@@ -3487,9 +3646,8 @@ async function boot() {
       } else {
         state.user = null;
         state.signedInReal = false;
-        // Don't create a new anon user while migrateAnonToGoogle is between
-        // anonUser.delete() and signInWithCredential.
-        if (!state.migrating) {
+        // Don't auto-reanon during account-deletion teardown or anon→Google migration.
+        if (!state.migrating && !state.deleting) {
           await ensureSignedIn();
         }
       }
