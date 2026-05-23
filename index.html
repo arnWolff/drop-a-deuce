@@ -2476,7 +2476,7 @@ async function signInWithGoogle() {
       }
     } else {
       try {
-        result = await signInWithPopup(auth, provider);
+        result = await signInWithRedirect(auth, provider); //await signInWithPopup(auth, provider);
       } catch (popupErr) {
         if (popupErr.code === 'auth/popup-blocked' || popupErr.code === 'auth/popup-closed-by-user') {
           toast(t('helpAuthBlocked'), 'warn');
