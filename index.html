@@ -3568,9 +3568,10 @@ function renderProfile() {
   $('nicknameInput').value = state.nickname || '';
   renderAvatarGrid();
 
-  $('hapticsSwitch').classList.toggle('on', state.haptics);
-  $('soundSwitch').classList.toggle('on', state.sound);
-  $('othersSwitch').classList.toggle('on', state.showOthers);
+  $('hapticsSwitch') && $('hapticsSwitch').classList.toggle('on', state.haptics);
+  $('soundSwitch') && $('soundSwitch').classList.toggle('on', state.sound);
+  $('othersSwitch') && $('othersSwitch').classList.toggle('on', state.showOthers);
+  $('zonesSwitch') && $('zonesSwitch').classList.toggle('on', state.showZones);
 
   qsa('#themeSeg .opt').forEach((o) => o.classList.toggle('active', o.dataset.val === state.theme));
 }
