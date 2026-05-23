@@ -992,6 +992,15 @@ html.theme-dark .leaflet-tile-pane { filter: brightness(.85) contrast(1.05) hue-
   100% { transform: scale(2.5); opacity: 0; }
 }
 
+.hex-canvas-overlay {
+  pointer-events: none;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  /* Smooth disappearance when toggling zones */
+  transition: opacity .18s var(--ease-out);
+}
+html.theme-dark .hex-canvas-overlay { mix-blend-mode: screen; }
+
 .me-marker {
   position: relative;
   width: 22px; height: 22px;
@@ -2275,15 +2284,25 @@ function initMap() {
     attribution: '© OpenStreetMap'
   }).addTo(map);
 
-  // Hex zone layer — uses a single canvas renderer for cheap drawing
-  hexCanvasRenderer = L.canvas({ padding: 0.2 });
-  hexLayer = L.layerGroup();
-  if (state.showZones) hexLayer.addTo(map);
+  // Single canvas territory layer — added once, lives forever.
+  // Its draw() respects state.showZones internally.
+  hexCanvas = new HexCanvasLayer();
+  hexCanvas.addTo(map);
 
-  // Hide hex layer during gestures; rebuild at gesture end.
-  map.on('movestart zoomstart', onMapGestureStart);
-  map.on('moveend',  onMapGestureEnd);
-  map.on('zoomend',  onMapGestureEnd);
+  // Tap on a cluster (low zoom) — fly in to expand it into hexes
+  map.on('click', (e) => {
+    if (state.pickMode) return;                        // pick takes priority
+    if (map.getZoom() >= HEX_MIN_ZOOM) return;         // hexes already shown
+    const hit = hexCanvas && hexCanvas.hitTestCluster(e.containerPoint);
+    if (hit) {
+      vibrate(10); sfxTap();
+      map.flyTo([hit.lat, hit.lng], HEX_MIN_ZOOM + 1, { duration: 0.6 });
+    }
+  });
+
+  // Show/hide individual pin markers when the threshold is crossed.
+  // Cluster badges replace them at low zoom.
+  map.on('zoomend', updatePinMarkersForZoom);
 
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
@@ -2291,10 +2310,28 @@ function initMap() {
         const ll = [p.coords.latitude, p.coords.longitude];
         map.setView(ll, 15);
         setUserMarker(ll);
+        updatePinMarkersForZoom();
       },
       () => {},
       { enableHighAccuracy: false, timeout: 5000, maximumAge: 60000 }
     );
+  }
+}
+
+/* Toggle individual pin markers based on zoom. Below the threshold the
+   canvas cluster badges represent them, so we keep the DOM clean. */
+function updatePinMarkersForZoom() {
+  if (!map) return;
+  const showIndividual = map.getZoom() >= HEX_MIN_ZOOM;
+  if (showIndividual) {
+    // Make sure all eligible markers are on the map
+    state.pins.forEach((p) => {
+      if (!markersByPin.has(p.id)) addPinMarker(p);
+    });
+  } else {
+    // Detach all markers; cluster canvas takes over
+    markersByPin.forEach((m) => map.removeLayer(m));
+    markersByPin.clear();
   }
 }
 
@@ -2373,8 +2410,12 @@ function popupHtml(pin) {
 function addPinMarker(pin) {
   if (!map) return;
   if (markersByPin.has(pin.id)) return;
+  // At low zoom we use the cluster canvas instead of DOM markers
+  if (map.getZoom() < HEX_MIN_ZOOM) return;
+
   const mine = state.user && pin.uid === state.user.uid;
   if (!mine && !state.showOthers) return;
+
   const m = L.marker([pin.lat, pin.lng], { icon: pinIconFor(pin, mine) })
     .bindPopup(popupHtml(pin), { maxWidth: 260, closeButton: true })
     .addTo(map);
@@ -2387,38 +2428,252 @@ function removePinMarker(id) {
 function refreshAllMarkers() {
   markersByPin.forEach((m) => map.removeLayer(m));
   markersByPin.clear();
+  // addPinMarker self-gates by zoom; clusters cover low zoom automatically
   state.pins.forEach(addPinMarker);
+  // Force a canvas redraw so cluster counts match pin set immediately
+  scheduleHexUpdate();
 }
 
 /* =====================================================================
-   HEX ZONES — H3 territory layer
-   Strategy: render one hex per pin (clustered by cell at current zoom).
-   Capped automatically by your 200-pin Firestore limit.
+   TERRITORY GRID — fixed H3 grid + clever low-zoom clusters
+   Drawn into ONE canvas (no per-hex Leaflet object). Phone-friendly.
    ===================================================================== */
 
-let hexLayer = null;            // L.layerGroup of all hex polygons
-let hexCanvasRenderer = null;   // shared L.canvas — one renderer, many polys
-const hexPolyByCell = new Map();// cell-id -> L.polygon (for diffed updates)
-const boundaryCache = new Map();// cell-id -> [[lat,lng],...] (memoized)
-let mapInGesture = false;       // pan/zoom in progress?
-let hexUpdatePending = false;   // rAF-coalesced redraw flag
-const HEX_MAX_CELLS = 800;      // hard cap (safety net; you'll never hit it)
+let hexCanvas = null;                  // HexCanvasLayer instance (added once)
+const boundaryCache = new Map();       // h3 cell -> [[lat,lng],...] memoized
+let hexUpdatePending = false;          // rAF coalescing flag
 
-/* Zoom → H3 resolution lookup.
-   Aim is ~constant on-screen hex size. OSM zoom 0–19, H3 res 0–15. */
-function h3ResForZoom(zoom) {
-  if (zoom <= 4)  return 2;
-  if (zoom <= 6)  return 3;
-  if (zoom <= 8)  return 4;
-  if (zoom <= 10) return 5;
-  if (zoom <= 12) return 6;
-  if (zoom <= 13) return 7;
-  if (zoom <= 14) return 8;
-  if (zoom <= 15) return 9;
-  if (zoom <= 16) return 10;
-  if (zoom <= 17) return 11;
-  return 12;
-}
+const HEX_FIXED_RES   = 9;             // Locked H3 resolution — never changes
+const HEX_MIN_ZOOM    = 14;            // Hexes only render at this zoom and above
+const CLUSTER_GRID_PX = 64;            // Pixel size of the low-zoom cluster grid
+const HEX_MAX_CELLS   = 800;           // safety net
+
+/* ---------------------------------------------------------------------
+   HexCanvasLayer — a single <canvas> Leaflet layer that draws either
+   the H3 territory grid (high zoom) OR clever cluster badges (low zoom).
+   No DOM node per hex/cluster. Hit-tests clusters for tap-to-zoom.
+   --------------------------------------------------------------------- */
+const HexCanvasLayer = L.Layer.extend({
+  initialize() {
+    this._lastClusters = []; // [{cx, cy, r, lat, lng, count}] for hit-test
+  },
+
+  onAdd(map) {
+    this._map = map;
+    const canvas = L.DomUtil.create('canvas', 'hex-canvas-overlay');
+    canvas.style.position = 'absolute';
+    canvas.style.left = '0';
+    canvas.style.top  = '0';
+    canvas.style.pointerEvents = 'none';
+    canvas.style.willChange = 'transform';
+    this._canvas = canvas;
+
+    // Sit in overlayPane: pans with the map for free during gestures
+    map.getPanes().overlayPane.appendChild(canvas);
+
+    map.on('move',   this._schedule, this);
+    map.on('zoom',   this._schedule, this);
+    map.on('moveend zoomend resize viewreset', this._reset, this);
+
+    this._reset();
+  },
+
+  onRemove(map) {
+    map.off('move',   this._schedule, this);
+    map.off('zoom',   this._schedule, this);
+    map.off('moveend zoomend resize viewreset', this._reset, this);
+    if (this._canvas) L.DomUtil.remove(this._canvas);
+    this._canvas = null;
+  },
+
+  /* Place the canvas at the top-left of the current viewport (in layer
+     coords) and resize to match the map. Then redraw. */
+  _reset() {
+    if (!this._canvas || !this._map) return;
+    const map  = this._map;
+    const size = map.getSize();
+    // Cap DPR at 2 — Retina is nice but on phones, more = wasted GPU
+    const dpr  = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+
+    if (this._canvas.width  !== size.x * dpr ||
+        this._canvas.height !== size.y * dpr) {
+      this._canvas.width  = size.x * dpr;
+      this._canvas.height = size.y * dpr;
+      this._canvas.style.width  = size.x + 'px';
+      this._canvas.style.height = size.y + 'px';
+    }
+
+    const topLeft = map.containerPointToLayerPoint([0, 0]);
+    L.DomUtil.setPosition(this._canvas, topLeft);
+    this._draw();
+  },
+
+  _schedule() {
+    if (hexUpdatePending) return;
+    hexUpdatePending = true;
+    requestAnimationFrame(() => {
+      hexUpdatePending = false;
+      // Reposition + redraw together — keeps the canvas perfectly registered
+      // with the map during inertia/fly animations.
+      this._reset();
+    });
+  },
+
+  _draw() {
+    const ctx = this._canvas.getContext('2d');
+    const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    const size = this._map.getSize();
+
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, size.x, size.y);
+    this._lastClusters.length = 0;
+
+    const zoom = this._map.getZoom();
+    if (zoom >= HEX_MIN_ZOOM) {
+      if (state.showZones) this._drawHexes(ctx);
+    } else {
+      this._drawClusters(ctx);
+    }
+  },
+
+  /* HIGH ZOOM — fixed H3 grid, one fill per occupied cell */
+  _drawHexes(ctx) {
+    if (typeof h3 === 'undefined') return;
+    const map = this._map;
+    const bounds = map.getBounds().pad(0.1);
+
+    // Aggregate visible pins into fixed-res cells
+    const cells = new Map();
+    for (const p of state.pins) {
+      const mine = state.user && p.uid === state.user.uid;
+      if (!mine && !state.showOthers) continue;
+      if (!bounds.contains([p.lat, p.lng])) continue;
+      const cell = h3.latLngToCell(p.lat, p.lng, HEX_FIXED_RES);
+      let info = cells.get(cell);
+      if (!info) { info = { count: 0, mine: false }; cells.set(cell, info); }
+      info.count++;
+      if (mine) info.mine = true;
+    }
+    if (cells.size > HEX_MAX_CELLS) return;
+
+    cells.forEach((info, cell) => {
+      const boundary = cellBoundary(cell);
+      if (!boundary || boundary.length < 6) return;
+
+      const intensity = Math.min(1, info.count / 5);
+      const rgb   = info.mine ? '255,107,157' : '255,138,101';
+      const alpha = 0.16 + intensity * 0.30;
+
+      ctx.beginPath();
+      for (let i = 0; i < boundary.length; i++) {
+        const pt = map.latLngToContainerPoint(boundary[i]);
+        if (i === 0) ctx.moveTo(pt.x, pt.y);
+        else         ctx.lineTo(pt.x, pt.y);
+      }
+      ctx.closePath();
+
+      ctx.fillStyle   = `rgba(${rgb},${alpha})`;
+      ctx.fill();
+
+      ctx.lineJoin    = 'round';
+      ctx.lineWidth   = 1.25;
+      ctx.strokeStyle = `rgba(${rgb},${Math.min(0.75, alpha + 0.30)})`;
+      ctx.stroke();
+    });
+  },
+
+  /* LOW ZOOM — friendly bubble clusters in screen space */
+  _drawClusters(ctx) {
+    const map  = this._map;
+    const bounds = map.getBounds().pad(0.05);
+    const grid = new Map();
+
+    for (const p of state.pins) {
+      const mine = state.user && p.uid === state.user.uid;
+      if (!mine && !state.showOthers) continue;
+      if (!bounds.contains([p.lat, p.lng])) continue;
+
+      const pt = map.latLngToContainerPoint([p.lat, p.lng]);
+      const gx = Math.floor(pt.x / CLUSTER_GRID_PX);
+      const gy = Math.floor(pt.y / CLUSTER_GRID_PX);
+      const key = gx + ':' + gy;
+
+      let info = grid.get(key);
+      if (!info) {
+        info = { count: 0, mine: 0, sumX: 0, sumY: 0, sumLat: 0, sumLng: 0 };
+        grid.set(key, info);
+      }
+      info.count++;
+      info.sumX += pt.x; info.sumY += pt.y;
+      info.sumLat += p.lat; info.sumLng += p.lng;
+      if (mine) info.mine++;
+    }
+
+    grid.forEach((info) => {
+      const cx = info.sumX / info.count;
+      const cy = info.sumY / info.count;
+      const lat = info.sumLat / info.count;
+      const lng = info.sumLng / info.count;
+      const isMine = info.mine === info.count;     // all mine
+      const mixed  = info.mine > 0 && !isMine;
+
+      // Radius: gentle log-ish growth, hard cap so it never overflows
+      const r = Math.min(30, 16 + Math.sqrt(info.count) * 3.2);
+
+      // Soft outer glow
+      const glowGrad = ctx.createRadialGradient(cx, cy, r, cx, cy, r + 14);
+      glowGrad.addColorStop(0, isMine ? 'rgba(255,107,157,0.40)'
+                                      : 'rgba(255,138,101,0.38)');
+      glowGrad.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = glowGrad;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 14, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Main bubble — gradient fill for that brand feel
+      const grad = ctx.createLinearGradient(cx, cy - r, cx, cy + r);
+      if (isMine) { grad.addColorStop(0, '#ff8ab4'); grad.addColorStop(1, '#ff5a8d'); }
+      else if (mixed) { grad.addColorStop(0, '#ffa07a'); grad.addColorStop(1, '#ff6b9d'); }
+      else { grad.addColorStop(0, '#ffb38a'); grad.addColorStop(1, '#ff7a4d'); }
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // Crisp white ring
+      ctx.lineWidth   = 2.5;
+      ctx.strokeStyle = '#ffffff';
+      ctx.stroke();
+
+      // Count label
+      const label = info.count > 999 ? '999+' : String(info.count);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = `800 ${info.count > 99 ? 12 : 14}px system-ui,-apple-system,Segoe UI,Roboto,sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.shadowColor = 'rgba(0,0,0,0.18)';
+      ctx.shadowBlur  = 2;
+      ctx.fillText(label, cx, cy + 0.5);
+      ctx.shadowBlur  = 0;
+
+      // Remember for hit-testing on tap
+      this._lastClusters.push({ cx, cy, r: r + 4, lat, lng, count: info.count });
+    });
+  },
+
+  /* Returns the cluster hit by a container point, or null. */
+  hitTestCluster(containerPoint) {
+    const x = containerPoint.x, y = containerPoint.y;
+    // Scan last drawn (small list, fast)
+    for (let i = this._lastClusters.length - 1; i >= 0; i--) {
+      const c = this._lastClusters[i];
+      const dx = x - c.cx, dy = y - c.cy;
+      if (dx * dx + dy * dy <= c.r * c.r) return c;
+    }
+    return null;
+  },
+});
 
 /* Memoized cellToBoundary — the cell -> latlng pairs never change. */
 function cellBoundary(cell) {
@@ -2435,134 +2690,33 @@ function cellBoundary(cell) {
   return b;
 }
 
-/* Style a hex based on the cluster info. */
-function hexStyleFor(info) {
-  // Intensity scales with pin count in the cell (capped at 5 for visual reasons)
-  const intensity = Math.min(1, info.count / 5);
-  const mine = info.mine;
-  // "Mine" zones get the pink end of the brand gradient; "theirs" get peach.
-  const color = mine ? '#ff6b9d' : '#ff8a65';
-  return {
-    color,
-    weight: 0,                 // no stroke = cheap on canvas
-    fillColor: color,
-    fillOpacity: 0.14 + intensity * 0.26, // 0.14–0.40
-  };
-}
-
-/* Cluster the currently-visible pins into H3 cells at the right res. */
-function clusterVisiblePins() {
-  if (!map || typeof h3 === 'undefined') return null;
-  const zoom = map.getZoom();
-  const res  = h3ResForZoom(zoom);
-  const bounds = map.getBounds().pad(0.15); // small buffer for smooth panning
-
-  const cells = new Map(); // cell-id -> { count, mine, sample }
-  for (const p of state.pins) {
-    // Respect the "show others" toggle for consistency with pin markers
-    const mine = state.user && p.uid === state.user.uid;
-    if (!mine && !state.showOthers) continue;
-    if (!bounds.contains([p.lat, p.lng])) continue;
-
-    const cell = h3.latLngToCell(p.lat, p.lng, res);
-    let info = cells.get(cell);
-    if (!info) {
-      info = { count: 0, mine: false, sample: p };
-      cells.set(cell, info);
-    }
-    info.count++;
-    if (mine) info.mine = true;
-  }
-  return cells;
-}
-
-/* Differential redraw of the hex layer. */
+/* Public API kept for backward compatibility with the rest of the app —
+   simply asks the canvas layer to redraw on the next frame. */
 function updateHexLayer() {
-  if (!map || !hexLayer || !hexCanvasRenderer) return;
-  if (typeof h3 === 'undefined') return;
-  if (mapInGesture) return;        // skip while user is dragging
-  if (!state.showZones) return;    // toggle off
-
-  const cells = clusterVisiblePins();
-  if (!cells) return;
-
-  // Hard safety cap (you should never hit this with 200-pin Firestore limit)
-  if (cells.size > HEX_MAX_CELLS) {
-    clearHexLayer();
-    return;
-  }
-
-  const wanted = new Set(cells.keys());
-
-  // Remove cells no longer present
-  hexPolyByCell.forEach((poly, cell) => {
-    if (!wanted.has(cell)) {
-      hexLayer.removeLayer(poly);
-      hexPolyByCell.delete(cell);
-    }
-  });
-
-  // Add or restyle the rest
-  cells.forEach((info, cell) => {
-    const style = hexStyleFor(info);
-    const existing = hexPolyByCell.get(cell);
-    if (existing) {
-      existing.setStyle(style);
-      return;
-    }
-    const poly = L.polygon(cellBoundary(cell), {
-      ...style,
-      renderer: hexCanvasRenderer,
-      interactive: false,        // don't steal clicks from pin markers
-      smoothFactor: 0,           // exact hex shape, no Douglas-Peucker
-      bubblingMouseEvents: true,
-    });
-    hexLayer.addLayer(poly);
-    hexPolyByCell.set(cell, poly);
-  });
-}
-
-/* rAF-coalesced scheduler — multiple callers in the same frame = one redraw. */
-function scheduleHexUpdate() {
-  if (hexUpdatePending) return;
-  hexUpdatePending = true;
-  requestAnimationFrame(() => {
-    hexUpdatePending = false;
-    updateHexLayer();
-  });
-}
-
-function clearHexLayer() {
-  if (!hexLayer) return;
-  hexLayer.clearLayers();
-  hexPolyByCell.clear();
-}
-
-/* Map gesture handlers — yank the layer off the map for buttery pans. */
-function onMapGestureStart() {
-  mapInGesture = true;
-  if (state.showZones && hexLayer && map.hasLayer(hexLayer)) {
-    map.removeLayer(hexLayer);
-  }
-}
-function onMapGestureEnd() {
-  mapInGesture = false;
-  if (state.showZones && hexLayer && !map.hasLayer(hexLayer)) {
-    hexLayer.addTo(map);
-  }
   scheduleHexUpdate();
 }
 
-/* Show/hide the layer in response to the toggle. */
-function setZoneLayerVisibility(visible) {
-  if (!map || !hexLayer) return;
-  if (visible) {
-    if (!map.hasLayer(hexLayer)) hexLayer.addTo(map);
-    scheduleHexUpdate();
-  } else {
-    if (map.hasLayer(hexLayer)) map.removeLayer(hexLayer);
-    clearHexLayer();
-  }
+function scheduleHexUpdate() {
+  if (!hexCanvas) return;
+  hexCanvas._schedule();
+}
+
+function clearHexLayer() {
+  // Nothing to clear — the canvas re-draws from scratch on each frame.
+  // Kept as a no-op so existing call sites don't break.
+  scheduleHexUpdate();
+}
+
+/* Canvas redraws on every move/zoom event already — no need to detach the
+   layer during gestures. These are kept as no-ops to preserve any call
+   sites elsewhere in the codebase. */
+function onMapGestureStart() { /* no-op — canvas handles itself */ }
+function onMapGestureEnd()   { scheduleHexUpdate(); }
+
+function setZoneLayerVisibility(_visible) {
+  // The canvas layer is always attached. Visibility of the territory grid
+  // is read from state.showZones inside the draw pass. Just trigger one.
+  scheduleHexUpdate();
 }
 
 /* Visual reward: ring-pulse the zone where a fresh drop landed. */
