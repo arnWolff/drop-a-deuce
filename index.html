@@ -3269,7 +3269,7 @@ async function performDrop() {
     lng: state.draftLoc.lng,
     ts,
     challengeId: ch.id,
-    h3_r9: (typeof h3 !== 'undefined') ? h3.latLngToCell(pin.lat, pin.lng, 9) : null,
+    h3_r9: (typeof h3 !== 'undefined') ? h3.latLngToCell(state.draftLoc.lat, state.draftLoc.lng, 9) : null, // FIXED
     note: ($('dropNote').value || '').trim().slice(0, 160),
     photo: state.draftPhoto || null,
     placeName: state.draftLoc.name || null,
