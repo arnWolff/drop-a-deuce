@@ -2459,13 +2459,17 @@ async function signInWithGoogle() {
   provider.setCustomParameters({ prompt: 'select_account' });
   
   try {
-    toast('Redirecting...', 'win', 3000);
+    toast('Redirection Google...', 'win', 3000);
+    // 1. Manually mark that we expect a redirect back
+    sessionStorage.setItem('awaiting_google', 'yes');
+    
     if (auth.currentUser && auth.currentUser.isAnonymous) {
       await linkWithRedirect(auth.currentUser, provider);
     } else {
       await signInWithRedirect(auth, provider);
     }
   } catch (e) {
+    sessionStorage.removeItem('awaiting_google');
     console.error('Google sign-in redirect failed:', e);
     toast(t('googleSigninErr') + ': ' + (e.message || e.code || ''), 'err');
   }
@@ -3323,20 +3327,27 @@ async function boot() {
     if (!fbReady()) return;
     const { auth, onAuthStateChanged, getRedirectResult, GoogleAuthProvider } = FB();
 
-    // 1. AWAIT the redirect result FIRST. This acts as a barrier.
-    // It prevents the app from creating a new anonymous user while Google is still logging you in.
+    // Did we just come back from the Google login page?
+    const wasRedirecting = sessionStorage.getItem('awaiting_google') === 'yes';
+    if (wasRedirecting) {
+      toast('Vérification du compte...', 'win', 4000);
+    }
+
     try {
       const result = await getRedirectResult(auth);
+      if (result) sessionStorage.removeItem('awaiting_google');
+      
       if (result && result.user) {
-        toast('👋 ' + (result.user.displayName || 'Hi'), 'win');
+        toast('👋 Bienvenue ' + (result.user.displayName || ''), 'win');
         sfxWin();
       }
     } catch (error) {
+      sessionStorage.removeItem('awaiting_google');
       console.error('Redirect auth error:', error);
       if (error.code === 'auth/credential-already-in-use' || error.code === 'auth/email-already-in-use') {
         const credential = GoogleAuthProvider.credentialFromError(error);
         if (credential) {
-          toast('Merging accounts...', 'win', 3000);
+          toast('Fusion des comptes...', 'win', 3000);
           await migrateAnonToGoogle(credential);
         }
       } else {
@@ -3344,13 +3355,22 @@ async function boot() {
       }
     }
 
-    // 2. NOW listen to the auth state. Because we waited above, this will accurately
-    // reflect the returning Google user instead of firing prematurely.
     onAuthStateChanged(auth, async (user) => {
       unsubAll();
       if (user) {
+        // 2. Force Firebase to fetch the latest state if we just linked an account
+        if (wasRedirecting) {
+          try { await user.reload(); } catch(_) {}
+          user = auth.currentUser; // Grab the freshly updated user object
+          sessionStorage.removeItem('awaiting_google');
+        }
+
         state.user = user;
-        state.signedInReal = !user.isAnonymous;
+        
+        // 3. Bulletproof check: Actually look inside providerData for Google
+        const hasGoogle = user.providerData && user.providerData.some(p => p.providerId === 'google.com');
+        state.signedInReal = !user.isAnonymous || hasGoogle;
+
         await ensureUserDoc(user);
         subscribePins();
         subscribeUserDoc();
@@ -3361,13 +3381,9 @@ async function boot() {
       } else {
         state.user = null;
         state.signedInReal = false;
-        // 3. ONLY trigger anonymous sign-in if we are absolutely sure there is no user
         await ensureSignedIn();
       }
     });
-    
-    // Notice: The rogue 'await ensureSignedIn();' that was previously at the bottom 
-    // of this function has been intentionally deleted.
   };
 
   if (fbReady()) start();
