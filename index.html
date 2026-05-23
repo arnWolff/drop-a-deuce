@@ -883,7 +883,7 @@ html.theme-dark .leaflet-tile-pane { filter: brightness(.85) contrast(1.05) hue-
 }
 .stat-card .em { font-size: 22px; line-height: 1; margin-bottom: 4px; }
 .stat-card .v {
-  font-family: 'Bagel Fat One', system-ui, sans-serif;
+  font-family: 'Bagel Fat One', sans-serif;
   font-size: 22px; line-height: 1; color: var(--ink);
 }
 .stat-card .l { font-size: 11px; color: var(--ink-3); font-weight: 600; margin-top: 4px; text-transform: uppercase; letter-spacing: .04em; }
@@ -1921,18 +1921,18 @@ const DEFAULTS = {
 };
 const state = Object.assign({}, DEFAULTS, loadLS());
 // ephemeral
-state.pins = [];          // all visible pins from Firestore
-state.places = [];        // saved places (Firestore subcol or local)
+state.pins = [];
+state.places = [];
 state.completed = new Set();
 state.xp = 0;
 state.streak = 0;
-state.user = null;        // current Firebase user
-state.signedInReal = false; // true when Google-linked
+state.user = null;
+state.signedInReal = false;
 state.draftLoc = null;
 state.draftChallenge = null;
 state.draftPhoto = null;
 state.editingPlace = null;
-state.pickMode = null;    // 'drop' or 'place'
+state.pickMode = null;
 state.pickResolve = null;
 
 function loadLS() {
@@ -2019,8 +2019,6 @@ function applyTheme() {
   html.classList.remove('theme-light', 'theme-dark');
   if (state.theme === 'light') html.classList.add('theme-light');
   else if (state.theme === 'dark') html.classList.add('theme-dark');
-  // 'auto' relies on @media (prefers-color-scheme)
-  // sync segment UI
   qsa('#themeSeg .opt').forEach(o => o.classList.toggle('active', o.dataset.val === state.theme));
 }
 
@@ -2072,19 +2070,52 @@ function confettiBurst() {
 const SHEETS = ['dropSheet', 'questsSheet', 'placesSheet', 'addPlaceSheet', 'profileSheet', 'iosSheet', 'welcomeSheet'];
 let currentSheet = null;
 
+/**
+ * Open a sheet with a guaranteed spring animation.
+ *
+ * The key insight: the drag-to-dismiss gesture writes inline style.transform
+ * and style.transition directly onto the element.  If we just toggle the CSS
+ * class those inline values win (specificity) and the transition either doesn't
+ * fire or fires from the wrong position.
+ *
+ * Fix:
+ *   1. closeAllSheets() wipes inline styles on every sheet so nothing leaks.
+ *   2. Here we also wipe them explicitly on the target before doing anything.
+ *   3. Double-rAF: first frame lets the browser compute the CSS baseline
+ *      (translateY 102%); second frame adds .open so the spring transition
+ *      animates from that baseline to translateY(0).
+ */
 function openSheet(id) {
   closeAllSheets();
   const el = $(id); if (!el) return;
   currentSheet = id;
   $('scrim').classList.add('show');
-  // force a reflow then add open class
-  requestAnimationFrame(() => el.classList.add('open'));
+  // Wipe any leftover inline styles from a previous drag gesture.
+  el.style.transition = '';
+  el.style.transform  = '';
+  // Double-rAF so the browser paints the CSS baseline position first,
+  // then triggers the spring transition into the open position.
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('open')));
 }
+
+/**
+ * Close all sheets and reset their inline styles.
+ *
+ * Without the style reset, a sheet that was partially dragged (dy < 90,
+ * bounce-back) still has an inline transform.  Next time the same sheet is
+ * opened the CSS class toggle is overridden by that stale inline value.
+ */
 function closeAllSheets() {
-  SHEETS.forEach((id) => $(id) && $(id).classList.remove('open'));
+  SHEETS.forEach((id) => {
+    const el = $(id); if (!el) return;
+    el.classList.remove('open');
+    // Always clear inline styles set by the drag handler so the next
+    // openSheet() starts from a clean CSS state.
+    el.style.transform  = '';
+    el.style.transition = '';
+  });
   $('scrim').classList.remove('show');
   currentSheet = null;
-  // reset nav active to map if no sheet open
   setNavActive('map');
 }
 
@@ -2098,31 +2129,71 @@ function bindSheet(id) {
   // Drag to dismiss
   if (!handle) return;
   let startY = 0, lastY = 0, dragging = false;
+
   const onStart = (y) => {
     dragging = true; startY = y; lastY = y;
+    // Disable CSS transition while the finger is moving so dragging feels
+    // instant with no lag.
     sheet.style.transition = 'none';
   };
+
   const onMove = (y) => {
     if (!dragging) return;
     const dy = Math.max(0, y - startY);
     sheet.style.transform = `translateY(${dy}px)`;
     lastY = y;
   };
+
+  /**
+   * FIX: onEnd must re-enable the CSS transition *before* the browser
+   * renders the next frame in which we clear/change the transform.
+   *
+   * Old code set style.transition = '' then immediately style.transform = ''
+   * in the same synchronous tick.  The browser batches style reads/writes, so
+   * the transition re-enable and the transform change landed in the same
+   * paint — meaning there was no "before" state for the transition engine to
+   * animate from, and the sheet snapped instead of springing.
+   *
+   * Fix: clear transition in one rAF callback, then clear/remove transform in
+   * the next one.  This gives the browser exactly one frame to re-enable the
+   * transition before we ask it to animate.
+   */
   const onEnd = () => {
     if (!dragging) return;
     dragging = false;
-    sheet.style.transition = '';
     const dy = Math.max(0, lastY - startY);
-    if (dy > 90) closeAllSheets();
-    else sheet.style.transform = '';
+
+    if (dy > 90) {
+      // Dismiss: re-enable transition then animate out via closeAllSheets.
+      // closeAllSheets clears both inline styles, so the sheet falls back to
+      // the CSS translateY(102%) rule which is already the correct "hidden" state.
+      sheet.style.transition = '';
+      closeAllSheets();
+    } else {
+      // Bounce back: re-enable transition in one frame, then clear the
+      // inline transform in the next so the spring animation fires correctly.
+      requestAnimationFrame(() => {
+        sheet.style.transition = ''; // re-enable CSS spring
+        requestAnimationFrame(() => {
+          sheet.style.transform = ''; // animate back to translateY(0) via .open rule
+        });
+      });
+    }
   };
+
   handle.addEventListener('touchstart', (e) => onStart(e.touches[0].clientY), { passive: true });
   handle.addEventListener('touchmove',  (e) => onMove(e.touches[0].clientY),  { passive: true });
   handle.addEventListener('touchend', onEnd);
-  handle.addEventListener('mousedown', (e) => { e.preventDefault(); onStart(e.clientY);
+  handle.addEventListener('mousedown', (e) => {
+    e.preventDefault(); onStart(e.clientY);
     const mm = (e2) => onMove(e2.clientY);
-    const mu = () => { onEnd(); document.removeEventListener('mousemove', mm); document.removeEventListener('mouseup', mu); };
-    document.addEventListener('mousemove', mm); document.addEventListener('mouseup', mu);
+    const mu = () => {
+      onEnd();
+      document.removeEventListener('mousemove', mm);
+      document.removeEventListener('mouseup', mu);
+    };
+    document.addEventListener('mousemove', mm);
+    document.addEventListener('mouseup', mu);
   });
 }
 
@@ -2139,7 +2210,6 @@ function initMap() {
     setTimeout(initMap, 100);
     return;
   }
-  // Default center — fall back to Paris-ish area if no GPS yet
   map = L.map('map', {
     zoomControl: false,
     attributionControl: true,
@@ -2152,7 +2222,6 @@ function initMap() {
     attribution: '© OpenStreetMap'
   }).addTo(map);
 
-  // Try GPS centering on first load
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       (p) => {
@@ -2253,23 +2322,13 @@ function removePinMarker(id) {
   if (m) { map.removeLayer(m); markersByPin.delete(id); }
 }
 function refreshAllMarkers() {
-  // Clear and rebuild — used after toggling showOthers
   markersByPin.forEach((m) => map.removeLayer(m));
   markersByPin.clear();
   state.pins.forEach(addPinMarker);
 }
 
 
-/* ---------- FIREBASE AUTH FLOW ----------
- * Strategy:
- *   1. On boot, sign in anonymously so reads/writes work right away.
- *   2. Subscribe to /pins for everyone's drops in real time.
- *   3. Subscribe to /users/{uid} for the current user's profile + XP.
- *   4. Subscribe to /users/{uid}/locations for saved places.
- *   5. Google sign-in upgrades the anonymous account via linkWithPopup;
- *      if linking fails (e.g. that Google account already exists),
- *      we fall back to signInWithPopup, snapshot+recreate anon data.
- */
+/* ---------- FIREBASE AUTH FLOW ---------- */
 const FB = () => window.__fb;
 const PIN_LIMIT = 200;
 
@@ -2401,13 +2460,10 @@ async function signInWithGoogle() {
   try {
     let result;
     if (auth.currentUser && auth.currentUser.isAnonymous) {
-      // Try to upgrade the anonymous account
       try {
         result = await linkWithPopup(auth.currentUser, provider);
       } catch (linkErr) {
-        // If account exists already, fall back to a normal sign-in
         if (linkErr.code === 'auth/credential-already-in-use' || linkErr.code === 'auth/email-already-in-use') {
-          // Snapshot anon data, then sign in directly, then re-create data
           await migrateAnonToGoogle();
           return;
         }
@@ -2446,7 +2502,6 @@ async function migrateAnonToGoogle() {
           collection, query, where, getDocs, doc, getDoc, setDoc, addDoc, deleteDoc, serverTimestamp } = FB();
   const anonUser = auth.currentUser;
   if (!anonUser || !anonUser.isAnonymous) {
-    // Just sign in normally
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
     await signInWithPopup(auth, provider);
@@ -2454,40 +2509,34 @@ async function migrateAnonToGoogle() {
   }
   const anonUid = anonUser.uid;
 
-  // 1. snapshot anon pins
   let anonPins = [];
   try {
     const pinsSnap = await getDocs(query(collection(db, 'pins'), where('uid', '==', anonUid)));
     pinsSnap.forEach((d) => anonPins.push({ id: d.id, ...d.data() }));
   } catch (_) {}
 
-  // 2. snapshot anon places
   let anonPlaces = [];
   try {
     const placesSnap = await getDocs(collection(db, 'users', anonUid, 'locations'));
     placesSnap.forEach((d) => anonPlaces.push({ id: d.id, ...d.data() }));
   } catch (_) {}
 
-  // 3. snapshot anon user doc
   let anonDoc = null;
   try {
     const us = await getDoc(doc(db, 'users', anonUid));
     if (us.exists()) anonDoc = us.data();
   } catch (_) {}
 
-  // 4. delete anon data (rules require auth as the owner)
   await Promise.all(anonPins.map((p) => deleteDoc(doc(db, 'pins', p.id)).catch(() => {})));
   await Promise.all(anonPlaces.map((p) => deleteDoc(doc(db, 'users', anonUid, 'locations', p.id)).catch(() => {})));
   await deleteDoc(doc(db, 'users', anonUid)).catch(() => {});
   try { await anonUser.delete(); } catch (_) {}
 
-  // 5. sign in with Google
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
   const result = await signInWithPopup(auth, provider);
   const newUser = result.user;
 
-  // 6. recreate pins under new uid
   await Promise.all(anonPins.map((p) => {
     const { id, uid, ...rest } = p;
     return addDoc(collection(db, 'pins'), {
@@ -2498,7 +2547,6 @@ async function migrateAnonToGoogle() {
     }).catch(() => {});
   }));
 
-  // 7. recreate places
   await Promise.all(anonPlaces.map((p) => {
     const { id, ...rest } = p;
     return addDoc(collection(db, 'users', newUser.uid, 'locations'), {
@@ -2506,7 +2554,6 @@ async function migrateAnonToGoogle() {
     }).catch(() => {});
   }));
 
-  // 8. merge user doc
   let existing = {};
   try {
     const ex = await getDoc(doc(db, 'users', newUser.uid));
@@ -2531,7 +2578,6 @@ async function doSignOut() {
   try {
     unsubAll();
     await signOut(auth);
-    // Re-sign in anonymously so the app keeps working
     await signInAnonymously(auth);
   } catch (e) {
     console.warn('Sign out failed:', e);
@@ -2627,7 +2673,6 @@ function renderDropLocRow() {
   const row = $('dropLocRow'); if (!row) return;
   row.innerHTML = '';
 
-  // GPS card
   const gps = document.createElement('button');
   gps.type = 'button';
   gps.className = 'loc-tile' + (state.draftLoc && state.draftLoc.src === 'gps' ? ' active' : '');
@@ -2642,7 +2687,6 @@ function renderDropLocRow() {
   });
   row.appendChild(gps);
 
-  // Pick on map card
   const pick = document.createElement('button');
   pick.type = 'button';
   pick.className = 'loc-tile' + (state.draftLoc && state.draftLoc.src === 'pick' ? ' active' : '');
@@ -2652,14 +2696,12 @@ function renderDropLocRow() {
     const ll = await beginPick('drop');
     if (ll) {
       state.draftLoc = { src: 'pick', lat: ll[0], lng: ll[1], name: null };
-      // reopen the drop sheet
       openSheet('dropSheet');
       renderDropLocRow();
     }
   });
   row.appendChild(pick);
 
-  // Saved places
   state.places.forEach((p) => {
     const tile = document.createElement('button');
     tile.type = 'button';
@@ -2707,7 +2749,6 @@ function openDrop(presetChallenge) {
   renderDropChalGrid();
   renderPhotoStage();
   $('dropNote').value = '';
-  // signed-in hint only if user is anonymous
   const isAnon = !state.user || state.user.isAnonymous;
   $('needAuthHint').style.display = isAnon ? '' : 'none';
   openSheet('dropSheet');
@@ -2767,7 +2808,6 @@ async function performDrop() {
   if (!state.draftLoc) { toast(t('needLoc'), 'warn'); vibrate(40); sfxErr(); return; }
   if (!state.draftChallenge) { toast(t('needChallenge'), 'warn'); vibrate(40); sfxErr(); return; }
 
-  // Auth gate: encourage sign in but allow anonymous drops (anon writes are valid per rules)
   if (!state.user) {
     await ensureSignedIn();
     if (!state.user) { toast(t('googleSigninErr'), 'err'); return; }
@@ -2799,7 +2839,6 @@ async function performDrop() {
     try {
       const { db, collection, addDoc, serverTimestamp } = FB();
       await addDoc(collection(db, 'pins'), { ...pin, createdAt: serverTimestamp() });
-      // user doc update
       await persistUserProfile();
     } catch (e) {
       console.error('Drop write failed:', e);
@@ -2807,13 +2846,11 @@ async function performDrop() {
       return;
     }
   } else {
-    // No firebase: local-only fallback
     state.pins.unshift({ ...pin, id: 'local_' + ts });
     refreshAllMarkers();
   }
 
   closeAllSheets();
-  // animate to drop spot
   if (map) map.flyTo([pin.lat, pin.lng], 16, { duration: 0.8 });
   vibrate([30, 40, 30]);
   sfxDrop();
@@ -2821,7 +2858,6 @@ async function performDrop() {
   toast(t('droppedXp').replace('{xp}', ch.xp + (firstTime ? 10 : 0)), 'win');
   if (firstTime) setTimeout(() => showAchievement(ch), 700);
 
-  // level up?
   if (level() > oldLevel) {
     setTimeout(() => {
       vibrate([50, 80, 50, 80, 50]);
@@ -2830,7 +2866,6 @@ async function performDrop() {
     }, 1300);
   }
 
-  // reset draft photo & note
   state.draftPhoto = null;
 }
 
@@ -2961,7 +2996,6 @@ async function savePlace() {
       console.error(e); toast('❌ ' + (e.message || 'Save failed'), 'err'); return;
     }
   } else {
-    // local fallback
     if (state.editingPlace) {
       const idx = state.places.findIndex((p) => p.id === state.editingPlace.id);
       if (idx >= 0) state.places[idx] = { ...state.places[idx], name, emoji, lat, lng };
@@ -2999,14 +3033,12 @@ function renderProfile() {
   $('profileName').textContent = state.nickname || (u && u.displayName) || t('anonymous');
   $('profileEmail').textContent = isAnon ? t('youAreAnon') : (u && u.email) || (u && u.displayName) || '';
 
-  // chips
   const chips = $('profileChips');
   chips.innerHTML = '';
   if (!isAnon) chips.innerHTML += '<span class="chip mint">✓ Google</span>';
   chips.innerHTML += `<span class="chip peach">Lv <span class="mono">${level()}</span></span>`;
   chips.innerHTML += `<span class="chip purple">${fmt(state.xp)} XP</span>`;
 
-  // auth block
   const block = $('authBlock');
   block.innerHTML = '';
   if (isAnon) {
@@ -3053,19 +3085,15 @@ function renderProfile() {
     block.appendChild(out);
   }
 
-  // stats
   recomputeStats();
 
-  // nickname + avatar
   $('nicknameInput').value = state.nickname || '';
   renderAvatarGrid();
 
-  // switches
   $('hapticsSwitch').classList.toggle('on', state.haptics);
   $('soundSwitch').classList.toggle('on', state.sound);
   $('othersSwitch').classList.toggle('on', state.showOthers);
 
-  // theme segment
   qsa('#themeSeg .opt').forEach((o) => o.classList.toggle('active', o.dataset.val === state.theme));
 }
 
@@ -3100,7 +3128,6 @@ function applyLang() {
     const k = el.dataset.i18n;
     if (I18N[state.lang] && I18N[state.lang][k]) el.textContent = I18N[state.lang][k];
   });
-  // refresh dynamic renderers that include translated copy
   renderHeader();
   renderQuests();
   renderPlaces();
@@ -3209,7 +3236,7 @@ function wireEvents() {
     toast(t('locDeleted'));
   });
 
-  // Profile - nickname & save
+  // Profile
   $('saveProfileBtn').addEventListener('click', async () => {
     state.nickname = ($('nicknameInput').value || '').trim().slice(0, 24);
     saveLS();
@@ -3278,7 +3305,6 @@ function setupInstall() {
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
-    // show banner only if not already installed
     if (!matchMedia('(display-mode: standalone)').matches) {
       $('installBanner').classList.remove('hidden');
     }
@@ -3295,7 +3321,6 @@ function setupInstall() {
     $('installBanner').classList.add('hidden');
   });
 
-  // iOS first-visit hint
   const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent);
   const standalone = matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
   if (isIOS && !standalone && !localStorage.getItem('peach-ios-hint')) {
@@ -3314,10 +3339,8 @@ async function boot() {
   wireEvents();
   setupInstall();
 
-  // Bind sheets
   SHEETS.forEach(bindSheet);
 
-  // Map click for pick mode
   setTimeout(() => {
     if (map) {
       map.on('click', (e) => {
@@ -3326,11 +3349,9 @@ async function boot() {
     }
   }, 300);
 
-  // Wait for Firebase to be initialized, then sign in
   const start = async () => {
     if (!fbReady()) return;
     const { auth, onAuthStateChanged, getRedirectResult } = FB();
-    // Handle any pending redirect result (popup blocked path)
     try { await getRedirectResult(auth); } catch (_) {}
 
     onAuthStateChanged(auth, async (user) => {
@@ -3348,23 +3369,20 @@ async function boot() {
       } else {
         state.user = null;
         state.signedInReal = false;
-        await ensureSignedIn(); // re-sign anon
+        await ensureSignedIn();
       }
     });
 
-    // Kick off initial anon sign-in if no user yet
     await ensureSignedIn();
   };
 
   if (fbReady()) start();
   else window.addEventListener('firebase-ready', start, { once: true });
 
-  // First-time welcome sheet
   if (!state.welcomed) {
     setTimeout(() => openSheet('welcomeSheet'), 400);
   }
 
-  // Service worker
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('./sw.js').catch(() => {});
