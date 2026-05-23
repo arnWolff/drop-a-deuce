@@ -3322,8 +3322,9 @@ async function boot() {
   const start = async () => {
     if (!fbReady()) return;
     const { auth, onAuthStateChanged, getRedirectResult, GoogleAuthProvider } = FB();
-    
-    // Handle redirect result to merge accounts or log in cleanly
+
+    // 1. AWAIT the redirect result FIRST. This acts as a barrier.
+    // It prevents the app from creating a new anonymous user while Google is still logging you in.
     try {
       const result = await getRedirectResult(auth);
       if (result && result.user) {
@@ -3332,7 +3333,6 @@ async function boot() {
       }
     } catch (error) {
       console.error('Redirect auth error:', error);
-      // If the Google account is already linked elsewhere, we extract the credential and manually merge
       if (error.code === 'auth/credential-already-in-use' || error.code === 'auth/email-already-in-use') {
         const credential = GoogleAuthProvider.credentialFromError(error);
         if (credential) {
@@ -3344,6 +3344,8 @@ async function boot() {
       }
     }
 
+    // 2. NOW listen to the auth state. Because we waited above, this will accurately
+    // reflect the returning Google user instead of firing prematurely.
     onAuthStateChanged(auth, async (user) => {
       unsubAll();
       if (user) {
@@ -3359,11 +3361,13 @@ async function boot() {
       } else {
         state.user = null;
         state.signedInReal = false;
+        // 3. ONLY trigger anonymous sign-in if we are absolutely sure there is no user
         await ensureSignedIn();
       }
     });
-
-    await ensureSignedIn();
+    
+    // Notice: The rogue 'await ensureSignedIn();' that was previously at the bottom 
+    // of this function has been intentionally deleted.
   };
 
   if (fbReady()) start();
