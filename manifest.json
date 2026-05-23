@@ -1,31 +1,63 @@
 {
-  "name": "Pose ta pêche",
-  "short_name": "Pêche",
-  "description": "La façon fun de cartographier ta #2",
+  "name": "Drop a Peach",
+  "short_name": "Peach",
+  "description": "The fun way to map your #2 — drop a peach wherever your business takes you.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "browser"],
   "orientation": "portrait",
   "background_color": "#faf3e7",
   "theme_color": "#3d2817",
-  "lang": "fr",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["lifestyle", "entertainment", "social"],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "apple-touch-icon.png",
       "sizes": "180x180",
       "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Drop a peach",
+      "short_name": "Drop",
+      "description": "Open straight into the drop screen",
+      "url": "./?action=drop",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "My quests",
+      "short_name": "Quests",
+      "description": "See your active challenges",
+      "url": "./?tab=quests",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
     }
   ]
 }
