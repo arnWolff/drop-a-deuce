@@ -330,6 +330,23 @@ html.theme-dark .leaflet-tile-pane { filter: brightness(.85) contrast(1.05) hue-
   100% { box-shadow: 0 0 0 0 rgba(255,107,157,0); }
 }
 
+/* FAB wiggle — fires when an anon user taps the FAB.
+   The compound transform keeps the existing translateX(-50%) centering
+   so the FAB doesn't visibly jump off-center during the shake. */
+.fab.wiggle {
+  animation: fab-wiggle .65s cubic-bezier(.36, .07, .19, .97);
+}
+@keyframes fab-wiggle {
+  0%   { transform: translateX(-50%) rotate(0deg)   scale(1);    }
+  10%  { transform: translateX(-50%) rotate(-14deg) scale(1.08); }
+  25%  { transform: translateX(-50%) rotate(12deg)  scale(1.10); }
+  40%  { transform: translateX(-50%) rotate(-10deg) scale(1.06); }
+  55%  { transform: translateX(-50%) rotate(8deg)   scale(1.06); }
+  70%  { transform: translateX(-50%) rotate(-5deg)  scale(1.03); }
+  85%  { transform: translateX(-50%) rotate(3deg)   scale(1.02); }
+  100% { transform: translateX(-50%) rotate(0deg)   scale(1);    }
+}
+
 .botnav {
   height: calc(var(--nav-h) + var(--safe-b));
   padding-bottom: var(--safe-b);
@@ -1825,11 +1842,7 @@ html.theme-dark .pin-pop-act.warn { color: #93c5fd; }
       <span class="ic">🍑</span>
       <span data-i18n="dropAction">Drop the peach</span>
     </button>
-
-    <div id="needAuthHint" class="card" style="margin-top:14px; display:none; background: var(--peach-grad-soft); border-color: var(--peach);">
-      <div style="font-weight:700; font-size:14px; color:var(--ink); margin-bottom:6px;">🔐 <span data-i18n="signinFirst">Sign in to drop</span></div>
-      <div style="font-size:12px; color:var(--ink-2); font-weight:500;" data-i18n="signinHintDrop">You can browse anonymously, but dropping a peach needs a quick sign-in so others can see who you are.</div>
-    </div>
+    
   </div>
 </div>
 
@@ -3465,6 +3478,7 @@ function paintAmenities(cell, list, pins) {
       row.querySelector('.drop').addEventListener('click', (e) => {
         e.stopPropagation();
         vibrate(12); sfxTap();
+        if (!requireAuth('drop')) return;
         state.draftLoc = { src: 'pick', lat: a.lat, lng: a.lng, name: a.name || label };
         if (!state.draftChallenge) state.draftChallenge = 'home';
         closeAllSheets();
@@ -4062,16 +4076,87 @@ const PIN_LIMIT = 200;
 function fbReady() { return !!(FB() && FB().auth && FB().db); }
 
 /**
- * Replaces the old auto-anon sign-in. Now we never sign anyone in silently.
- * Returns true if the user is (or just became) a real signed-in user.
- * If they're not signed in, opens the invitation sheet and returns false.
+ * Funny, peach-themed nag messages shown when an anonymous visitor tries
+ * to do something that requires an account. One is picked at random each
+ * time the sheet opens, so the experience stays fresh.
+ *
+ * Keep these short & cheeky — title <= ~40 chars, body <= ~140 chars.
  */
-async function promptSignIn(reason) {
-  if (state.user) return true;          // already real-signed-in
-  // Store the reason so the invitation sheet can show a contextual message
+const ANON_MESSAGES = {
+  en: [
+    { title: "Hold up, ninja! 🥷",            body: "You're peachin' in stealth mode. Anonymous Peaches™ aren't a thing — grab a name first." },
+    { title: "Not so fast, mystery peach! 🍑", body: "Even peaches need a name tag. Sign in so the world knows whose juice is whose." },
+    { title: "Whoa there, ghost-dropper! 👻",  body: "Anonymous peaches just blow away in the wind. Sign in so your drops actually count." },
+    { title: "Wait… who dis? 🤨",              body: "Can't drop a peach if nobody knows you. The peach gods demand a name." },
+    { title: "Pump the brakes, stranger! 🚦",  body: "Throwing nameless peaches into the void? Bold. Sign in and make it official." },
+    { title: "Identify yourself, fruit! 🕵️",   body: "Security check at the peach gate. One free account and you're in." },
+    { title: "Almost! Just one tiny thing 🤏",  body: "Your peach is ready to fly. It just needs a name on the tag. Two taps, promise." }
+  ],
+  fr: [
+    { title: "Hé minute, ninja ! 🥷",          body: "Tu poses ta pêche en mode invisible. Les Pêches Anonymes™ ça n'existe pas — faut un blaze." },
+    { title: "Pas si vite, pêche mystère ! 🍑", body: "Même les pêches ont besoin d'une étiquette. Connecte-toi pour qu'on sache qui a fait quoi." },
+    { title: "Hop hop hop, fantôme ! 👻",       body: "Les pêches anonymes s'envolent au vent. Connecte-toi pour que tes drops comptent vraiment." },
+    { title: "Attends… c'est qui ça ? 🤨",      body: "On peut pas poser une pêche si personne te connaît. Les dieux de la pêche exigent un nom !" },
+    { title: "Doucement, étranger ! 🚦",        body: "Balancer des pêches sans nom dans le vide ? Audacieux. Connecte-toi pour officialiser." },
+    { title: "Identifie-toi, fruit ! 🕵️",       body: "Contrôle de sécurité à la porte de la pêcheraie. Un compte gratuit et c'est bon." },
+    { title: "Presque ! Juste un détail 🤏",    body: "Ta pêche est prête à décoller. Il manque juste un nom sur l'étiquette. Deux taps, promis." }
+  ]
+};
+
+function pickAnonMessage() {
+  const arr = ANON_MESSAGES[state.lang] || ANON_MESSAGES.en;
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+/**
+ * Little CSS-driven wiggle on the FAB to acknowledge an anon tap before
+ * the sheet appears. Restarts cleanly even on rapid re-taps.
+ */
+function wiggleFab() {
+  const fab = $('fab');
+  if (!fab) return;
+  fab.classList.remove('wiggle');
+  void fab.offsetWidth;          // force reflow → restart animation
+  fab.classList.add('wiggle');
+  setTimeout(() => fab.classList.remove('wiggle'), 700);
+}
+
+/**
+ * Auth gate for any write-style action (drop, save place, etc).
+ *
+ * Returns true when the user is signed in — the caller proceeds normally.
+ * Returns false when the user is anonymous — the caller MUST stop, and
+ * this function will already have shown the cheeky sign-in invitation.
+ *
+ * @param {'drop'|'quest'|'place'|'generic'} reason   used to slightly
+ *   tweak the visual feedback (only 'drop' triggers the FAB wiggle).
+ */
+function requireAuth(reason) {
+  if (state.user) return true;
+
   state.signInReason = reason || 'generic';
+
+  // Inject a randomized funny message into the existing signInSheet.
+  // There are TWO data-i18n="signInRequiredTitle" nodes (head h2 + hero card)
+  // and ONE body node — we update them all.
+  const msg = pickAnonMessage();
+  document.querySelectorAll('#signInSheet [data-i18n="signInRequiredTitle"]')
+    .forEach(el => { el.textContent = msg.title; });
+  const bodyEl = document.querySelector('#signInSheet [data-i18n="signInRequiredBody"]');
+  if (bodyEl) bodyEl.textContent = msg.body;
+
+  if (reason === 'drop') wiggleFab();
+  vibrate([10, 30, 10]);
   openSheet('signInSheet');
   return false;
+}
+
+/**
+ * Legacy entry point — older call sites (e.g. performDrop) still use this.
+ * Now just delegates to requireAuth so messaging stays consistent.
+ */
+async function promptSignIn(reason) {
+  return requireAuth(reason);
 }
 
 function subscribePins() {
@@ -4514,6 +4599,7 @@ function renderQuests() {
     `;
     row.addEventListener('click', () => {
       vibrate(10); sfxTap();
+      if (!requireAuth('quest')) return;
       openDrop(c.id);
     });
     list.appendChild(row);
@@ -4601,8 +4687,6 @@ function openDrop(presetChallenge) {
   renderDropChalGrid();
   renderPhotoStage();
   $('dropNote').value = '';
-  const isAnon = !state.user || state.user.isAnonymous;
-  $('needAuthHint').style.display = isAnon ? '' : 'none';
   openSheet('dropSheet');
 }
 
@@ -5108,9 +5192,12 @@ function wireEvents() {
     });
   });
 
-  // FAB
+  // FAB — anonymous-friendly: gate at the entry, not at submit.
+  // An anonymous tap shows the cheeky sign-in sheet instantly instead
+  // of dragging the user halfway through the drop flow.
   $('fab').addEventListener('click', () => {
     vibrate(14); sfxTap();
+    if (!requireAuth('drop')) return;
     openDrop();
   });
 
