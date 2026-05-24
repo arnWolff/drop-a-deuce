@@ -2571,7 +2571,8 @@ const CHALLENGES = [
   { id:'beach',    em:'🏖️', xp:45, en:['Beach','Sandy shores.'], fr:['Plage','Sur le sable.'] },
   { id:'event',    em:'🎉', xp:50, en:['Event / Festival','Big day, big drop.'], fr:['Événement / Festival','Grand jour, grand soulagement.'] },
   { id:'mountain', em:'⛰️', xp:60, en:['Mountain','High elevation drop.'], fr:['Montagne','Pose en haute altitude.'] },
-  { id:'wild',     em:'🌿', xp:80, en:['In the wild','Brave and free.'], fr:['En pleine nature','Brave et libre.'] }
+  { id:'wild',     em:'🌿', xp:80, en:['In the wild','Brave and free.'], fr:['En pleine nature','Brave et libre.'] },
+  { id:'civic',    em:'🏛️', xp:55, en:['Public institution','Diplomatic incident averted.'], fr:['Institution publique',"Incident diplomatique évité."] }
 ];
 
 const PLACE_EMOJIS = ['🏠','💼','🎓','☕','🍽️','💪','🛍️','✈️','🚆','🚌','🚗','🚉','🏥','🏛️','🏨','🛏️','🌳','🌊','⛰️','🍻','🎉','🎬','🎭','🎟️','⛪','🛕','🕌','⛩️','🏟️','🚐'];
@@ -2952,7 +2953,7 @@ function bindSheet(id) {
    ===================================================================== */
 
 const AMENITY_CATS = {
-  // amenity=*
+  // ===== amenity=* — daily life =====
   restaurant:       { em:'🍔', tag:'amenity', en:'Restaurants',     fr:'Restos' },
   fast_food:        { em:'🍟', tag:'amenity', en:'Fast food',       fr:'Fast-food' },
   cafe:             { em:'☕', tag:'amenity', en:'Cafés',           fr:'Cafés' },
@@ -2982,21 +2983,75 @@ const AMENITY_CATS = {
   parking:          { em:'🅿️', tag:'amenity', en:'Parking',         fr:'Parkings' },
   bus_station:      { em:'🚌', tag:'amenity', en:'Bus stations',    fr:'Gares routières' },
   place_of_worship: { em:'⛪', tag:'amenity', en:'Worship',         fr:'Lieux de culte' },
-  // shop=*
+
+  // ===== amenity=* — CIVIC / INSTITUTIONAL (the new VIP tier) =====
+  embassy:          { em:'🏳️', tag:'amenity', en:'Embassies',       fr:'Ambassades' },
+  townhall:         { em:'🏛️', tag:'amenity', en:'Town halls',      fr:'Mairies' },
+  courthouse:       { em:'⚖️', tag:'amenity', en:'Courthouses',     fr:'Tribunaux' },
+  prison:           { em:'🚔', tag:'amenity', en:'Prisons',         fr:'Prisons' },
+  community_centre: { em:'🎪', tag:'amenity', en:'Community ctrs.', fr:'Centres soc.' },
+  marketplace:      { em:'🍅', tag:'amenity', en:'Markets',         fr:'Marchés' },
+
+  // ===== office=* — government, diplomatic, NGO =====
+  // This is where the Parlement européen, Conseil de l'Europe, ministries, etc. live in OSM.
+  government:       { em:'🏛️', tag:'office',  en:'Government',      fr:'Administrations' },
+  diplomatic:       { em:'🛂', tag:'office',  en:'Consulates',      fr:'Consulats' },
+  ngo:              { em:'🌍', tag:'office',  en:'NGOs',            fr:'ONG' },
+
+  // ===== historic=* — heritage spots ("I left my mark on a 12th-century castle") =====
+  monument:         { em:'🗽', tag:'historic', en:'Monuments',      fr:'Monuments' },
+  castle:           { em:'🏰', tag:'historic', en:'Castles',        fr:'Châteaux' },
+  memorial:         { em:'🕯️', tag:'historic', en:'Memorials',      fr:'Mémoriaux' },
+  ruins:            { em:'🏚️', tag:'historic', en:'Ruins',          fr:'Ruines' },
+
+  // ===== shop=* =====
   bakery:           { em:'🥐', tag:'shop',    en:'Bakeries',        fr:'Boulangeries' },
   supermarket:      { em:'🛒', tag:'shop',    en:'Supermarkets',    fr:'Supermarchés' },
   convenience:      { em:'🏪', tag:'shop',    en:'Mini-markets',    fr:'Épiceries' },
   butcher:          { em:'🥩', tag:'shop',    en:'Butchers',        fr:'Boucheries' },
-  // leisure=*
+  mall:             { em:'🏬', tag:'shop',    en:'Malls',           fr:'Centres comm.' },
+  hairdresser:      { em:'💇', tag:'shop',    en:'Hairdressers',    fr:'Coiffeurs' },
+  florist:          { em:'💐', tag:'shop',    en:'Florists',        fr:'Fleuristes' },
+  books:            { em:'📖', tag:'shop',    en:'Bookshops',       fr:'Librairies' },
+
+  // ===== leisure=* =====
   fitness_centre:   { em:'💪', tag:'leisure', en:'Gyms',            fr:'Salles de sport' },
   swimming_pool:    { em:'🏊', tag:'leisure', en:'Pools',           fr:'Piscines' },
   playground:       { em:'🎠', tag:'leisure', en:'Playgrounds',     fr:'Aires de jeux' },
   park:             { em:'🌳', tag:'leisure', en:'Parks',           fr:'Parcs' },
-  // tourism=*
+  stadium:          { em:'🏟️', tag:'leisure', en:'Stadiums',        fr:'Stades' },
+  garden:           { em:'🌸', tag:'leisure', en:'Gardens',         fr:'Jardins' },
+  sports_centre:    { em:'⛹️', tag:'leisure', en:'Sport centres',   fr:'Complexes sportifs' },
+
+  // ===== tourism=* =====
   hotel:            { em:'🏨', tag:'tourism', en:'Hotels',          fr:'Hôtels' },
+  hostel:           { em:'🛌', tag:'tourism', en:'Hostels',         fr:'Auberges' },
   museum:           { em:'🏛️', tag:'tourism', en:'Museums',         fr:'Musées' },
-  attraction:       { em:'🎡', tag:'tourism', en:'Attractions',     fr:'Attractions' }
+  gallery:          { em:'🖼️', tag:'tourism', en:'Galleries',       fr:'Galeries' },
+  attraction:       { em:'🎡', tag:'tourism', en:'Attractions',     fr:'Attractions' },
+  viewpoint:        { em:'🌄', tag:'tourism', en:'Viewpoints',      fr:'Belvédères' },
+  artwork:          { em:'🗿', tag:'tourism', en:'Artworks',        fr:"Œuvres d'art" },
+  zoo:              { em:'🦒', tag:'tourism', en:'Zoos',            fr:'Zoos' },
+  theme_park:       { em:'🎢', tag:'tourism', en:'Theme parks',     fr:"Parcs d'attractions" }
 };
+
+/* VIP categories get a 👑 prefix and pinned high in the hex sheet.
+   These are the "drop a legendary one" tier — diplomats and presidents would weep. */
+const VIP_AMENITY_KEYS = new Set([
+  'embassy', 'diplomatic', 'government',
+  'townhall', 'courthouse', 'prison',
+  'castle', 'monument', 'memorial',
+  'stadium', 'theme_park'
+]);
+
+/* Derived once, used by the query builder and the parser.
+   This list comes from AMENITY_CATS itself so adding a new entry above
+   "just works" with no other code changes. */
+const SUPPORTED_OSM_TAGS = (() => {
+  const s = new Set();
+  for (const v of Object.values(AMENITY_CATS)) s.add(v.tag);
+  return [...s];
+})();
 
 const OVERPASS_ENDPOINTS = [
   'https://overpass-api.de/api/interpreter',
@@ -3036,16 +3091,27 @@ function saveAmenitiesCache() {
 
 function buildOverpassQuery(bbox) {
   // bbox = "south,west,north,east"
-  const byTag = { amenity:[], shop:[], leisure:[], tourism:[] };
-  for (const [k, v] of Object.entries(AMENITY_CATS)) byTag[v.tag].push(k);
+  // Group categories by their OSM tag namespace dynamically — no hardcoded
+  // {amenity, shop, leisure, tourism} list anymore. Adding `office`, `historic`,
+  // or anything else to AMENITY_CATS now flows through automatically.
+  const byTag = {};
+  for (const [k, v] of Object.entries(AMENITY_CATS)) {
+    (byTag[v.tag] = byTag[v.tag] || []).push(k);
+  }
   const parts = [];
   for (const [tag, vals] of Object.entries(byTag)) {
     if (!vals.length) continue;
     const re = '^(' + vals.join('|') + ')$';
     parts.push(`node["${tag}"~"${re}"](${bbox});`);
     parts.push(`way["${tag}"~"${re}"](${bbox});`);
+    // Big institutional buildings (parliaments, embassies, castles) are
+    // usually multipolygon RELATIONS in OSM, not single ways. Without this
+    // line, the European Parliament literally doesn't show up.
+    parts.push(`relation["${tag}"~"${re}"](${bbox});`);
   }
-  return `[out:json][timeout:15];(${parts.join('')});out center 150;`;
+  // Bumped timeout 15→25s and result cap 150→250 to absorb the new categories
+  // and relation lookups without truncation in dense city hexes.
+  return `[out:json][timeout:25];(${parts.join('')});out center 250;`;
 }
 
 async function fetchAmenitiesForCell(cell, { force = false } = {}) {
@@ -3074,7 +3140,7 @@ async function fetchAmenitiesForCell(cell, { force = false } = {}) {
   let lastErr = null;
   for (const url of OVERPASS_ENDPOINTS) {
     try {
-      const tid = setTimeout(() => { try { amenitiesAbortCtrl && amenitiesAbortCtrl.abort(); } catch (_) {} }, 14000);
+      const tid = setTimeout(() => { try { amenitiesAbortCtrl && amenitiesAbortCtrl.abort(); } catch (_) {} }, 24000);
       const res = await fetch(url, {
         method: 'POST',
         body: 'data=' + encodeURIComponent(query),
@@ -3090,8 +3156,16 @@ async function fetchAmenitiesForCell(cell, { force = false } = {}) {
         if (lat == null || lng == null) return null;
         if (h3.latLngToCell(lat, lng, HEX_FIXED_RES) !== cell) return null; // hex-strict
         const tags = el.tags || {};
-        const key = tags.amenity || tags.shop || tags.leisure || tags.tourism;
-        if (!key || !AMENITY_CATS[key]) return null;
+
+        // Walk every supported OSM namespace (amenity, shop, office, historic, …)
+        // and pick the first value that matches a known category.
+        let key = null;
+        for (const ns of SUPPORTED_OSM_TAGS) {
+          const v = tags[ns];
+          if (v && AMENITY_CATS[v]) { key = v; break; }
+        }
+        if (!key) return null;
+
         return {
           id: el.type + '/' + el.id,
           lat, lng, key,
@@ -3100,7 +3174,12 @@ async function fetchAmenitiesForCell(cell, { force = false } = {}) {
           opening_hours: tags.opening_hours || null,
           wheelchair: tags.wheelchair || null,
           website: tags.website || tags['contact:website'] || null,
-          phone: tags.phone || tags['contact:phone'] || null
+          phone: tags.phone || tags['contact:phone'] || null,
+          // NEW: keep the raw operator/country so we can show "Embassy of Japan"
+          // not just "Embassy" — comedy lands harder with specifics.
+          operator: tags.operator || tags['operator:en'] || null,
+          country: tags['country'] || tags['addr:country'] || null,
+          vip: VIP_AMENITY_KEYS.has(key)
         };
       }).filter(Boolean);
 
@@ -3409,6 +3488,13 @@ function paintAmenities(cell, list, pins) {
     else                                   vibe.textContent = t('hexQuiet').replace('{a}', list.length || pins.length);
   }
 
+  // VIP override — if there's an institution in this hex, hype it up.
+  if (vibe && list.some(a => VIP_AMENITY_KEYS.has(a.key))) {
+    vibe.textContent = state.lang === 'fr'
+      ? '👑 Zone VIP — fais entrer ton nom dans l\'histoire'
+      : '👑 VIP zone — go make legendary history';
+  }
+
   if (!list.length) {
     wrap.innerHTML = `<div class="hex-empty">${escHtml(t('hexNoAmenities'))}</div>`;
     return;
@@ -3421,10 +3507,15 @@ function paintAmenities(cell, list, pins) {
     groups.get(a.key).push(a);
   }
 
-  // Sort groups by count desc; toilets pinned to top for the lulz
+  // Toilets first (obviously). Then VIP institutions (embassies, parliaments,
+  // castles…) so the funniest drops are surfaced. Then everything else by count.
   const order = [...groups.entries()].sort((A, B) => {
     if (A[0] === 'toilets') return -1;
     if (B[0] === 'toilets') return  1;
+    const aVip = VIP_AMENITY_KEYS.has(A[0]);
+    const bVip = VIP_AMENITY_KEYS.has(B[0]);
+    if (aVip && !bVip) return -1;
+    if (bVip && !aVip) return  1;
     return B[1].length - A[1].length;
   });
 
@@ -3438,6 +3529,9 @@ function paintAmenities(cell, list, pins) {
   for (const [key, items] of order) {
     const meta = AMENITY_CATS[key];
     const label = (state.lang === 'fr' ? meta.fr : meta.en);
+    // Crown VIP categories — visual hit + sets the comedic tone.
+    const crown = VIP_AMENITY_KEYS.has(key) ? '👑 ' : '';
+    // Then use `crown + meta.em + ' ' + label` wherever the group header is built.
     const grp = document.createElement('div');
     grp.className = 'hex-amen-group';
     grp.innerHTML = `
