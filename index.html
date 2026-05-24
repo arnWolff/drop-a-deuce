@@ -4154,7 +4154,7 @@ function unsubAll() {
   if (userDocUnsub) { userDocUnsub(); userDocUnsub = null; }
 }
 
-et modRoleUnsub = null;
+let modRoleUnsub = null;
 
 /** Decides current role from auth + moderator doc. Updates state.role. */
 function computeMyRole() {
