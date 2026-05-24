@@ -1637,6 +1637,69 @@ html.theme-dark .hex-toilet-joke {
 /* hide scrollbars in sheets but keep scrollable */
 .sheet-body::-webkit-scrollbar { width: 0; display: none; }
 .sheet-body { scrollbar-width: none; }
+
+/* ===== ROLE BADGES & MODERATION ===== */
+.chip.admin {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: white;
+  font-weight: 800;
+}
+.chip.mod {
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+  color: white;
+  font-weight: 800;
+}
+
+/* Pin popup action buttons (delete / mod-delete) */
+.pin-pop-act {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: transform .12s var(--ease-out);
+  border: 1.5px solid transparent;
+}
+.pin-pop-act:active { transform: scale(.96); }
+.pin-pop-act.danger {
+  background: rgba(239,68,68,.10);
+  color: var(--danger);
+  border-color: rgba(239,68,68,.25);
+}
+.pin-pop-act.warn {
+  background: linear-gradient(135deg, rgba(96,165,250,.15) 0%, rgba(59,130,246,.20) 100%);
+  color: #2563eb;
+  border-color: rgba(59,130,246,.30);
+}
+html.theme-dark .pin-pop-act.warn { color: #93c5fd; }
+
+/* Admin panel rows */
+.admin-mod-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-md);
+  margin-bottom: 8px;
+}
+.admin-mod-row .info { flex: 1; min-width: 0; }
+.admin-mod-row .nm {
+  font-weight: 700; font-size: 14px; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.admin-mod-row .sub {
+  font-size: 10px; color: var(--ink-3); font-weight: 500;
+  margin-top: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
 </style>
 </head>
 <body>
@@ -1964,6 +2027,65 @@ html.theme-dark .hex-toilet-joke {
   </div>
 </div>
 
+<!-- ===== SIGN-IN INVITATION SHEET ===== -->
+<div class="sheet" id="signInSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-head">
+    <div class="title-block">
+      <h2 data-i18n="signInRequiredTitle">Drop needs a peach-name 🍑</h2>
+      <div class="sub" data-i18n="adminSub">Quick & free</div>
+    </div>
+    <button class="sheet-close" data-close type="button">✕</button>
+  </div>
+  <div class="sheet-body">
+    <div class="card" style="text-align:center;padding:24px 18px;background:var(--peach-grad-soft);border:none;margin-bottom:16px;">
+      <div style="font-size:72px;line-height:1;">🍑✨</div>
+      <div style="font-family:'Bagel Fat One',sans-serif;font-size:22px;color:var(--ink);margin-top:10px;line-height:1.15;" data-i18n="signInRequiredTitle">Drop needs a peach-name 🍑</div>
+      <div style="color:var(--ink-2);font-size:13px;margin-top:8px;font-weight:600;" data-i18n="signInRequiredBody">You're browsing in stealth mode. To drop a peach, sign in so the world knows who's behind the deed.</div>
+    </div>
+    <div class="card flat" style="background:var(--surface-2);margin-bottom:16px;">
+      <div style="white-space:pre-line;font-size:13px;font-weight:600;color:var(--ink-2);line-height:1.7;" data-i18n="signInBenefits">✓ Your drops sync across devices
+✓ Earn XP and climb levels
+✓ Compete with friends</div>
+    </div>
+    <button class="gbtn" id="signInDoBtn" type="button">
+      <svg class="g-ic" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+        <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.5-5.9 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.4-.4-3.5z"/>
+        <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8c1.8-4.4 6.1-7.5 11.1-7.5 3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.4 6.3 14.7z"/>
+        <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2c-2 1.4-4.5 2.4-7.2 2.4-5.3 0-9.7-3.4-11.3-8.1l-6.5 5C9.5 39.5 16.2 44 24 44z"/>
+        <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.1-4.1 5.6l6.2 5.2C40.1 35.6 44 30.3 44 24c0-1.3-.1-2.4-.4-3.5z"/>
+      </svg>
+      <span data-i18n="signInNow">Sign me in</span>
+    </button>
+    <div style="height:8px;"></div>
+    <button class="btn ghost block" data-close type="button"><span data-i18n="maybeLater">Keep lurking</span></button>
+  </div>
+</div>
+
+<!-- ===== ADMIN PANEL SHEET ===== -->
+<div class="sheet" id="adminSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-head">
+    <div class="title-block">
+      <h2 data-i18n="adminTitle">Admin panel</h2>
+      <div class="sub" data-i18n="adminSub">Elect or revoke moderators</div>
+    </div>
+    <button class="sheet-close" data-close type="button">✕</button>
+  </div>
+  <div class="sheet-body">
+    <div class="section-label" data-i18n="addModByUid">Add a moderator by UID</div>
+    <div style="font-size:12px;color:var(--ink-3);font-weight:500;margin-bottom:10px;" data-i18n="addModHint">Ask the user to copy their UID from their profile and paste it below.</div>
+    <div class="input-row" style="gap:8px;">
+      <input class="input" id="adminAddUid" placeholder="Firebase UID" autocomplete="off" spellcheck="false" />
+      <button class="btn primary" id="adminAddBtn" type="button" style="flex-shrink:0;">
+        <span class="ic">🛡️</span><span data-i18n="addMod">Elect moderator</span>
+      </button>
+    </div>
+    <div class="section-label" style="margin-top:24px;" data-i18n="currentMods">Current moderators</div>
+    <div id="adminModList"></div>
+  </div>
+</div>
+
 <!-- IOS INSTALL SHEET -->
 <div class="sheet" id="iosSheet">
   <div class="sheet-handle"></div>
@@ -2118,6 +2240,11 @@ window.dispatchEvent(new Event('firebase-ready'));
 <script>
 'use strict';
 
+/* ---------- ROLES & ADMIN ---------- */
+// Paste here YOUR own Firebase Auth UID (same value as in firestore_rules).
+// The owner of this Firebase project = the single admin.
+const ADMIN_UID = '9qNBC8wrdxT7lhNwHOmAJ8of3442';
+
 /* ---------- i18n ---------- */
 const I18N = {
   en: {
@@ -2233,6 +2360,39 @@ const I18N = {
     hexShare: 'of total XP',
     onePeach: '1 peach',
     manyPeaches: '{n} peaches',
+    // Roles & permissions
+    signInRequiredTitle: 'Drop needs a peach-name 🍑',
+    signInRequiredBody: "You're browsing in stealth mode. To drop a peach, sign in so the world knows who's behind the deed.",
+    signInBenefits: "✓ Your drops sync across devices\n✓ Earn XP and climb levels\n✓ Compete with friends",
+    maybeLater: 'Keep lurking',
+    signInNow: 'Sign me in',
+    adminBadge: 'ADMIN',
+    modBadge: 'MOD',
+    deleteMine: 'Delete my drop',
+    deleteAsMod: 'Moderate (delete)',
+    deleteAsAdmin: 'Admin delete',
+    confirmDeleteMine: 'Flush this drop forever?',
+    confirmDeleteAsMod: 'Delete {name}\'s drop as a moderator?',
+    pinDeleted: 'Drop flushed 🚽',
+    notAllowed: 'Not allowed for your role.',
+    verifyingAccount: 'Verifying account…',
+    openAdminPanel: 'Admin panel',
+    adminTitle: 'Admin panel',
+    adminSub: 'Elect or revoke moderators',
+    currentMods: 'Current moderators',
+    addModByUid: 'Add a moderator by UID',
+    addModHint: "Ask the user to copy their UID from their profile and paste it below.",
+    paste: 'Paste UID',
+    addMod: 'Elect moderator',
+    removeModerator: 'Revoke',
+    confirmRemoveMod: 'Revoke {name} as moderator?',
+    modAdded: '🛡️ Moderator elected',
+    modRemoved: 'Moderator revoked',
+    noModerators: 'No moderators yet. Elect your first peach knight! 🛡️',
+    invalidUid: 'That doesn\'t look like a Firebase UID.',
+    cantModAdmin: "Admin can't be a moderator (you're already the king 👑).",
+    uidCopied: 'UID copied to clipboard',
+    loading: 'Loading',
   },
   fr: {
     appName: 'Pose ta Pêche', tagline: 'Trace ton trône',
@@ -2346,6 +2506,38 @@ const I18N = {
     hexShare: 'du XP total',
     onePeach: '1 pêche',
     manyPeaches: '{n} pêches',
+    signInRequiredTitle: 'Pour poser, il faut un blaze 🍑',
+    signInRequiredBody: "Tu navigues en mode incognito. Pour poser une pêche, connecte-toi pour que le monde sache qui c'est.",
+    signInBenefits: "✓ Tes pêches synchronisées sur tous tes appareils\n✓ Gagne de l'XP et monte les niveaux\n✓ Affronte tes potes",
+    maybeLater: 'Je rôde encore',
+    signInNow: 'Connecte-moi',
+    adminBadge: 'ADMIN',
+    modBadge: 'MODO',
+    deleteMine: 'Supprimer ma pêche',
+    deleteAsMod: 'Modérer (supprimer)',
+    deleteAsAdmin: 'Supprimer (admin)',
+    confirmDeleteMine: 'Tirer la chasse pour de bon ?',
+    confirmDeleteAsMod: 'Supprimer la pêche de {name} en tant que modo ?',
+    pinDeleted: 'Pêche tirée 🚽',
+    notAllowed: 'Non autorisé pour ton rôle.',
+    verifyingAccount: 'Vérification du compte…',
+    openAdminPanel: 'Panneau admin',
+    adminTitle: 'Panneau admin',
+    adminSub: 'Élis ou révoque des modérateurs',
+    currentMods: 'Modérateurs actuels',
+    addModByUid: 'Ajouter un modérateur via son UID',
+    addModHint: "Demande à l'utilisateur de copier son UID depuis son profil et de te l'envoyer.",
+    paste: 'Coller l\'UID',
+    addMod: 'Élire modérateur',
+    removeModerator: 'Révoquer',
+    confirmRemoveMod: 'Révoquer {name} en tant que modérateur ?',
+    modAdded: '🛡️ Modérateur élu',
+    modRemoved: 'Modérateur révoqué',
+    noModerators: 'Aucun modérateur. Élis ton premier chevalier de la pêche ! 🛡️',
+    invalidUid: 'Ça ne ressemble pas à un UID Firebase.',
+    cantModAdmin: "L'admin ne peut pas être modo (tu es déjà le roi 👑).",
+    uidCopied: 'UID copié',
+    loading: 'Chargement',
   }
 };
 const t = (k) => (I18N[state.lang] && I18N[state.lang][k]) || I18N.en[k] || k;
@@ -2377,6 +2569,10 @@ const AVATAR_EMOJIS = ['🍑','🐱','🐶','🦊','🦝','🐼','🐨','🐯','
 const LS_KEY = 'peach-app-v2';
 const DEFAULTS = {
   lang: (navigator.language || 'en').startsWith('fr') ? 'fr' : 'en',
+  // ROLES — derived at runtime, never persisted from LS
+  role: 'guest',        // 'guest' | 'user' | 'moderator' | 'admin'
+  isModerator: false,
+  isAdmin: false,
   theme: 'auto',
   haptics: true,
   sound: true,
@@ -2401,7 +2597,6 @@ state.draftPhoto = null;
 state.editingPlace = null;
 state.pickMode = null;
 state.pickResolve = null;
-state.migrating = false;
 state.deleting = false;
 
 function loadLS() {
@@ -2607,7 +2802,7 @@ function confettiBurst() {
 
 
 /* ---------- SHEETS ---------- */
-const SHEETS = ['dropSheet', 'questsSheet', 'placesSheet', 'addPlaceSheet', 'profileSheet', 'iosSheet', 'welcomeSheet', 'hexSheet'];
+const SHEETS = ['dropSheet', 'questsSheet', 'placesSheet', 'addPlaceSheet', 'profileSheet', 'iosSheet', 'welcomeSheet', 'hexSheet', 'signInSheet', 'adminSheet'];
 let currentSheet = null;
 
 /**
@@ -3697,6 +3892,7 @@ function pinIconFor(pin, mine) {
 function popupHtml(pin) {
   const ch = chById(pin.challengeId);
   const isMe = state.user && pin.uid === state.user.uid;
+  const canMod = !!state.user && (state.isModerator || state.isAdmin) && !isMe;
   const avatarHtml = pin.photoURL
     ? `<img src="${escHtml(pin.photoURL)}" alt=""/>`
     : (pin.avatarEmoji
@@ -3713,10 +3909,18 @@ function popupHtml(pin) {
       </div>
       ${mineBadge}
     </div>`;
-  if (ch) html += `<div class="ch-line"><span class="em">${ch.em}</span><span>${escHtml(chName(ch))}</span></div>`;
+  if (ch)            html += `<div class="ch-line"><span class="em">${ch.em}</span><span>${escHtml(chName(ch))}</span></div>`;
   if (pin.placeName) html += `<div class="ploc">📍 ${escHtml(pin.placeName)}</div>`;
-  if (pin.note) html += `<div style="font-size:12px;color:var(--ink-2);font-weight:500;margin-top:4px;">💬 ${escHtml(pin.note)}</div>`;
-  if (pin.photo) html += `<img class="pimg" src="${pin.photo}" alt="drop photo"/>`;
+  if (pin.note)      html += `<div style="font-size:12px;color:var(--ink-2);font-weight:500;margin-top:4px;">💬 ${escHtml(pin.note)}</div>`;
+  if (pin.photo)     html += `<img class="pimg" src="${pin.photo}" alt="drop photo"/>`;
+
+  // Action row — owner, mod, or admin sees a delete button
+  if (isMe) {
+    html += `<button class="pin-pop-act danger" data-act="del" data-pin="${escHtml(pin.id)}">🗑️ ${escHtml(t('deleteMine'))}</button>`;
+  } else if (canMod) {
+    const label = state.isAdmin ? t('deleteAsAdmin') : t('deleteAsMod');
+    html += `<button class="pin-pop-act warn" data-act="del" data-pin="${escHtml(pin.id)}">🛡️ ${escHtml(label)}</button>`;
+  }
   html += `</div>`;
   return html;
 }
@@ -3724,7 +3928,6 @@ function popupHtml(pin) {
 function addPinMarker(pin) {
   if (!map) return;
   if (markersByPin.has(pin.id)) return;
-  // At low zoom we use the cluster canvas instead of DOM markers
   if (map.getZoom() < HEX_MIN_ZOOM) return;
 
   const mine = state.user && pin.uid === state.user.uid;
@@ -3733,6 +3936,15 @@ function addPinMarker(pin) {
   const m = L.marker([pin.lat, pin.lng], { icon: pinIconFor(pin, mine) })
     .bindPopup(popupHtml(pin), { maxWidth: 260, closeButton: true })
     .addTo(map);
+
+  // Wire the delete button after Leaflet renders the popup DOM
+  m.on('popupopen', (ev) => {
+    const root = ev.popup.getElement();
+    if (!root) return;
+    const btn = root.querySelector('.pin-pop-act[data-act="del"]');
+    if (btn) btn.addEventListener('click', () => { vibrate(15); sfxTap(); deletePin(pin); });
+  });
+
   markersByPin.set(pin.id, m);
 }
 function removePinMarker(id) {
@@ -3746,6 +3958,26 @@ function refreshAllMarkers() {
   state.pins.forEach(addPinMarker);
   // Force a canvas redraw so cluster counts match pin set immediately
   scheduleHexUpdate();
+}
+/** Owner deletes their own. Mod/admin deletes anyone's. */
+async function deletePin(pin) {
+  if (!state.user || !fbReady()) return;
+  const canDelete = pin.uid === state.user.uid || state.isModerator || state.isAdmin;
+  if (!canDelete) { toast(t('notAllowed'), 'err'); return; }
+  const isMine = pin.uid === state.user.uid;
+  const msg = isMine ? t('confirmDeleteMine')
+                     : t('confirmDeleteAsMod').replace('{name}', pin.displayName || t('friend'));
+  if (!confirm(msg)) return;
+  try {
+    const { db, doc, deleteDoc } = FB();
+    await deleteDoc(doc(db, 'pins', pin.id));
+    map.closePopup();
+    toast(t('pinDeleted'), 'win');
+    sfxWin(); vibrate(20);
+  } catch (e) {
+    console.error('Pin delete failed:', e);
+    toast('❌ ' + (e.message || 'Delete failed'), 'err');
+  }
 }
 
 /* =====================================================================
@@ -3829,17 +4061,17 @@ const PIN_LIMIT = 200;
 
 function fbReady() { return !!(FB() && FB().auth && FB().db); }
 
-async function ensureSignedIn() {
-  if (!fbReady()) return null;
-  const { auth, signInAnonymously } = FB();
-  if (auth.currentUser) return auth.currentUser;
-  try {
-    const cred = await signInAnonymously(auth);
-    return cred.user;
-  } catch (e) {
-    console.warn('Anon sign-in failed:', e);
-    return null;
-  }
+/**
+ * Replaces the old auto-anon sign-in. Now we never sign anyone in silently.
+ * Returns true if the user is (or just became) a real signed-in user.
+ * If they're not signed in, opens the invitation sheet and returns false.
+ */
+async function promptSignIn(reason) {
+  if (state.user) return true;          // already real-signed-in
+  // Store the reason so the invitation sheet can show a contextual message
+  state.signInReason = reason || 'generic';
+  openSheet('signInSheet');
+  return false;
 }
 
 function subscribePins() {
@@ -3922,6 +4154,44 @@ function unsubAll() {
   if (userDocUnsub) { userDocUnsub(); userDocUnsub = null; }
 }
 
+et modRoleUnsub = null;
+
+/** Decides current role from auth + moderator doc. Updates state.role. */
+function computeMyRole() {
+  if (!state.user) {
+    state.role = 'guest';
+    state.isAdmin = false;
+    state.isModerator = false;
+    return;
+  }
+  if (state.user.uid === ADMIN_UID) {
+    state.role = 'admin';
+    state.isAdmin = true;
+    state.isModerator = true;   // admin can do anything a mod can
+    return;
+  }
+  if (state.isModerator) {
+    state.role = 'moderator';
+    state.isAdmin = false;
+    return;
+  }
+  state.role = 'user';
+  state.isAdmin = false;
+}
+
+/** Live-subscribe to moderators/{myUid}. If the doc exists, I'm a mod. */
+function subscribeModRole() {
+  if (!fbReady() || !state.user) return;
+  const { db, doc, onSnapshot } = FB();
+  if (modRoleUnsub) modRoleUnsub();
+  modRoleUnsub = onSnapshot(doc(db, 'moderators', state.user.uid), (snap) => {
+    state.isModerator = snap.exists();
+    computeMyRole();
+    renderProfile();
+    refreshAllMarkers();   // popups change when role changes
+  }, () => {});
+}
+
 async function ensureUserDoc(user) {
   if (!fbReady() || !user) return;
   const { db, doc, getDoc, setDoc, serverTimestamp } = FB();
@@ -3960,8 +4230,7 @@ async function signInWithGoogle() {
   if (!fbReady()) { toast(t('googleSigninErr'), 'err'); return; }
   const {
     auth, GoogleAuthProvider,
-    signInWithPopup, signInWithRedirect,
-    linkWithPopup, linkWithRedirect
+    signInWithPopup, signInWithRedirect
   } = FB();
 
   const provider = new GoogleAuthProvider();
@@ -3976,65 +4245,25 @@ async function signInWithGoogle() {
     'auth/web-storage-unsupported'
   ]);
 
-  const fallbackToRedirect = async (isAnon) => {
-    toast(t('helpAuthBlocked'), 'warn');
-    sessionStorage.setItem('awaiting_google', 'yes');
-    if (isAnon && auth.currentUser) {
-      await linkWithRedirect(auth.currentUser, provider);
-    } else {
-      await signInWithRedirect(auth, provider);
-    }
-  };
-
-  const handleCredentialReuse = async (err) => {
-    const credential = GoogleAuthProvider.credentialFromError(err);
-    if (!credential) return false;
-    toast('Fusion des comptes...', 'win', 3000);
-    await migrateAnonToGoogle(credential);
-    return true;
-  };
-
-  const isAnon = auth.currentUser && auth.currentUser.isAnonymous;
   let result = null;
-
   try {
-    if (isAnon) {
-      // Try LINK first so we keep the same UID + all the user's drops
-      try {
-        result = await linkWithPopup(auth.currentUser, provider);
-      } catch (err) {
-        if (err.code === 'auth/credential-already-in-use' ||
-            err.code === 'auth/email-already-in-use') {
-          if (await handleCredentialReuse(err)) return;
-        }
-        if (POPUP_FAIL.has(err.code)) {
-          await fallbackToRedirect(true);
-          return;
-        }
-        throw err;
+    try {
+      result = await signInWithPopup(auth, provider);
+    } catch (err) {
+      if (POPUP_FAIL.has(err.code)) {
+        toast(t('helpAuthBlocked'), 'warn');
+        sessionStorage.setItem('awaiting_google', 'yes');
+        await signInWithRedirect(auth, provider);
+        return;
       }
-    } else {
-      try {
-        result = await signInWithPopup(auth, provider);
-      } catch (err) {
-        if (POPUP_FAIL.has(err.code)) {
-          await fallbackToRedirect(false);
-          return;
-        }
-        throw err;
-      }
+      throw err;
     }
 
     if (result && result.user) {
-      // Force the SDK to fetch the latest profile so isAnonymous/displayName
-      // are up to date in the same tick (linkWithPopup does NOT always
-      // refire onAuthStateChanged because the UID didn't change).
       try { await result.user.reload(); } catch (_) {}
-
       state.user = auth.currentUser;
-      state.signedInReal = true;
 
-      // Pull Google's name/photo into the user doc
+      // Push Google's name/photo into the user doc
       try {
         const { db, doc, setDoc, serverTimestamp } = FB();
         await setDoc(doc(db, 'users', state.user.uid), {
@@ -4045,13 +4274,14 @@ async function signInWithGoogle() {
         }, { merge: true });
       } catch (_) {}
 
-      // Re-subscribe so listeners point at the (now non-anon) user
       await ensureUserDoc(state.user);
       subscribePins();
       subscribeUserDoc();
       subscribePlaces();
+      subscribeModRole();           // NEW — see §2.7
+      computeMyRole();              // NEW — see §2.7
 
-      // Refresh every surface that shows identity
+      closeAllSheets();
       renderHeader();
       renderProfile();
       renderQuests();
@@ -4065,89 +4295,6 @@ async function signInWithGoogle() {
     console.error('Google sign-in failed:', e);
     toast(t('googleSigninErr') + ': ' + (e.message || e.code || ''), 'err');
   }
-}
-
-async function migrateAnonToGoogle(credential) {
-  if (!fbReady() || !credential) return;
-  const {
-    auth, db, signInWithCredential,
-    collection, query, where, getDocs,
-    doc, getDoc, setDoc, addDoc, deleteDoc, serverTimestamp
-  } = FB();
-  const anonUser = auth.currentUser;
-  if (!anonUser || !anonUser.isAnonymous) return;
-
-  // Tell the auth state listener: don't sign me back in anonymously while
-  // we're tearing down the old anon user and signing in with Google.
-  state.migrating = true;
-
-  const anonUid = anonUser.uid;
-
-  let anonPins = [];
-  try {
-    const pinsSnap = await getDocs(query(collection(db, 'pins'), where('uid', '==', anonUid)));
-    pinsSnap.forEach((d) => anonPins.push({ id: d.id, ...d.data() }));
-  } catch (_) {}
-
-  let anonPlaces = [];
-  try {
-    const placesSnap = await getDocs(collection(db, 'users', anonUid, 'locations'));
-    placesSnap.forEach((d) => anonPlaces.push({ id: d.id, ...d.data() }));
-  } catch (_) {}
-
-  let anonDoc = null;
-  try {
-    const us = await getDoc(doc(db, 'users', anonUid));
-    if (us.exists()) anonDoc = us.data();
-  } catch (_) {}
-
-  await Promise.all(anonPins.map((p) => deleteDoc(doc(db, 'pins', p.id)).catch(() => {})));
-  await Promise.all(anonPlaces.map((p) => deleteDoc(doc(db, 'users', anonUid, 'locations', p.id)).catch(() => {})));
-  await deleteDoc(doc(db, 'users', anonUid)).catch(() => {});
-  try { await anonUser.delete(); } catch (_) {}
-
-  let result;
-  try {
-    result = await signInWithCredential(auth, credential);
-  } finally {
-    state.migrating = false;
-  }
-  const newUser = result.user;
-
-  await Promise.all(anonPins.map((p) => {
-    const { id, uid, ...rest } = p;
-    return addDoc(collection(db, 'pins'), {
-      ...rest, uid: newUser.uid,
-      displayName: newUser.displayName || rest.displayName || null,
-      photoURL: newUser.photoURL || rest.photoURL || null,
-      createdAt: serverTimestamp()
-    }).catch(() => {});
-  }));
-
-  await Promise.all(anonPlaces.map((p) => {
-    const { id, ...rest } = p;
-    return addDoc(collection(db, 'users', newUser.uid, 'locations'), {
-      ...rest, createdAt: serverTimestamp()
-    }).catch(() => {});
-  }));
-
-  let existing = {};
-  try {
-    const ex = await getDoc(doc(db, 'users', newUser.uid));
-    if (ex.exists()) existing = ex.data();
-  } catch (_) {}
-
-  await setDoc(doc(db, 'users', newUser.uid), {
-    displayName: newUser.displayName || existing.displayName || (anonDoc && anonDoc.displayName) || null,
-    photoURL: newUser.photoURL || existing.photoURL || null,
-    avatarEmoji: existing.avatarEmoji || (anonDoc && anonDoc.avatarEmoji) || state.avatar || null,
-    xp: Math.max(existing.xp || 0, (anonDoc && anonDoc.xp) || 0),
-    completed: [...new Set([...(existing.completed || []), ...((anonDoc && anonDoc.completed) || [])])],
-    updatedAt: serverTimestamp()
-  }, { merge: true });
-
-  toast('🎉 ' + (newUser.displayName || 'Signed in'), 'win');
-  sfxWin();
 }
 
 async function deleteAccount() {
@@ -4182,7 +4329,6 @@ async function deleteAccount() {
 
   // Block the listener's "user is null → re-anonymize" path while we tear down.
   state.deleting = true;
-  state.migrating = true;
 
   // Show a long-running toast — the deletion can take a few seconds.
   toast(t('deleting'), 'warn', 5000);
@@ -4236,10 +4382,13 @@ async function deleteAccount() {
 
     // Release the guards BEFORE the auth state listener fires for the new anon user.
     state.deleting = false;
-    state.migrating = false;
 
-    // 6) Drop them back into a clean anonymous session.
-    await ensureSignedIn();
+    // 6) Become an unauthenticated visitor (read-only).
+    state.user = null;
+    state.role = 'guest';
+    state.isAdmin = false;
+    state.isModerator = false;
+    subscribePins();   // keep showing public pins
 
     // 7) Refresh every surface.
     closeAllSheets();
@@ -4255,7 +4404,6 @@ async function deleteAccount() {
     vibrate([30, 60, 30]);
   } catch (e) {
     state.deleting = false;
-    state.migrating = false;
     console.error('Account deletion failed:', e);
     const msg = t('deleteFailed') + ': ' + (e.message || e.code || '');
     toast(msg, 'err', 4500);
@@ -4271,11 +4419,18 @@ async function deleteAccount() {
 
 async function doSignOut() {
   if (!fbReady()) return;
-  const { auth, signOut, signInAnonymously } = FB();
+  const { auth, signOut } = FB();
   try {
     unsubAll();
+    if (modRoleUnsub) { modRoleUnsub(); modRoleUnsub = null; }   // NEW
     await signOut(auth);
-    await signInAnonymously(auth);
+    state.user = null;
+    state.role = 'guest';
+    state.isAdmin = false;
+    state.isModerator = false;
+    refreshAllMarkers();   // wipe "mine" styling from all markers
+    renderHeader();
+    renderProfile();
   } catch (e) {
     console.warn('Sign out failed:', e);
   }
@@ -4502,13 +4657,11 @@ async function compressImage(file, maxDim = 900, quality = 0.78) {
 }
 
 async function performDrop() {
-  if (!state.draftLoc) { toast(t('needLoc'), 'warn'); vibrate(40); sfxErr(); return; }
-  if (!state.draftChallenge) { toast(t('needChallenge'), 'warn'); vibrate(40); sfxErr(); return; }
+  if (!state.draftLoc)        { toast(t('needLoc'),       'warn'); vibrate(40); sfxErr(); return; }
+  if (!state.draftChallenge)  { toast(t('needChallenge'), 'warn'); vibrate(40); sfxErr(); return; }
 
-  if (!state.user) {
-    await ensureSignedIn();
-    if (!state.user) { toast(t('googleSigninErr'), 'err'); return; }
-  }
+  // Anonymous = read-only. Politely invite, don't auto-sign-in.
+  if (!state.user) { await promptSignIn('drop'); return; }
 
   const ch = chById(state.draftChallenge);
   if (!ch) return;
@@ -4519,7 +4672,9 @@ async function performDrop() {
     lng: state.draftLoc.lng,
     ts,
     challengeId: ch.id,
-    h3_r9: (typeof h3 !== 'undefined') ? h3.latLngToCell(state.draftLoc.lat, state.draftLoc.lng, 9) : null, // FIXED
+    h3_r9: (typeof h3 !== 'undefined')
+      ? h3.latLngToCell(state.draftLoc.lat, state.draftLoc.lng, 9)
+      : null,
     note: ($('dropNote').value || '').trim().slice(0, 160),
     photo: state.draftPhoto || null,
     placeName: state.draftLoc.name || null,
@@ -4528,8 +4683,7 @@ async function performDrop() {
     avatarEmoji: state.avatar || null
   };
 
-  let firstTime = !state.completed.has(ch.id);
-  const oldLevel = level();
+  const firstTime = !state.completed.has(ch.id);
   state.xp += ch.xp + (firstTime ? 10 : 0);
   state.completed.add(ch.id);
 
@@ -4543,33 +4697,17 @@ async function performDrop() {
       toast('❌ ' + (e.message || 'Drop failed'), 'err');
       return;
     }
-  } else {
-    state.pins.unshift({ ...pin, id: 'local_' + ts });
-    refreshAllMarkers();
-    scheduleHexUpdate();
   }
 
   closeAllSheets();
   if (map) {
     map.flyTo([pin.lat, pin.lng], 16, { duration: 0.8 });
-    // Wait for fly to settle, then pulse the zone
     setTimeout(() => pulseHexAt(pin.lat, pin.lng), 850);
   }
   vibrate([30, 40, 30]);
   sfxDrop();
   confettiBurst();
   toast(t('droppedXp').replace('{xp}', ch.xp + (firstTime ? 10 : 0)), 'win');
-  if (firstTime) setTimeout(() => showAchievement(ch), 700);
-
-  if (level() > oldLevel) {
-    setTimeout(() => {
-      vibrate([50, 80, 50, 80, 50]);
-      sfxWin();
-      toast('🎊 ' + t('levelUp').replace('{title}', levelTitle()), 'win', 3200);
-    }, 1300);
-  }
-
-  state.draftPhoto = null;
 }
 
 
@@ -4683,29 +4821,20 @@ async function savePlace() {
   const [lat, lng] = coords.split(',').map(parseFloat);
   const emoji = $('placeEmoji').dataset.picked || '🏠';
 
-  if (!state.user) await ensureSignedIn();
+  if (!state.user) { await promptSignIn('place'); return; }
 
-  if (fbReady() && state.user) {
-    const { db, doc, setDoc, collection, addDoc, serverTimestamp } = FB();
-    try {
-      if (state.editingPlace) {
-        await setDoc(doc(db, 'users', state.user.uid, 'locations', state.editingPlace.id),
-          { name, emoji, lat, lng, updatedAt: serverTimestamp() }, { merge: true });
-      } else {
-        await addDoc(collection(db, 'users', state.user.uid, 'locations'),
-          { name, emoji, lat, lng, createdAt: serverTimestamp() });
-      }
-    } catch (e) {
-      console.error(e); toast('❌ ' + (e.message || 'Save failed'), 'err'); return;
-    }
-  } else {
+  if (!fbReady()) return;
+  const { db, doc, setDoc, collection, addDoc, serverTimestamp } = FB();
+  try {
     if (state.editingPlace) {
-      const idx = state.places.findIndex((p) => p.id === state.editingPlace.id);
-      if (idx >= 0) state.places[idx] = { ...state.places[idx], name, emoji, lat, lng };
+      await setDoc(doc(db, 'users', state.user.uid, 'locations', state.editingPlace.id),
+        { name, emoji, lat, lng, updatedAt: serverTimestamp() }, { merge: true });
     } else {
-      state.places.push({ id: 'local_' + Date.now(), name, emoji, lat, lng });
+      await addDoc(collection(db, 'users', state.user.uid, 'locations'),
+        { name, emoji, lat, lng, createdAt: serverTimestamp() });
     }
-    renderPlaces();
+  } catch (e) {
+    console.error(e); toast('❌ ' + (e.message || 'Save failed'), 'err'); return;
   }
   closeAllSheets();
   toast(t('locSaved'), 'win');
@@ -4726,13 +4855,7 @@ async function deletePlace(id) {
 /* ---------- RENDER: PROFILE ---------- */
 function renderProfile() {
   const u = state.user;
-
-  // Real sign-in = not anonymous OR has any provider attached that isn't
-  // "anonymous". This handles the brief window where linkWithPopup has
-  // succeeded but the user object hasn't refreshed isAnonymous yet.
-  const hasRealProvider = u && u.providerData &&
-    u.providerData.some(p => p.providerId && p.providerId !== 'anonymous');
-  const isAnon = !u || (u.isAnonymous && !hasRealProvider);
+  const isAnon = !u;   // no more isAnonymous flag — either signed in or not
 
   $('profileAvatar').textContent = '';
   if (u && u.photoURL) {
@@ -4740,26 +4863,30 @@ function renderProfile() {
   } else {
     $('profileAvatar').textContent = state.avatar || '🍑';
   }
-  $('profileName').textContent = state.nickname || (u && u.displayName) || t('anonymous');
+  $('profileName').textContent  = state.nickname || (u && u.displayName) || t('anonymous');
   $('profileEmail').textContent = isAnon ? t('youAreAnon') : (u && u.email) || (u && u.displayName) || '';
 
   const chips = $('profileChips');
   chips.innerHTML = '';
   if (!isAnon) chips.innerHTML += '<span class="chip mint">✓ Google</span>';
+  if (state.isAdmin)         chips.innerHTML += `<span class="chip admin">👑 ${escHtml(t('adminBadge'))}</span>`;
+  else if (state.isModerator) chips.innerHTML += `<span class="chip mod">🛡️ ${escHtml(t('modBadge'))}</span>`;
   chips.innerHTML += `<span class="chip peach">Lv <span class="mono">${level()}</span></span>`;
   chips.innerHTML += `<span class="chip purple">${fmt(state.xp)} XP</span>`;
 
   const block = $('authBlock');
   block.innerHTML = '';
+
   if (isAnon) {
+    // Friendly sign-in invitation card
     const card = document.createElement('div');
     card.className = 'card';
     card.style.background = 'linear-gradient(135deg, var(--peach-grad-soft) 0%, rgba(167,139,250,.12) 100%)';
     card.style.borderColor = 'transparent';
     card.style.marginBottom = '12px';
     card.innerHTML = `
-      <div style="font-weight:800; color:var(--ink); font-size:15px;">${escHtml(t('upgradeAcct'))}</div>
-      <div style="color:var(--ink-2); font-size:13px; margin-top:4px; font-weight:500;">${escHtml(t('upgradeHint'))}</div>
+      <div style="font-weight:800;color:var(--ink);font-size:15px;">${escHtml(t('upgradeAcct'))}</div>
+      <div style="color:var(--ink-2);font-size:13px;margin-top:4px;font-weight:500;">${escHtml(t('upgradeHint'))}</div>
     `;
     block.appendChild(card);
     const btn = document.createElement('button');
@@ -4777,16 +4904,36 @@ function renderProfile() {
     btn.addEventListener('click', () => { vibrate(10); sfxTap(); signInWithGoogle(); });
     block.appendChild(btn);
   } else {
+    // Signed-in card with copyable UID, sign-out, delete account
     const card = document.createElement('div');
     card.className = 'card flat';
     card.style.marginBottom = '12px';
     card.style.background = 'var(--surface-2)';
     card.innerHTML = `
-      <div style="font-size:12px; color:var(--ink-3); font-weight:700; text-transform:uppercase; letter-spacing:.06em;">${escHtml(t('signedInAs'))}</div>
-      <div style="font-weight:700; color:var(--ink); margin-top:4px;">${escHtml(u.displayName || u.email || '')}</div>
-      ${u.email ? `<div style="color:var(--ink-3); font-size:12px; margin-top:2px;">${escHtml(u.email)}</div>` : ''}
+      <div style="font-size:12px;color:var(--ink-3);font-weight:700;text-transform:uppercase;letter-spacing:.06em;">${escHtml(t('signedInAs'))}</div>
+      <div style="font-weight:700;color:var(--ink);margin-top:4px;">${escHtml(u.displayName || u.email || '')}</div>
+      ${u.email ? `<div style="color:var(--ink-3);font-size:12px;margin-top:2px;">${escHtml(u.email)}</div>` : ''}
+      <div style="margin-top:10px;padding:8px 10px;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;display:flex;align-items:center;gap:8px;">
+        <span style="font-size:11px;color:var(--ink-3);font-weight:700;flex-shrink:0;">UID</span>
+        <span class="mono" style="font-size:11px;color:var(--ink-2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(u.uid)}</span>
+        <button class="btn ghost" id="copyUidBtn" type="button" style="min-height:auto;padding:4px 10px;font-size:11px;">📋</button>
+      </div>
     `;
     block.appendChild(card);
+    card.querySelector('#copyUidBtn').addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(u.uid); toast(t('uidCopied'), 'win'); } catch (_) {}
+    });
+
+    // Admin panel toggle
+    if (state.isAdmin) {
+      const adminBtn = document.createElement('button');
+      adminBtn.className = 'btn block';
+      adminBtn.type = 'button';
+      adminBtn.style.marginBottom = '10px';
+      adminBtn.innerHTML = `<span class="ic">👑</span><span>${escHtml(t('openAdminPanel'))}</span>`;
+      adminBtn.addEventListener('click', () => { vibrate(10); sfxTap(); openAdminPanel(); });
+      block.appendChild(adminBtn);
+    }
 
     const out = document.createElement('button');
     out.className = 'btn ghost block';
@@ -4795,13 +4942,12 @@ function renderProfile() {
     out.addEventListener('click', async () => { vibrate(10); sfxTap(); await doSignOut(); });
     block.appendChild(out);
 
-    // Destructive action — set apart visually with a small spacer and a hint.
     const spacer = document.createElement('div');
     spacer.style.height = '20px';
     block.appendChild(spacer);
 
     const hint = document.createElement('div');
-    hint.style.cssText = 'font-size:11px; color:var(--ink-3); font-weight:600; margin-bottom:8px; text-align:center;';
+    hint.style.cssText = 'font-size:11px;color:var(--ink-3);font-weight:600;margin-bottom:8px;text-align:center;';
     hint.textContent = t('deleteAccountHint');
     block.appendChild(hint);
 
@@ -4814,16 +4960,98 @@ function renderProfile() {
   }
 
   recomputeStats();
-
   $('nicknameInput').value = state.nickname || '';
   renderAvatarGrid();
-
   $('hapticsSwitch') && $('hapticsSwitch').classList.toggle('on', state.haptics);
-  $('soundSwitch') && $('soundSwitch').classList.toggle('on', state.sound);
-  $('othersSwitch') && $('othersSwitch').classList.toggle('on', state.showOthers);
-  $('zonesSwitch') && $('zonesSwitch').classList.toggle('on', state.showZones);
-
+  $('soundSwitch')   && $('soundSwitch').classList.toggle('on', state.sound);
+  $('othersSwitch')  && $('othersSwitch').classList.toggle('on', state.showOthers);
+  $('zonesSwitch')   && $('zonesSwitch').classList.toggle('on', state.showZones);
   qsa('#themeSeg .opt').forEach((o) => o.classList.toggle('active', o.dataset.val === state.theme));
+}
+
+/* ---------- ADMIN PANEL ---------- */
+async function openAdminPanel() {
+  if (!state.isAdmin) { toast(t('notAllowed'), 'err'); return; }
+  openSheet('adminSheet');
+  await renderModeratorList();
+}
+
+async function renderModeratorList() {
+  const list = $('adminModList');
+  if (!list) return;
+  list.innerHTML = `<div style="text-align:center;padding:14px;color:var(--ink-3);font-size:13px;">${escHtml(t('loading'))}…</div>`;
+  if (!fbReady()) return;
+  const { db, collection, getDocs, doc, getDoc } = FB();
+  try {
+    const snap = await getDocs(collection(db, 'moderators'));
+    if (snap.empty) {
+      list.innerHTML = `<div style="text-align:center;padding:14px;color:var(--ink-3);font-size:13px;">${escHtml(t('noModerators'))}</div>`;
+      return;
+    }
+    list.innerHTML = '';
+    for (const d of snap.docs) {
+      const uid = d.id;
+      // Pull display name from users/{uid} if it exists
+      let name = uid;
+      let email = '';
+      try {
+        const us = await getDoc(doc(db, 'users', uid));
+        if (us.exists()) {
+          const ud = us.data();
+          name = ud.displayName || uid;
+          email = ud.email || '';
+        }
+      } catch (_) {}
+      const row = document.createElement('div');
+      row.className = 'admin-mod-row';
+      row.innerHTML = `
+        <div class="info">
+          <div class="nm">🛡️ ${escHtml(name)}</div>
+          <div class="sub mono">${escHtml(uid)}</div>
+        </div>
+        <button class="btn danger" type="button" style="min-height:auto;padding:8px 12px;font-size:12px;">${escHtml(t('removeModerator'))}</button>
+      `;
+      row.querySelector('button').addEventListener('click', async () => {
+        vibrate(15); sfxTap();
+        if (!confirm(t('confirmRemoveMod').replace('{name}', name))) return;
+        await removeModerator(uid);
+        await renderModeratorList();
+      });
+      list.appendChild(row);
+    }
+  } catch (e) {
+    list.innerHTML = `<div style="text-align:center;padding:14px;color:var(--danger);font-size:13px;">❌ ${escHtml(e.message || e.code || 'Error')}</div>`;
+  }
+}
+
+async function addModerator() {
+  if (!state.isAdmin) { toast(t('notAllowed'), 'err'); return; }
+  const uid = ($('adminAddUid').value || '').trim();
+  if (!uid || uid.length < 20) { toast(t('invalidUid'), 'warn'); sfxErr(); return; }
+  if (uid === ADMIN_UID) { toast(t('cantModAdmin'), 'warn'); return; }
+  const { db, doc, setDoc, serverTimestamp } = FB();
+  try {
+    await setDoc(doc(db, 'moderators', uid), {
+      electedBy: state.user.uid,
+      electedAt: serverTimestamp()
+    });
+    $('adminAddUid').value = '';
+    toast(t('modAdded'), 'win'); sfxWin(); vibrate(20);
+    await renderModeratorList();
+  } catch (e) {
+    toast('❌ ' + (e.message || e.code || 'Failed'), 'err');
+  }
+}
+
+async function removeModerator(uid) {
+  if (!state.isAdmin) { toast(t('notAllowed'), 'err'); return; }
+  const { db, doc, deleteDoc } = FB();
+  try {
+    await deleteDoc(doc(db, 'moderators', uid));
+    toast(t('modRemoved'), 'win'); sfxWin(); vibrate(15);
+  } catch (e) {
+    toast('❌ ' + (e.message || e.code || 'Failed'), 'err');
+  }
 }
 
 function renderAvatarGrid() {
@@ -5043,6 +5271,16 @@ function wireEvents() {
 
   // Scrim to close
   $('scrim').addEventListener('click', () => closeAllSheets());
+
+  // Sign-in invitation sheet
+  $('signInDoBtn') && $('signInDoBtn').addEventListener('click', () => {
+    vibrate(10); sfxTap(); signInWithGoogle();
+  });
+
+  // Admin panel
+  $('adminAddBtn') && $('adminAddBtn').addEventListener('click', () => {
+    vibrate(10); sfxTap(); addModerator();
+  });
 }
 
 /* ---------- PWA INSTALL ---------- */
@@ -5100,65 +5338,54 @@ async function boot() {
 
   const start = async () => {
     if (!fbReady()) return;
-    const { auth, onAuthStateChanged, getRedirectResult, GoogleAuthProvider } = FB();
+    const { auth, onAuthStateChanged, getRedirectResult } = FB();
 
-    // Did we just come back from the Google login page?
+    // Did we just come back from a Google login redirect?
     const wasRedirecting = sessionStorage.getItem('awaiting_google') === 'yes';
-    if (wasRedirecting) {
-      toast('Vérification du compte...', 'win', 4000);
-    }
+    if (wasRedirecting) toast(t('verifyingAccount'), 'win', 3000);
 
     try {
       const result = await getRedirectResult(auth);
       if (result) sessionStorage.removeItem('awaiting_google');
-      
       if (result && result.user) {
-        toast('👋 Bienvenue ' + (result.user.displayName || ''), 'win');
+        toast('👋 ' + (result.user.displayName || ''), 'win');
         sfxWin();
       }
     } catch (error) {
       sessionStorage.removeItem('awaiting_google');
       console.error('Redirect auth error:', error);
-      if (error.code === 'auth/credential-already-in-use' || error.code === 'auth/email-already-in-use') {
-        const credential = GoogleAuthProvider.credentialFromError(error);
-        if (credential) {
-          toast('Fusion des comptes...', 'win', 3000);
-          await migrateAnonToGoogle(credential);
-        }
-      } else {
-        toast(t('googleSigninErr') + ': ' + (error.message || error.code || ''), 'err');
-      }
+      toast(t('googleSigninErr') + ': ' + (error.message || error.code || ''), 'err');
     }
 
     onAuthStateChanged(auth, async (user) => {
       unsubAll();
+      if (modRoleUnsub) { modRoleUnsub(); modRoleUnsub = null; }
+
       if (user) {
+        // We don't auto-anon, so any user here is real Google-signed.
         if (wasRedirecting) {
-          try { await user.reload(); } catch(_) {}
+          try { await user.reload(); } catch (_) {}
           user = auth.currentUser;
           sessionStorage.removeItem('awaiting_google');
         }
-
         state.user = user;
-
-        const hasGoogle = user.providerData && user.providerData.some(p => p.providerId === 'google.com');
-        state.signedInReal = !user.isAnonymous || hasGoogle;
-
         await ensureUserDoc(user);
         subscribePins();
         subscribeUserDoc();
         subscribePlaces();
-        renderHeader();
-        renderProfile();
-        renderQuests();
+        subscribeModRole();
+        computeMyRole();
       } else {
+        // Truly unauthenticated visitor — read-only mode.
         state.user = null;
-        state.signedInReal = false;
-        // Don't auto-reanon during account-deletion teardown or anon→Google migration.
-        if (!state.migrating && !state.deleting) {
-          await ensureSignedIn();
-        }
+        computeMyRole();
+        // Subscribe to pins ONLY (no user doc, no places, no mod role).
+        subscribePins();
       }
+      renderHeader();
+      renderProfile();
+      renderQuests();
+      refreshAllMarkers();
     });
   };
 
