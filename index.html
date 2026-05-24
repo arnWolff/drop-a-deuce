@@ -1103,6 +1103,149 @@ html.theme-dark .hex-canvas-overlay { mix-blend-mode: screen; }
 }
 .hex-summary .chip { font-weight: 700; }
 
+/* =====================================================================
+   HEX TERRITORY — DipGo leaderboard inside the hex sheet
+   ===================================================================== */
+.hex-summary .chip.gold {
+  background: linear-gradient(135deg, rgba(245,158,11,.18), rgba(245,158,11,.08));
+  color: #b45309;
+  border: 1px solid rgba(245,158,11,.35);
+}
+html.theme-dark .hex-summary .chip.gold { color: #fcd34d; }
+
+.hex-territory {
+  display: flex; flex-direction: column;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+/* Owner card — the big one */
+.terr-owner {
+  position: relative;
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 14px 14px 16px;
+  border: 2px solid transparent;
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-md);
+  overflow: hidden;
+  isolation: isolate;
+}
+.terr-owner::before {
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(120% 100% at 0% 0%,
+    hsla(var(--uc-h), var(--uc-s), var(--uc-l), .28), transparent 60%);
+  z-index: -1; pointer-events: none;
+}
+.terr-crown {
+  position: absolute; top: -8px; right: 10px;
+  font-size: 26px;
+  transform: rotate(12deg);
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.18));
+}
+.terr-ava {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 800; font-size: 22px;
+  overflow: hidden; flex-shrink: 0;
+  border: 2.5px solid #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,.15);
+}
+.terr-ava img { width: 100%; height: 100%; object-fit: cover; }
+.terr-ava.sm {
+  width: 36px; height: 36px;
+  font-size: 16px;
+  border-width: 2px;
+}
+.terr-info { flex: 1; min-width: 0; }
+.terr-name {
+  font-weight: 800; font-size: 16px; color: var(--ink);
+  display: flex; align-items: center; gap: 6px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.terr-sub {
+  color: var(--ink-2); font-size: 12px; font-weight: 600;
+  margin-top: 2px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.terr-xp {
+  text-align: right;
+  flex-shrink: 0;
+  font-family: 'Bagel Fat One', system-ui, sans-serif;
+}
+.terr-xp .n {
+  font-size: 26px; line-height: 1; color: var(--ink);
+}
+.terr-xp .u {
+  font-size: 10px; color: var(--ink-3); font-weight: 800;
+  letter-spacing: .1em; margin-top: 2px;
+}
+
+/* Ranked list */
+.terr-list {
+  display: flex; flex-direction: column;
+  gap: 6px;
+}
+.terr-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-md);
+  transition: transform .12s var(--ease-out), border-color .2s var(--ease-out);
+}
+.terr-row:active { transform: scale(.99); }
+.terr-row.top {
+  background: linear-gradient(135deg, var(--surface), var(--surface-2));
+  border-color: var(--border-2);
+}
+.terr-row.me {
+  border-color: var(--peach);
+  background: var(--peach-grad-soft);
+}
+.terr-rank {
+  font-size: 16px;
+  width: 22px; text-align: center;
+  font-weight: 800; color: var(--ink-2);
+  flex-shrink: 0;
+}
+.terr-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px var(--surface);
+}
+.terr-row-info { flex: 1; min-width: 0; }
+.terr-row-name {
+  font-weight: 700; font-size: 13px; color: var(--ink);
+  display: flex; align-items: center; gap: 6px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.terr-bar {
+  height: 6px; border-radius: 999px;
+  background: var(--surface-3);
+  overflow: hidden;
+  margin-top: 5px;
+}
+.terr-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width .5s var(--spring);
+}
+.terr-row-meta {
+  color: var(--ink-3); font-size: 11px; font-weight: 600;
+  margin-top: 3px;
+  font-variant-numeric: tabular-nums;
+}
+.terr-row-share {
+  font-family: 'Bagel Fat One', system-ui, sans-serif;
+  font-size: 18px; color: var(--ink);
+  flex-shrink: 0;
+  min-width: 44px; text-align: right;
+}
+.terr-row.me .terr-row-share { color: var(--peach-2); }
+
 .hex-pins {
   display: flex; flex-direction: column;
   gap: 8px;
@@ -2085,6 +2228,9 @@ const I18N = {
     hexOthersHere: 'Other peach-droppers here',
     hexNoYourPins: "You haven't dropped here yet — be a pioneer 🚩",
     hexNoOthers: "No one else has dropped here — this zone is yours 👑",
+    hexTerritory: 'Territory leaderboard',
+    hexOwnerLabel: 'Owner of this zone',
+    hexShare: 'of total XP',
     onePeach: '1 peach',
     manyPeaches: '{n} peaches',
   },
@@ -2195,6 +2341,9 @@ const I18N = {
     hexOthersHere: 'Autres poseurs ici',
     hexNoYourPins: "Tu n'as pas encore posé ici — sois pionnier 🚩",
     hexNoOthers: "Personne d'autre n'a posé ici — cette zone est à toi 👑",
+    hexTerritory: 'Classement du territoire',
+    hexOwnerLabel: 'Propriétaire de cette zone',
+    hexShare: 'du XP total',
     onePeach: '1 pêche',
     manyPeaches: '{n} pêches',
   }
@@ -2311,6 +2460,76 @@ const fmt = (n) => Number(n || 0).toLocaleString(state.lang === 'fr' ? 'fr-FR' :
 const chName = (c) => c[state.lang] ? c[state.lang][0] : c.en[0];
 const chDesc = (c) => c[state.lang] ? c[state.lang][1] : c.en[1];
 const chById = (id) => CHALLENGES.find((c) => c.id === id);
+
+/* ---------------------------------------------------------------------
+   USER COLOR — deterministic, stable per UID
+   The same uid always maps to the same hue, so each player gets a
+   unique colour across every hex they touch. Used by the territory
+   grid (canvas fill) and by the hex sheet leaderboard.
+   --------------------------------------------------------------------- */
+function userColorHue(key) {
+  if (!key) return 24; // peach-ish fallback for anon
+  let h = 2166136261; // FNV-1a-ish hash, deterministic
+  for (let i = 0; i < key.length; i++) {
+    h ^= key.charCodeAt(i);
+    h = (h * 16777619) >>> 0;
+  }
+  return h % 360;
+}
+function userColorObj(key) {
+  return { h: userColorHue(key), s: 72, l: 56 };
+}
+function userColorCss(key, alpha = 1) {
+  const { h, s, l } = userColorObj(key);
+  return alpha >= 1 ? `hsl(${h} ${s}% ${l}%)` : `hsla(${h}, ${s}%, ${l}%, ${alpha})`;
+}
+// Stable grouping key for pins (uid when signed-in, anon:displayName otherwise)
+function pinUserKey(p) {
+  return p.uid || ('anon:' + (p.displayName || 'guest'));
+}
+
+/* ---------------------------------------------------------------------
+   HEX XP RANKING — DipGo territory math
+   Given the pins inside a single hex cell, return per-user XP totals
+   sorted by xp DESC (ties: pin count DESC, then latest activity DESC).
+   The first element is the OWNER of the hex.
+   --------------------------------------------------------------------- */
+function computeHexUserXp(pinsInCell) {
+  const byKey = new Map();
+  for (const p of pinsInCell) {
+    const key = pinUserKey(p);
+    let g = byKey.get(key);
+    if (!g) {
+      g = {
+        key,
+        uid: p.uid || null,
+        displayName: p.displayName || null,
+        photoURL: p.photoURL || null,
+        avatarEmoji: p.avatarEmoji || null,
+        xp: 0,
+        count: 0,
+        latestTs: 0,
+        challenges: new Set()
+      };
+      byKey.set(key, g);
+    }
+    const ch = chById(p.challengeId);
+    g.xp += ch ? ch.xp : 5; // 5 = safety fallback if challenge id is unknown
+    g.count += 1;
+    if (p.challengeId) g.challenges.add(p.challengeId);
+    if ((p.ts || 0) > g.latestTs) {
+      g.latestTs = p.ts || 0;
+      if (p.displayName) g.displayName = p.displayName;
+      if (p.photoURL)    g.photoURL    = p.photoURL;
+      if (p.avatarEmoji) g.avatarEmoji = p.avatarEmoji;
+    }
+  }
+  return [...byKey.values()].sort((a, b) => {
+    if (b.xp    !== a.xp)    return b.xp    - a.xp;
+    if (b.count !== a.count) return b.count - a.count;
+    return b.latestTs - a.latestTs;
+  });
+}
 
 function relTime(ts) {
   if (!ts) return '';
@@ -2730,14 +2949,7 @@ function renderHexSheet(cell) {
   const body = $('hexSheetBody'); if (!body) return;
   const subEl = $('hexSheetSub');
 
-  // ---- ROBUST PIN FILTER ----------------------------------------------
-  // Compute the H3 cell on the fly from the pin's lat/lng. We don't trust
-  // any precomputed field on the pin because:
-  //   - subscribePins() strips h3_r9 when copying Firestore docs into
-  //     state.pins, so server-backed pins never carry it.
-  //   - field names have drifted historically (cellH3 / h3_r9), so a
-  //     mixed dataset can silently mismatch.
-  // The lat/lng IS the source of truth — derive the cell from it.
+  // ---- ROBUST PIN FILTER (unchanged: derive from lat/lng for safety) --
   const pinsInCell = (typeof h3 !== 'undefined')
     ? state.pins.filter(p => {
         if (typeof p.lat !== 'number' || typeof p.lng !== 'number') return false;
@@ -2745,52 +2957,38 @@ function renderHexSheet(cell) {
       })
     : state.pins.filter(p => p.h3_r9 === cell || p.cellH3 === cell);
 
-  // Newest first
   pinsInCell.sort((a, b) => (b.ts || 0) - (a.ts || 0));
 
-  // Split mine vs others
-  const myUid    = state.user && state.user.uid;
-  const myPins   = myUid ? pinsInCell.filter(p => p.uid === myUid)  : [];
-  const otherPins = myUid ? pinsInCell.filter(p => p.uid !== myUid) : pinsInCell.slice();
+  const myUid  = state.user && state.user.uid;
+  const myPins = myUid ? pinsInCell.filter(p => p.uid === myUid) : [];
 
-  // Group OTHER users by uid (fallback to displayName if uid missing)
-  const othersByUid = new Map();
-  for (const p of otherPins) {
-    const key = p.uid || ('anon:' + (p.displayName || 'guest'));
-    let g = othersByUid.get(key);
-    if (!g) {
-      g = {
-        uid: p.uid || null,
-        displayName: p.displayName || null,
-        photoURL: p.photoURL || null,
-        avatarEmoji: p.avatarEmoji || null,
-        pins: [],
-        latestTs: 0
-      };
-      othersByUid.set(key, g);
-    }
-    g.pins.push(p);
-    if ((p.ts || 0) > g.latestTs) {
-      g.latestTs = p.ts || 0;
-      // Always reflect the most recent avatar/name this user has used here
-      if (p.displayName) g.displayName = p.displayName;
-      if (p.photoURL)    g.photoURL    = p.photoURL;
-      if (p.avatarEmoji) g.avatarEmoji = p.avatarEmoji;
-    }
-  }
-  const otherUsers = [...othersByUid.values()].sort((a, b) => b.latestTs - a.latestTs);
+  // DipGo: every user ranked by XP in THIS hex
+  const ranking = computeHexUserXp(pinsInCell);
+  const owner   = ranking[0] || null;
+  const totalXp = ranking.reduce((s, r) => s + r.xp, 0);
+
+  // "Other users" list for the existing section (still recency-sorted,
+  // because that section is "who was here recently", not the ranking).
+  const otherUsers = ranking
+    .filter(r => !(myUid && r.uid === myUid))
+    .slice()
+    .sort((a, b) => b.latestTs - a.latestTs);
 
   // Header sub
   const shortIdx = cell.slice(-5).toUpperCase();
   if (subEl) subEl.textContent = t('hexSub').replace('{idx}', shortIdx);
 
-  // 1) Shell
+  // ---- 1) Shell -------------------------------------------------------
   body.innerHTML = `
     <div class="hex-summary" id="hexSummary">
       <span class="chip peach">🍑 <span id="hexCntPins">${pinsInCell.length}</span></span>
       <span class="chip purple">📍 <span id="hexCntAmen">…</span></span>
+      <span class="chip gold">⚡ <span id="hexCntXp">${fmt(totalXp)}</span> XP</span>
       <span class="chip mint" id="hexVibe">${escHtml(t('hexLoading'))}</span>
     </div>
+
+    <div class="section-label">👑 ${escHtml(t('hexTerritory'))} <span class="count">${ranking.length}</span></div>
+    <div class="hex-territory" id="hexTerritory"></div>
 
     <div class="section-label">🍑 ${escHtml(t('hexYourDrops'))} <span class="count" id="hexMyPinsCnt">${myPins.length}</span></div>
     <div class="hex-pins" id="hexPinsList"></div>
@@ -2809,7 +3007,90 @@ function renderHexSheet(cell) {
     </div>
   `;
 
-  // 2) YOUR drops — detailed rows
+  // ---- 2) TERRITORY LEADERBOARD --------------------------------------
+  const terr = $('hexTerritory');
+  if (!ranking.length) {
+    terr.innerHTML = `<div class="hex-empty">${escHtml(t('hexNoPins'))}</div>`;
+  } else {
+    // Owner card (big, branded with their colour)
+    const oc   = userColorObj(owner.key);
+    const isMineOwner = !!(myUid && owner.uid === myUid);
+    const ownerName = isMineOwner
+      ? t('you')
+      : (owner.displayName || t('friend'));
+    const ownerAva = owner.photoURL
+      ? `<img src="${escHtml(owner.photoURL)}" alt=""/>`
+      : (owner.avatarEmoji ? escHtml(owner.avatarEmoji)
+          : (owner.displayName ? escHtml(owner.displayName[0].toUpperCase()) : '🍑'));
+    const ownerShare = totalXp ? Math.round((owner.xp / totalXp) * 100) : 100;
+
+    terr.innerHTML = `
+      <div class="terr-owner" style="
+        --uc-h:${oc.h}; --uc-s:${oc.s}%; --uc-l:${oc.l}%;
+        background: linear-gradient(135deg,
+          hsla(${oc.h}, ${oc.s}%, ${oc.l}%, .22),
+          hsla(${oc.h}, ${oc.s}%, ${Math.min(72, oc.l + 8)}%, .10));
+        border-color: hsla(${oc.h}, ${oc.s}%, ${oc.l}%, .55);
+      ">
+        <div class="terr-crown">👑</div>
+        <div class="terr-ava" style="background: hsl(${oc.h} ${oc.s}% ${oc.l}%);">${ownerAva}</div>
+        <div class="terr-info">
+          <div class="terr-name">
+            ${escHtml(ownerName)}
+            ${isMineOwner ? `<span class="mine-tag">${escHtml(t('mine'))}</span>` : ''}
+          </div>
+          <div class="terr-sub">${escHtml(t('hexOwnerLabel'))} · ${ownerShare}% ${escHtml(t('hexShare'))}</div>
+        </div>
+        <div class="terr-xp">
+          <div class="n">${fmt(owner.xp)}</div>
+          <div class="u">XP</div>
+        </div>
+      </div>
+      <div class="terr-list" id="hexTerritoryList"></div>
+    `;
+
+    // Full ranked list (owner included as #1, then everyone else by XP desc)
+    const list = $('hexTerritoryList');
+    const frag = document.createDocumentFragment();
+    ranking.forEach((u, idx) => {
+      const c = userColorObj(u.key);
+      const isMe = !!(myUid && u.uid === myUid);
+      const name = isMe ? t('you') : (u.displayName || t('friend'));
+      const ava = u.photoURL
+        ? `<img src="${escHtml(u.photoURL)}" alt=""/>`
+        : (u.avatarEmoji ? escHtml(u.avatarEmoji)
+            : (u.displayName ? escHtml(u.displayName[0].toUpperCase()) : '🍑'));
+      const pct = totalXp ? Math.round((u.xp / totalXp) * 100) : 0;
+      const medal = idx === 0 ? '🥇' : (idx === 1 ? '🥈' : (idx === 2 ? '🥉' : (idx + 1 + '·')));
+      const row = document.createElement('div');
+      row.className = 'terr-row' + (isMe ? ' me' : '') + (idx === 0 ? ' top' : '');
+      row.innerHTML = `
+        <div class="terr-rank">${medal}</div>
+        <span class="terr-dot" style="background: hsl(${c.h} ${c.s}% ${c.l}%);"></span>
+        <div class="terr-ava sm" style="background: hsl(${c.h} ${c.s}% ${c.l}%);">${ava}</div>
+        <div class="terr-row-info">
+          <div class="terr-row-name">
+            ${escHtml(name)}
+            ${isMe ? `<span class="mine-tag">${escHtml(t('mine'))}</span>` : ''}
+          </div>
+          <div class="terr-bar">
+            <div class="terr-bar-fill"
+                 style="width:${pct}%; background: linear-gradient(90deg,
+                   hsl(${c.h} ${c.s}% ${c.l}%),
+                   hsl(${c.h} ${c.s}% ${Math.min(70, c.l + 10)}%));"></div>
+          </div>
+          <div class="terr-row-meta">
+            ⚡ ${fmt(u.xp)} XP · 🍑 ${u.count} · ${escHtml(relTime(u.latestTs))}
+          </div>
+        </div>
+        <div class="terr-row-share">${pct}%</div>
+      `;
+      frag.appendChild(row);
+    });
+    list.appendChild(frag);
+  }
+
+  // ---- 3) YOUR drops — detailed rows (unchanged behaviour) -----------
   const pinsList = $('hexPinsList');
   if (!myPins.length) {
     pinsList.innerHTML = `<div class="hex-empty">${escHtml(t('hexNoYourPins'))}</div>`;
@@ -2827,7 +3108,7 @@ function renderHexSheet(cell) {
         <div class="ava">${ava}</div>
         <div class="info">
           <div class="who">${escHtml(t('you'))} <span class="mine-tag">${escHtml(t('mine'))}</span></div>
-          <div class="meta">${ch ? ch.em + ' ' + escHtml(chName(ch)) : ''} · ${escHtml(relTime(p.ts))}</div>
+          <div class="meta">${ch ? ch.em + ' ' + escHtml(chName(ch)) + ' · +' + ch.xp + ' XP' : ''} · ${escHtml(relTime(p.ts))}</div>
           ${p.note ? `<div class="note">💬 ${escHtml(p.note)}</div>` : ''}
         </div>
         <button class="ax" type="button" aria-label="${escHtml(t('hexFlyToBtn'))}">🗺️</button>
@@ -2842,13 +3123,14 @@ function renderHexSheet(cell) {
     pinsList.appendChild(frag);
   }
 
-  // 3) OTHER peach-droppers — one row per user (grouped)
+  // ---- 4) OTHER peach-droppers — one row per user --------------------
   const othersList = $('hexOthersList');
   if (!otherUsers.length) {
     othersList.innerHTML = `<div class="hex-empty">${escHtml(t('hexNoOthers'))}</div>`;
   } else {
     const frag = document.createDocumentFragment();
     otherUsers.slice(0, 40).forEach(u => {
+      const c = userColorObj(u.key);
       const row = document.createElement('div');
       row.className = 'hex-pin-row';
       const ava = u.photoURL
@@ -2856,18 +3138,18 @@ function renderHexSheet(cell) {
         : (u.avatarEmoji ? escHtml(u.avatarEmoji)
             : (u.displayName ? escHtml(u.displayName[0].toUpperCase()) : '🍑'));
       const name = u.displayName || t('friend');
-      const cnt  = u.pins.length;
-      const cntLabel = cnt === 1
+      const cntLabel = u.count === 1
         ? t('onePeach')
-        : t('manyPeaches').replace('{n}', cnt);
-      // Most-recent pin from this user (pinsInCell was sorted desc, so first match works)
-      const lastPin = u.pins.reduce((a, b) => ((b.ts || 0) > (a.ts || 0) ? b : a), u.pins[0]);
+        : t('manyPeaches').replace('{n}', u.count);
+      // Most-recent pin from this user, for the flyTo button
+      const userPins = pinsInCell.filter(p => pinUserKey(p) === u.key);
+      const lastPin = userPins.reduce((a, b) => ((b.ts || 0) > (a.ts || 0) ? b : a), userPins[0]);
       const ch = chById(lastPin && lastPin.challengeId);
       row.innerHTML = `
-        <div class="ava">${ava}</div>
+        <div class="ava" style="box-shadow: 0 0 0 2px hsl(${c.h} ${c.s}% ${c.l}%);">${ava}</div>
         <div class="info">
           <div class="who">${escHtml(name)}</div>
-          <div class="meta">${ch ? ch.em + ' ' : ''}${escHtml(cntLabel)} · ${escHtml(relTime(u.latestTs))}</div>
+          <div class="meta">${ch ? ch.em + ' ' : ''}${escHtml(cntLabel)} · ⚡ ${fmt(u.xp)} XP · ${escHtml(relTime(u.latestTs))}</div>
           ${lastPin && lastPin.note ? `<div class="note">💬 ${escHtml(lastPin.note)}</div>` : ''}
         </div>
         <button class="ax" type="button" aria-label="${escHtml(t('hexFlyToBtn'))}">🗺️</button>
@@ -2882,7 +3164,7 @@ function renderHexSheet(cell) {
     othersList.appendChild(frag);
   }
 
-  // 4) Fun loading message cycle
+  // ---- 5) Fun loading message cycle for amenities --------------------
   const loadMsgs = [t('hexLoading'), t('hexLoading2'), t('hexLoading3'), t('hexLoading4')];
   let msgIdx = 0;
   const loadInterval = setInterval(() => {
@@ -2891,11 +3173,11 @@ function renderHexSheet(cell) {
     el.textContent = loadMsgs[msgIdx];
   }, 1100);
 
-  // 5) Fetch amenities (lazy). Pass the combined pin list for the vibe chip.
+  // ---- 6) Fetch amenities (lazy, unchanged) --------------------------
   fetchAmenitiesForCell(cell)
     .then(list => {
       clearInterval(loadInterval);
-      if (currentHexCell !== cell) return; // user moved on
+      if (currentHexCell !== cell) return;
       paintAmenities(cell, list, pinsInCell);
     })
     .catch(err => {
@@ -3126,23 +3408,28 @@ function initMap() {
       }
     },
 
-    /* HIGH ZOOM — fixed H3 grid, one fill per occupied cell */
+    /* HIGH ZOOM — fixed H3 grid, owner-coloured DipGo territories.
+       Each occupied cell is filled with the colour of the user who has
+       the highest XP total in that cell. Intensity scales with the
+       cell's total XP so contested zones glow brighter. */
     _drawHexes(ctx) {
       if (typeof h3 === 'undefined') return;
       const map = this._map;
       const bounds = map.getBounds().pad(0.1);
+      const myUid  = state.user && state.user.uid;
 
-      // Aggregate visible pins into fixed-res cells
+      // Bucket visible pins into hex cells (keep the full pin list per cell)
       const cells = new Map();
       for (const p of state.pins) {
-        const mine = state.user && p.uid === state.user.uid;
+        const mine = myUid && p.uid === myUid;
+        // Respect the user's "show others" toggle for the territory layer
         if (!mine && !state.showOthers) continue;
+        if (typeof p.lat !== 'number' || typeof p.lng !== 'number') continue;
         if (!bounds.contains([p.lat, p.lng])) continue;
         const cell = h3.latLngToCell(p.lat, p.lng, HEX_FIXED_RES);
         let info = cells.get(cell);
-        if (!info) { info = { count: 0, mine: false }; cells.set(cell, info); }
-        info.count++;
-        if (mine) info.mine = true;
+        if (!info) { info = { pins: [] }; cells.set(cell, info); }
+        info.pins.push(p);
       }
       if (cells.size > HEX_MAX_CELLS) return;
 
@@ -3150,9 +3437,23 @@ function initMap() {
         const boundary = cellBoundary(cell);
         if (!boundary || boundary.length < 6) return;
 
-        const intensity = Math.min(1, info.count / 5);
-        const rgb   = info.mine ? '255,107,157' : '255,138,101';
-        const alpha = 0.16 + intensity * 0.30;
+        // DipGo: rank users by XP, the top one OWNS this cell
+        const ranking = computeHexUserXp(info.pins);
+        if (!ranking.length) return;
+        const owner = ranking[0];
+        const isMine = myUid && owner.uid === myUid;
+
+        // Contested? second-place is within 25% of first
+        const contested = ranking.length > 1
+          && ranking[1].xp >= owner.xp * 0.75;
+
+        // Intensity from owner's XP in this cell (caps near ~100xp)
+        const intensity = Math.min(1, owner.xp / 100);
+        const baseAlpha = 0.22 + intensity * 0.42;
+
+        const { h, s, l } = userColorObj(owner.key);
+        const fill   = `hsla(${h}, ${s}%, ${l}%, ${baseAlpha})`;
+        const stroke = `hsla(${h}, ${s}%, ${Math.max(30, l - 14)}%, ${Math.min(0.95, baseAlpha + 0.32)})`;
 
         ctx.beginPath();
         for (let i = 0; i < boundary.length; i++) {
@@ -3162,13 +3463,21 @@ function initMap() {
         }
         ctx.closePath();
 
-        ctx.fillStyle   = `rgba(${rgb},${alpha})`;
+        ctx.fillStyle = fill;
         ctx.fill();
 
         ctx.lineJoin    = 'round';
-        ctx.lineWidth   = 1.25;
-        ctx.strokeStyle = `rgba(${rgb},${Math.min(0.75, alpha + 0.30)})`;
-        ctx.stroke();
+        ctx.lineWidth   = isMine ? 2.2 : (contested ? 1.75 : 1.25);
+        ctx.strokeStyle = stroke;
+
+        if (contested) {
+          // Dashed outline = under siege from another player
+          ctx.setLineDash([6, 4]);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        } else {
+          ctx.stroke();
+        }
       });
     },
 
