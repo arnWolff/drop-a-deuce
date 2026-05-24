@@ -2081,6 +2081,12 @@ const I18N = {
     hexGhost: '👻 Ghost town. Quiet. Almost suspicious.',
     hexToiletJoke: 'A kindred spirit was here 🚽',
     retry: 'Retry',
+    hexYourDrops: 'Your drops here',
+    hexOthersHere: 'Other peach-droppers here',
+    hexNoYourPins: "You haven't dropped here yet — be a pioneer 🚩",
+    hexNoOthers: "No one else has dropped here — this zone is yours 👑",
+    onePeach: '1 peach',
+    manyPeaches: '{n} peaches',
   },
   fr: {
     appName: 'Pose ta Pêche', tagline: 'Trace ton trône',
@@ -2185,6 +2191,12 @@ const I18N = {
     hexGhost: '👻 Ville fantôme. Calme. Presque louche.',
     hexToiletJoke: 'Un confrère est passé par là 🚽',
     retry: 'Réessayer',
+    hexYourDrops: 'Tes pêches ici',
+    hexOthersHere: 'Autres poseurs ici',
+    hexNoYourPins: "Tu n'as pas encore posé ici — sois pionnier 🚩",
+    hexNoOthers: "Personne d'autre n'a posé ici — cette zone est à toi 👑",
+    onePeach: '1 pêche',
+    manyPeaches: '{n} pêches',
   }
 };
 const t = (k) => (I18N[state.lang] && I18N[state.lang][k]) || I18N.en[k] || k;
@@ -2718,23 +2730,73 @@ function renderHexSheet(cell) {
   const body = $('hexSheetBody'); if (!body) return;
   const subEl = $('hexSheetSub');
 
-  // PINS in this cell (already in app state — instant, no network)
-  const pins = state.pins.filter(p => p.h3_r9 === cell || p.cellH3 === cell);
+  // ---- ROBUST PIN FILTER ----------------------------------------------
+  // Compute the H3 cell on the fly from the pin's lat/lng. We don't trust
+  // any precomputed field on the pin because:
+  //   - subscribePins() strips h3_r9 when copying Firestore docs into
+  //     state.pins, so server-backed pins never carry it.
+  //   - field names have drifted historically (cellH3 / h3_r9), so a
+  //     mixed dataset can silently mismatch.
+  // The lat/lng IS the source of truth — derive the cell from it.
+  const pinsInCell = (typeof h3 !== 'undefined')
+    ? state.pins.filter(p => {
+        if (typeof p.lat !== 'number' || typeof p.lng !== 'number') return false;
+        return h3.latLngToCell(p.lat, p.lng, HEX_FIXED_RES) === cell;
+      })
+    : state.pins.filter(p => p.h3_r9 === cell || p.cellH3 === cell);
+
+  // Newest first
+  pinsInCell.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+
+  // Split mine vs others
+  const myUid    = state.user && state.user.uid;
+  const myPins   = myUid ? pinsInCell.filter(p => p.uid === myUid)  : [];
+  const otherPins = myUid ? pinsInCell.filter(p => p.uid !== myUid) : pinsInCell.slice();
+
+  // Group OTHER users by uid (fallback to displayName if uid missing)
+  const othersByUid = new Map();
+  for (const p of otherPins) {
+    const key = p.uid || ('anon:' + (p.displayName || 'guest'));
+    let g = othersByUid.get(key);
+    if (!g) {
+      g = {
+        uid: p.uid || null,
+        displayName: p.displayName || null,
+        photoURL: p.photoURL || null,
+        avatarEmoji: p.avatarEmoji || null,
+        pins: [],
+        latestTs: 0
+      };
+      othersByUid.set(key, g);
+    }
+    g.pins.push(p);
+    if ((p.ts || 0) > g.latestTs) {
+      g.latestTs = p.ts || 0;
+      // Always reflect the most recent avatar/name this user has used here
+      if (p.displayName) g.displayName = p.displayName;
+      if (p.photoURL)    g.photoURL    = p.photoURL;
+      if (p.avatarEmoji) g.avatarEmoji = p.avatarEmoji;
+    }
+  }
+  const otherUsers = [...othersByUid.values()].sort((a, b) => b.latestTs - a.latestTs);
 
   // Header sub
   const shortIdx = cell.slice(-5).toUpperCase();
   if (subEl) subEl.textContent = t('hexSub').replace('{idx}', shortIdx);
 
-  // 1) Pins section + loading shell for amenities
+  // 1) Shell
   body.innerHTML = `
     <div class="hex-summary" id="hexSummary">
-      <span class="chip peach">🍑 <span id="hexCntPins">${pins.length}</span></span>
+      <span class="chip peach">🍑 <span id="hexCntPins">${pinsInCell.length}</span></span>
       <span class="chip purple">📍 <span id="hexCntAmen">…</span></span>
       <span class="chip mint" id="hexVibe">${escHtml(t('hexLoading'))}</span>
     </div>
 
-    <div class="section-label">🍑 ${escHtml(t('hexDropsHere'))} <span class="count" id="hexPinsCnt">${pins.length}</span></div>
+    <div class="section-label">🍑 ${escHtml(t('hexYourDrops'))} <span class="count" id="hexMyPinsCnt">${myPins.length}</span></div>
     <div class="hex-pins" id="hexPinsList"></div>
+
+    <div class="section-label">👥 ${escHtml(t('hexOthersHere'))} <span class="count" id="hexOthersCnt">${otherUsers.length}</span></div>
+    <div class="hex-pins" id="hexOthersList"></div>
 
     <div class="section-label">🌍 ${escHtml(t('hexAmenitiesHere'))} <span class="count" id="hexAmenCnt">…</span></div>
     <div class="hex-amen" id="hexAmenList">
@@ -2747,25 +2809,24 @@ function renderHexSheet(cell) {
     </div>
   `;
 
-  // Render pins list
+  // 2) YOUR drops — detailed rows
   const pinsList = $('hexPinsList');
-  if (!pins.length) {
-    pinsList.innerHTML = `<div class="hex-empty">${escHtml(t('hexNoPins'))}</div>`;
+  if (!myPins.length) {
+    pinsList.innerHTML = `<div class="hex-empty">${escHtml(t('hexNoYourPins'))}</div>`;
   } else {
     const frag = document.createDocumentFragment();
-    pins.sort((a, b) => (b.ts || 0) - (a.ts || 0)).slice(0, 40).forEach(p => {
+    myPins.slice(0, 40).forEach(p => {
       const row = document.createElement('div');
       row.className = 'hex-pin-row';
       const ch = chById(p.challengeId);
-      const isMe = state.user && p.uid === state.user.uid;
       const ava = p.photoURL
         ? `<img src="${escHtml(p.photoURL)}" alt=""/>`
-        : (p.avatarEmoji ? escHtml(p.avatarEmoji) : (p.displayName ? escHtml(p.displayName[0].toUpperCase()) : '🍑'));
-      const who = isMe ? t('you') : (p.displayName || t('friend'));
+        : (p.avatarEmoji ? escHtml(p.avatarEmoji)
+            : (state.avatar || (p.displayName ? escHtml(p.displayName[0].toUpperCase()) : '🍑')));
       row.innerHTML = `
         <div class="ava">${ava}</div>
         <div class="info">
-          <div class="who">${escHtml(who)} ${isMe ? '<span class="mine-tag">'+escHtml(t('mine'))+'</span>' : ''}</div>
+          <div class="who">${escHtml(t('you'))} <span class="mine-tag">${escHtml(t('mine'))}</span></div>
           <div class="meta">${ch ? ch.em + ' ' + escHtml(chName(ch)) : ''} · ${escHtml(relTime(p.ts))}</div>
           ${p.note ? `<div class="note">💬 ${escHtml(p.note)}</div>` : ''}
         </div>
@@ -2781,7 +2842,47 @@ function renderHexSheet(cell) {
     pinsList.appendChild(frag);
   }
 
-  // Cycle a fun loading message
+  // 3) OTHER peach-droppers — one row per user (grouped)
+  const othersList = $('hexOthersList');
+  if (!otherUsers.length) {
+    othersList.innerHTML = `<div class="hex-empty">${escHtml(t('hexNoOthers'))}</div>`;
+  } else {
+    const frag = document.createDocumentFragment();
+    otherUsers.slice(0, 40).forEach(u => {
+      const row = document.createElement('div');
+      row.className = 'hex-pin-row';
+      const ava = u.photoURL
+        ? `<img src="${escHtml(u.photoURL)}" alt=""/>`
+        : (u.avatarEmoji ? escHtml(u.avatarEmoji)
+            : (u.displayName ? escHtml(u.displayName[0].toUpperCase()) : '🍑'));
+      const name = u.displayName || t('friend');
+      const cnt  = u.pins.length;
+      const cntLabel = cnt === 1
+        ? t('onePeach')
+        : t('manyPeaches').replace('{n}', cnt);
+      // Most-recent pin from this user (pinsInCell was sorted desc, so first match works)
+      const lastPin = u.pins.reduce((a, b) => ((b.ts || 0) > (a.ts || 0) ? b : a), u.pins[0]);
+      const ch = chById(lastPin && lastPin.challengeId);
+      row.innerHTML = `
+        <div class="ava">${ava}</div>
+        <div class="info">
+          <div class="who">${escHtml(name)}</div>
+          <div class="meta">${ch ? ch.em + ' ' : ''}${escHtml(cntLabel)} · ${escHtml(relTime(u.latestTs))}</div>
+          ${lastPin && lastPin.note ? `<div class="note">💬 ${escHtml(lastPin.note)}</div>` : ''}
+        </div>
+        <button class="ax" type="button" aria-label="${escHtml(t('hexFlyToBtn'))}">🗺️</button>
+      `;
+      row.querySelector('.ax').addEventListener('click', () => {
+        vibrate(8); sfxTap();
+        closeAllSheets();
+        if (map && lastPin) map.flyTo([lastPin.lat, lastPin.lng], 17, { duration: 0.6 });
+      });
+      frag.appendChild(row);
+    });
+    othersList.appendChild(frag);
+  }
+
+  // 4) Fun loading message cycle
   const loadMsgs = [t('hexLoading'), t('hexLoading2'), t('hexLoading3'), t('hexLoading4')];
   let msgIdx = 0;
   const loadInterval = setInterval(() => {
@@ -2790,12 +2891,12 @@ function renderHexSheet(cell) {
     el.textContent = loadMsgs[msgIdx];
   }, 1100);
 
-  // 2) Fetch amenities (lazy)
+  // 5) Fetch amenities (lazy). Pass the combined pin list for the vibe chip.
   fetchAmenitiesForCell(cell)
     .then(list => {
       clearInterval(loadInterval);
       if (currentHexCell !== cell) return; // user moved on
-      paintAmenities(cell, list, pins);
+      paintAmenities(cell, list, pinsInCell);
     })
     .catch(err => {
       clearInterval(loadInterval);
@@ -3442,18 +3543,26 @@ function subscribePins() {
     snap.forEach((d) => {
       const data = d.data();
       if (typeof data.lat !== 'number' || typeof data.lng !== 'number') return;
+      // Re-derive the H3 cell from lat/lng — never trust the stored field,
+      // because legacy docs may have used cellH3 instead, or none at all.
+      const cell = (typeof h3 !== 'undefined')
+        ? h3.latLngToCell(data.lat, data.lng, HEX_FIXED_RES)
+        : (data.h3_r9 || data.cellH3 || null);
       state.pins.push({
         id: d.id,
         uid: data.uid,
         lat: data.lat, lng: data.lng,
-        ts: typeof data.ts === 'number' ? data.ts : (data.createdAt && data.createdAt.toMillis ? data.createdAt.toMillis() : Date.now()),
+        ts: typeof data.ts === 'number'
+              ? data.ts
+              : (data.createdAt && data.createdAt.toMillis ? data.createdAt.toMillis() : Date.now()),
         challengeId: data.challengeId || 'home',
         note: data.note || '',
         photo: data.photo || null,
         placeName: data.placeName || data.locationName || null,
         displayName: data.displayName || null,
         photoURL: data.photoURL || null,
-        avatarEmoji: data.avatarEmoji || null
+        avatarEmoji: data.avatarEmoji || null,
+        h3_r9: cell
       });
     });
     refreshAllMarkers();
