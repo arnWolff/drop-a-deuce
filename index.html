@@ -5203,23 +5203,25 @@ function wireEvents() {
 
   // Side stack
   $('meBtn').addEventListener('click', () => { vibrate(10); sfxTap(); locateMe().catch(() => {}); });
+  
   $('filterBtn').addEventListener('click', () => {
     state.showOthers = !state.showOthers;
-    $('zonesBtn').addEventListener('click', () => {
-      state.showZones = !state.showZones;
-      vibrate(10); sfxTap();
-      $('zonesBtn').style.opacity = state.showZones ? '1' : '.55';
-      $('zonesSwitch') && $('zonesSwitch').classList.toggle('on', state.showZones);
-      saveLS();
-      setZoneLayerVisibility(state.showZones);
-      toast(state.showZones ? t('zonesOn') : t('zonesOff'));
-    });
     vibrate(10); sfxTap();
     $('filterBtn').textContent = state.showOthers ? '🌍' : '👤';
     $('othersSwitch') && $('othersSwitch').classList.toggle('on', state.showOthers);
     saveLS();
     refreshAllMarkers();
     toast(state.showOthers ? t('seeAllPins') : t('seeMyPins'));
+  });
+
+  $('zonesBtn').addEventListener('click', () => {
+    state.showZones = !state.showZones;
+    vibrate(10); sfxTap();
+    $('zonesBtn').style.opacity = state.showZones ? '1' : '.55';
+    $('zonesSwitch') && $('zonesSwitch').classList.toggle('on', state.showZones);
+    saveLS();
+    setZoneLayerVisibility(state.showZones);
+    toast(state.showZones ? t('zonesOn') : t('zonesOff'));
   });
 
   // Top bar
