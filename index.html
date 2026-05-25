@@ -3584,6 +3584,8 @@ function paintAmenities(cell, list, pins) {
       const name = a.name || (state.lang === 'fr' ? 'Sans nom' : 'Unnamed');
       const dist = hasTap ? fmtDist(metersBetween(tapLat, tapLng, a.lat, a.lng)) : '';
       const extras = [];
+      if (a.country) extras.push('🏳️ ' + a.country);
+      if (a.operator && !name.includes(a.operator)) extras.push(a.operator);
       if (a.cuisine) extras.push('🍴 ' + a.cuisine.split(';')[0]);
       if (a.wheelchair === 'yes') extras.push('♿');
       if (a.opening_hours) extras.push('🕒');
