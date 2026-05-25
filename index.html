@@ -1380,6 +1380,61 @@ html.theme-dark .hex-summary .chip.gold { color: #fcd34d; }
 }
 .hex-amen-row .ax:active { transform: scale(.88); }
 
+/* ---------- SPECIAL LANDMARK — head-of-state tier ---------- */
+.hex-amen-group.has-special {
+  border-color: rgba(245,158,11,.5);
+  box-shadow:
+    0 0 0 1px rgba(245,158,11,.18),
+    0 4px 14px rgba(245,158,11,.12);
+}
+.hex-amen-group.has-special .hex-amen-head {
+  background: linear-gradient(135deg, rgba(252,211,77,.14), rgba(245,158,11,.04));
+}
+
+.hex-amen-row.special {
+  position: relative;
+  background: linear-gradient(135deg, rgba(255,215,0,.10), rgba(255,165,0,.05));
+  border-top: 1px solid rgba(245,158,11,.30);
+}
+.hex-amen-row.special:first-child { border-top: none; }
+.hex-amen-row.special::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0; width: 3px;
+  background: linear-gradient(180deg, #fcd34d, #f59e0b);
+}
+.hex-amen-row.special .em {
+  font-size: 24px;
+  filter: drop-shadow(0 1px 3px rgba(245,158,11,.45));
+}
+.hex-amen-row.special .nm {
+  display: flex; align-items: center; gap: 6px;
+  font-weight: 800;
+}
+.special-badge {
+  background: linear-gradient(135deg, #fcd34d, #f59e0b);
+  color: #7c2d12;
+  font-size: 9px; font-weight: 900;
+  letter-spacing: .08em;
+  padding: 2px 7px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(245,158,11,.4);
+  animation: special-shine 2.4s ease-in-out infinite;
+}
+@keyframes special-shine {
+  0%,100% { box-shadow: 0 1px 3px rgba(245,158,11,.4); }
+  50%     { box-shadow: 0 1px 9px rgba(245,158,11,.8); }
+}
+
+html.theme-dark .hex-amen-row.special {
+  background: linear-gradient(135deg, rgba(245,158,11,.18), rgba(245,158,11,.06));
+}
+html.theme-dark .special-badge {
+  color: #fef3c7;
+  background: linear-gradient(135deg, #d97706, #b45309);
+}
+
 .hex-empty {
   background: var(--surface-2);
   border: 1.5px dashed var(--border-2);
@@ -3079,6 +3134,146 @@ const VIP_AMENITY_KEYS = new Set([
   'stadium', 'theme_park'
 ]);
 
+/* ---------------------------------------------------------------------
+   SPECIAL LANDMARKS — head-of-state seats / supreme institutions per
+   country. A drop here is once-in-a-lifetime — pinned to the top of its
+   category with a gold "SPECIAL" badge.
+
+   Match by name fragment (lower-case + accent stripped). One entry per
+   institution; add `match` variants when the building has multiple
+   common renderings (English vs local script vs nickname).
+   --------------------------------------------------------------------- */
+const SPECIAL_LANDMARKS = [
+  // ===== EUROPE =====
+  { match:['palais de l\'elysee','elysee palace','elysee'], em:'🇫🇷',
+    en:'Élysée Palace · President',           fr:'Palais de l\'Élysée · Présidence' },
+  { match:['hotel de matignon','matignon'], em:'🇫🇷',
+    en:'Matignon · Prime Minister',           fr:'Matignon · Premier ministre' },
+  { match:['10 downing street','number 10'], em:'🇬🇧',
+    en:'10 Downing Street · PM',              fr:'10 Downing Street · Premier ministre' },
+  { match:['buckingham palace'], em:'🇬🇧',
+    en:'Buckingham Palace · Royal residence', fr:'Palais de Buckingham · Résidence royale' },
+  { match:['bundeskanzleramt','federal chancellery'], em:'🇩🇪',
+    en:'Federal Chancellery · Chancellor',    fr:'Chancellerie fédérale · Chancelier' },
+  { match:['schloss bellevue','bellevue palace'], em:'🇩🇪',
+    en:'Bellevue Palace · President',         fr:'Château de Bellevue · Présidence' },
+  { match:['palazzo del quirinale','quirinal palace'], em:'🇮🇹',
+    en:'Quirinal Palace · President',         fr:'Palais du Quirinal · Présidence' },
+  { match:['palazzo chigi'], em:'🇮🇹',
+    en:'Palazzo Chigi · PM',                  fr:'Palazzo Chigi · Premier ministre' },
+  { match:['palacio de la moncloa','moncloa'], em:'🇪🇸',
+    en:'Moncloa Palace · PM',                 fr:'Palais de la Moncloa · Premier ministre' },
+  { match:['palacio real de madrid','royal palace of madrid'], em:'🇪🇸',
+    en:'Royal Palace · Madrid',               fr:'Palais royal · Madrid' },
+  { match:['palacio de belem','belem palace'], em:'🇵🇹',
+    en:'Belém Palace · President',            fr:'Palais de Belém · Présidence' },
+  { match:['koninklijk paleis','royal palace amsterdam'], em:'🇳🇱',
+    en:'Royal Palace · Amsterdam',            fr:'Palais royal · Amsterdam' },
+  { match:['binnenhof','torentje'], em:'🇳🇱',
+    en:'Binnenhof · Parliament',              fr:'Binnenhof · Parlement' },
+  { match:['hofburg'], em:'🇦🇹',
+    en:'Hofburg · Federal President',         fr:'Hofburg · Présidence fédérale' },
+  { match:['palais de bruxelles','koninklijk paleis van brussel','royal palace of brussels'], em:'🇧🇪',
+    en:'Royal Palace · Brussels',             fr:'Palais royal · Bruxelles' },
+  { match:['stockholms slott','royal palace stockholm'], em:'🇸🇪',
+    en:'Royal Palace · Stockholm',            fr:'Palais royal · Stockholm' },
+  { match:['amalienborg'], em:'🇩🇰',
+    en:'Amalienborg · Royal residence',       fr:'Amalienborg · Résidence royale' },
+  { match:['slottet','royal palace oslo'], em:'🇳🇴',
+    en:'Royal Palace · Oslo',                 fr:'Palais royal · Oslo' },
+  { match:['presidentinlinna','presidential palace helsinki'], em:'🇫🇮',
+    en:'Presidential Palace · Helsinki',      fr:'Palais présidentiel · Helsinki' },
+  { match:['kremlin','московский кремль','senate palace','сенатский дворец'], em:'🇷🇺',
+    en:'The Kremlin · President',             fr:'Le Kremlin · Présidence' },
+  { match:['palace of the grand dukes','grand-ducal palace'], em:'🇱🇺',
+    en:'Grand Ducal Palace · Luxembourg',     fr:'Palais grand-ducal · Luxembourg' },
+
+  // ===== AMERICAS =====
+  { match:['white house'], em:'🇺🇸',
+    en:'The White House · President',         fr:'Maison Blanche · Présidence' },
+  { match:['rideau hall','24 sussex','rideau cottage'], em:'🇨🇦',
+    en:'Rideau Hall · Governor General',      fr:'Rideau Hall · Gouverneur général' },
+  { match:['palacio nacional'], em:'🇲🇽',
+    en:'National Palace · Mexico',            fr:'Palais national · Mexique' },
+  { match:['palacio do planalto','planalto'], em:'🇧🇷',
+    en:'Planalto Palace · President',         fr:'Palais du Planalto · Présidence' },
+  { match:['casa rosada'], em:'🇦🇷',
+    en:'Casa Rosada · President',             fr:'Casa Rosada · Présidence' },
+  { match:['palacio de la moneda','la moneda'], em:'🇨🇱',
+    en:'La Moneda · President',               fr:'La Moneda · Présidence' },
+  { match:['casa de narino','palacio de narino'], em:'🇨🇴',
+    en:'Casa de Nariño · President',          fr:'Casa de Nariño · Présidence' },
+
+  // ===== ASIA =====
+  { match:['imperial palace','皇居','kokyo'], em:'🇯🇵',
+    en:'Imperial Palace · Tokyo',             fr:'Palais impérial · Tokyo' },
+  { match:['kantei','首相官邸'], em:'🇯🇵',
+    en:'Kantei · PM',                         fr:'Kantei · Premier ministre' },
+  { match:['zhongnanhai','中南海'], em:'🇨🇳',
+    en:'Zhongnanhai · Central Government',    fr:'Zhongnanhai · Gouvernement central' },
+  { match:['great hall of the people','人民大会堂'], em:'🇨🇳',
+    en:'Great Hall of the People',            fr:'Palais de l\'Assemblée du peuple' },
+  { match:['rashtrapati bhavan'], em:'🇮🇳',
+    en:'Rashtrapati Bhavan · President',      fr:'Rashtrapati Bhavan · Présidence' },
+  { match:['cheong wa dae','청와대','yongsan presidential office'], em:'🇰🇷',
+    en:'Presidential Office · Seoul',         fr:'Bureau présidentiel · Séoul' },
+  { match:['the istana','presidential palace singapore'], em:'🇸🇬',
+    en:'The Istana · President',              fr:'L\'Istana · Présidence' },
+  { match:['istana merdeka','merdeka palace'], em:'🇮🇩',
+    en:'Merdeka Palace · President',          fr:'Palais Merdeka · Présidence' },
+  { match:['malacanang','malacañang'], em:'🇵🇭',
+    en:'Malacañang · President',              fr:'Malacañang · Présidence' },
+  { match:['cankaya kosku','presidential complex ankara','çankaya'], em:'🇹🇷',
+    en:'Presidential Complex · Ankara',       fr:'Complexe présidentiel · Ankara' },
+
+  // ===== MIDDLE EAST / AFRICA =====
+  { match:['knesset'], em:'🇮🇱',
+    en:'Knesset · Parliament',                fr:'Knesset · Parlement' },
+  { match:['ittihadiya','heliopolis palace'], em:'🇪🇬',
+    en:'Ittihadiya Palace · President',       fr:'Palais Ittihadiya · Présidence' },
+  { match:['union buildings'], em:'🇿🇦',
+    en:'Union Buildings · Pretoria',          fr:'Union Buildings · Pretoria' },
+  { match:['royal palace of rabat','palais royal de rabat'], em:'🇲🇦',
+    en:'Royal Palace · Rabat',                fr:'Palais royal · Rabat' },
+
+  // ===== OCEANIA =====
+  { match:['parliament house','australian parliament'], em:'🇦🇺',
+    en:'Parliament House · Canberra',         fr:'Parlement · Canberra' },
+  { match:['government house wellington'], em:'🇳🇿',
+    en:'Government House · Wellington',       fr:'Government House · Wellington' },
+
+  // ===== SUPRANATIONAL (bonus, lands in your local hex too) =====
+  { match:['european parliament','parlement europeen','europaisches parlament'], em:'🇪🇺',
+    en:'European Parliament',                 fr:'Parlement européen' },
+  { match:['european commission','commission europeenne'], em:'🇪🇺',
+    en:'European Commission',                 fr:'Commission européenne' },
+  { match:['council of europe','conseil de l\'europe'], em:'🇪🇺',
+    en:'Council of Europe',                   fr:'Conseil de l\'Europe' },
+];
+
+// Flatten + normalise once at boot. Pure constant — no runtime cost later.
+const _normStr = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+const SPECIAL_LANDMARKS_INDEX = (() => {
+  const idx = [];
+  for (const sp of SPECIAL_LANDMARKS) {
+    for (const m of sp.match) idx.push([_normStr(m), sp]);
+  }
+  return idx;
+})();
+
+function getSpecialLandmark(amenity) {
+  if (!amenity) return null;
+  const names = [amenity.name, amenity.nameEn].filter(Boolean);
+  if (!names.length) return null;
+  for (const raw of names) {
+    const norm = _normStr(raw);
+    for (const [m, sp] of SPECIAL_LANDMARKS_INDEX) {
+      if (norm.includes(m)) return sp;
+    }
+  }
+  return null;
+}
+
 /* Derived once, used by the query builder and the parser.
    This list comes from AMENITY_CATS itself so adding a new entry above
    "just works" with no other code changes. */
@@ -3205,6 +3400,7 @@ async function fetchAmenitiesForCell(cell, { force = false } = {}) {
           id: el.type + '/' + el.id,
           lat, lng, key,
           name: tags.name || tags['name:en'] || tags['name:fr'] || null,
+          nameEn: tags['name:en'] || null,   // NEW — for cross-script special-landmark match
           cuisine: tags.cuisine || null,
           opening_hours: tags.opening_hours || null,
           wheelchair: tags.wheelchair || null,
@@ -3515,19 +3711,29 @@ function paintAmenities(cell, list, pins) {
   const cntEl = $('hexAmenCnt'); if (cntEl) cntEl.textContent = list.length;
   const cntChip = $('hexCntAmen'); if (cntChip) cntChip.textContent = list.length;
 
-  // Vibe chip
+  // Pre-detect specials once; stash on the amenity so sort + render share work.
+  list.forEach(a => { a._special = getSpecialLandmark(a); });
+  const hasSpecial = list.some(a => a._special);
+  const hasVip     = list.some(a => VIP_AMENITY_KEYS.has(a.key));
+
+  // Vibe chip — LEGENDARY beats VIP beats generic.
   const vibe = $('hexVibe');
   if (vibe) {
-    if (!pins.length && !list.length)      vibe.textContent = t('hexGhost');
-    else if (pins.length && list.length)   vibe.textContent = t('hexBusy').replace('{p}', pins.length).replace('{a}', list.length);
-    else                                   vibe.textContent = t('hexQuiet').replace('{a}', list.length || pins.length);
-  }
-
-  // VIP override — if there's an institution in this hex, hype it up.
-  if (vibe && list.some(a => VIP_AMENITY_KEYS.has(a.key))) {
-    vibe.textContent = state.lang === 'fr'
-      ? '👑 Zone VIP — fais entrer ton nom dans l\'histoire'
-      : '👑 VIP zone — go make legendary history';
+    if (hasSpecial) {
+      vibe.textContent = state.lang === 'fr'
+        ? '🌟 ZONE LÉGENDAIRE — niveau chef d\'État'
+        : '🌟 LEGENDARY ZONE — head-of-state level';
+    } else if (hasVip) {
+      vibe.textContent = state.lang === 'fr'
+        ? '👑 Zone VIP — fais entrer ton nom dans l\'histoire'
+        : '👑 VIP zone — go make legendary history';
+    } else if (!pins.length && !list.length) {
+      vibe.textContent = t('hexGhost');
+    } else if (pins.length && list.length) {
+      vibe.textContent = t('hexBusy').replace('{p}', pins.length).replace('{a}', list.length);
+    } else {
+      vibe.textContent = t('hexQuiet').replace('{a}', list.length || pins.length);
+    }
   }
 
   if (!list.length) {
@@ -3542,9 +3748,21 @@ function paintAmenities(cell, list, pins) {
     groups.get(a.key).push(a);
   }
 
-  // Toilets first (obviously). Then VIP institutions (embassies, parliaments,
-  // castles…) so the funniest drops are surfaced. Then everything else by count.
+  // Within each group, specials float to the top.
+  for (const items of groups.values()) {
+    items.sort((a, b) => (b._special ? 1 : 0) - (a._special ? 1 : 0));
+  }
+
+  // Group order:
+  //   1) groups containing a SPECIAL (legendary stuff first)
+  //   2) toilets (it's a peach app, obviously)
+  //   3) VIP categories
+  //   4) everything else, by count
   const order = [...groups.entries()].sort((A, B) => {
+    const aSpec = A[1].some(x => x._special);
+    const bSpec = B[1].some(x => x._special);
+    if (aSpec && !bSpec) return -1;
+    if (bSpec && !aSpec) return  1;
     if (A[0] === 'toilets') return -1;
     if (B[0] === 'toilets') return  1;
     const aVip = VIP_AMENITY_KEYS.has(A[0]);
@@ -3560,15 +3778,15 @@ function paintAmenities(cell, list, pins) {
   const tapLng = parseFloat(sheet.dataset.tapLng);
   const hasTap = !isNaN(tapLat) && !isNaN(tapLng);
 
+  const specialLbl = state.lang === 'fr' ? 'SPÉCIAL' : 'SPECIAL';
+
   const frag = document.createDocumentFragment();
   for (const [key, items] of order) {
     const meta = AMENITY_CATS[key];
     const label = (state.lang === 'fr' ? meta.fr : meta.en);
-    // Crown VIP categories — visual hit + sets the comedic tone.
-    const crown = VIP_AMENITY_KEYS.has(key) ? '👑 ' : '';
-    // Then use `crown + meta.em + ' ' + label` wherever the group header is built.
+    const grpHasSpec = items.some(x => x._special);
     const grp = document.createElement('div');
-    grp.className = 'hex-amen-group';
+    grp.className = 'hex-amen-group' + (grpHasSpec ? ' has-special' : '');
     grp.innerHTML = `
       <div class="hex-amen-head">
         <span class="em">${meta.em}</span>
@@ -3578,21 +3796,35 @@ function paintAmenities(cell, list, pins) {
       <div class="hex-amen-rows"></div>
     `;
     const rows = grp.querySelector('.hex-amen-rows');
+
     items.slice(0, 30).forEach(a => {
       const row = document.createElement('div');
-      row.className = 'hex-amen-row';
+      const sp  = a._special;
+      row.className = 'hex-amen-row' + (sp ? ' special' : '');
       const name = a.name || (state.lang === 'fr' ? 'Sans nom' : 'Unnamed');
       const dist = hasTap ? fmtDist(metersBetween(tapLat, tapLng, a.lat, a.lng)) : '';
+
       const extras = [];
-      if (a.country) extras.push('🏳️ ' + a.country);
-      if (a.operator && !name.includes(a.operator)) extras.push(a.operator);
+      if (sp) {
+        // Flag + role tagline replaces the generic country chip — punchier.
+        extras.push(sp.em + ' ' + (state.lang === 'fr' ? sp.fr : sp.en));
+      } else {
+        if (a.country) extras.push('🏳️ ' + a.country);
+        if (a.operator && !name.includes(a.operator)) extras.push(a.operator);
+      }
       if (a.cuisine) extras.push('🍴 ' + a.cuisine.split(';')[0]);
       if (a.wheelchair === 'yes') extras.push('♿');
       if (a.opening_hours) extras.push('🕒');
+
+      // For specials, swap the category emoji for the country flag — most
+      // recognisable signal that "this is THE building".
+      const leadEm = sp ? sp.em : meta.em;
+      const badge  = sp ? `<span class="special-badge">${escHtml(specialLbl)}</span>` : '';
+
       row.innerHTML = `
-        <div class="em">${meta.em}</div>
+        <div class="em">${leadEm}</div>
         <div class="info">
-          <div class="nm">${escHtml(name)}</div>
+          <div class="nm">${escHtml(name)}${badge}</div>
           <div class="sub">${dist ? '<span class="d">'+escHtml(dist)+'</span>' : ''} ${extras.map(escHtml).join(' · ')}</div>
         </div>
         <div class="acts">
@@ -3606,15 +3838,15 @@ function paintAmenities(cell, list, pins) {
         closeAllSheets();
         if (map) {
           map.flyTo([a.lat, a.lng], 18, { duration: 0.6 });
-          showAmenityTarget(a.lat, a.lng); // <--- Triggers the animated target
+          showAmenityTarget(a.lat, a.lng);
         }
       });
       row.querySelector('.drop').addEventListener('click', (e) => {
         e.stopPropagation();
-        vibrate(12); sfxTap();
+        vibrate(sp ? 20 : 12); sfxTap();   // beefier haptic on legendary drops
         if (!requireAuth('drop')) return;
         state.draftLoc = { src: 'pick', lat: a.lat, lng: a.lng, name: a.name || label };
-        if (!state.draftChallenge) state.draftChallenge = 'home';
+        if (!state.draftChallenge) state.draftChallenge = sp ? 'civic' : 'home';
         closeAllSheets();
         setTimeout(() => openDrop(), 80);
       });
@@ -3625,7 +3857,7 @@ function paintAmenities(cell, list, pins) {
   wrap.innerHTML = '';
   wrap.appendChild(frag);
 
-  // Easter egg: lots of toilets in this app's universe = chef's kiss
+  // Easter egg: toilets joke (unchanged)
   if ((groups.get('toilets') || []).length >= 1) {
     const tag = document.createElement('div');
     tag.className = 'hex-toilet-joke';
