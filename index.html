@@ -944,55 +944,6 @@ html.theme-dark .leaflet-tile-pane { filter: brightness(.85) contrast(1.05) hue-
 .avatar-grid .ax.selected { border-color: var(--peach); background: var(--peach-grad-soft); transform: scale(1.05); }
 
 /* =====================================================================
-   MAP MARKERS
-   ===================================================================== */
-.peach-marker {
-  position: relative;
-  display: flex; flex-direction: column; align-items: center;
-}
-.peach-marker .bubble {
-  width: 44px; height: 44px;
-  border-radius: 50% 50% 50% 8px;
-  transform: rotate(-45deg);
-  background: var(--surface);
-  border: 2.5px solid var(--peach);
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 6px 14px rgba(255,107,157,.32);
-  overflow: hidden;
-}
-.peach-marker .bubble .inner {
-  transform: rotate(45deg);
-  width: 100%; height: 100%;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--surface);
-}
-.peach-marker .bubble .em { font-size: 22px; line-height: 1; }
-.peach-marker .bubble .av-img {
-  width: 100%; height: 100%; object-fit: cover;
-}
-.peach-marker.mine .bubble { border-color: var(--peach-2); background: var(--peach-grad); }
-.peach-marker.mine .bubble .inner { background: transparent; color: white; }
-.peach-marker .badge-count {
-  position: absolute;
-  top: -4px; right: -4px;
-  background: var(--ink);
-  color: white;
-  font-size: 10px; font-weight: 800;
-  padding: 2px 6px;
-  border-radius: 999px;
-  min-width: 18px; height: 18px;
-  display: flex; align-items: center; justify-content: center;
-  border: 2px solid var(--surface);
-  z-index: 2;
-}
-.peach-marker.drop-anim .bubble { animation: drop-in .6s var(--spring); }
-@keyframes drop-in {
-  0%   { transform: rotate(-45deg) translateY(-40px) scale(.4); opacity: 0; }
-  60%  { transform: rotate(-45deg) translateY(4px) scale(1.1); opacity: 1; }
-  100% { transform: rotate(-45deg) translateY(0) scale(1); }
-}
-
-/* =====================================================================
    HEX ZONE PULSE — fires when a fresh drop lands in a zone
    ===================================================================== */
 .hex-pulse {
@@ -1314,6 +1265,81 @@ html.theme-dark .hex-summary .chip.gold { color: #fcd34d; }
   border-radius: 999px;
   letter-spacing: .04em;
 }
+
+/* Drop-photo thumbnail inside a hex-pin-row */
+.hex-pin-row .pin-thumb {
+  width: 46px; height: 46px;
+  border-radius: 10px;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  padding: 0;
+  position: relative;
+  cursor: pointer;
+  transition: transform .12s var(--ease-out);
+}
+.hex-pin-row .pin-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hex-pin-row .pin-thumb:active { transform: scale(.92); }
+.hex-pin-row .pin-thumb::after {
+  content: "🔍";
+  position: absolute; right: 2px; bottom: 1px;
+  font-size: 9px;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,.5));
+}
+
+/* Fullscreen image lightbox */
+.img-lightbox {
+  position: fixed; inset: 0;
+  z-index: 9999;
+  display: flex; align-items: center; justify-content: center;
+  padding: max(20px, var(--safe-t)) 16px max(20px, var(--safe-b));
+  background: rgba(10,8,16,0);
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
+  opacity: 0; pointer-events: none;
+  transition: opacity .25s var(--ease-out), background .25s var(--ease-out),
+              backdrop-filter .25s var(--ease-out);
+}
+.img-lightbox.open {
+  opacity: 1; pointer-events: auto;
+  background: rgba(10,8,16,.82);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.img-lightbox-inner {
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  max-width: 100%; max-height: 100%;
+  transform: scale(.94);
+  transition: transform .3s var(--spring);
+}
+.img-lightbox.open .img-lightbox-inner { transform: scale(1); }
+.img-lightbox-img {
+  max-width: 100%; max-height: 78vh;
+  border-radius: 16px;
+  object-fit: contain;
+  box-shadow: 0 20px 60px rgba(0,0,0,.5);
+}
+.img-lightbox-cap {
+  color: #fff;
+  font-size: 14px; font-weight: 600;
+  text-align: center;
+  max-width: 90%;
+  line-height: 1.4;
+  text-shadow: 0 1px 6px rgba(0,0,0,.5);
+}
+.img-lightbox-close {
+  position: absolute;
+  top: max(16px, var(--safe-t)); right: 16px;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.16);
+  color: #fff; font-size: 18px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  transition: transform .12s var(--ease-out);
+}
+.img-lightbox-close:active { transform: scale(.9); }
 
 .hex-amen {
   display: flex; flex-direction: column;
@@ -3444,6 +3470,53 @@ function metersBetween(lat1, lng1, lat2, lng2) {
 }
 function fmtDist(m) { return m < 1000 ? Math.round(m) + ' m' : (m/1000).toFixed(1) + ' km'; }
 
+/* ---------------------------------------------------------------------
+   IMAGE LIGHTBOX — fullscreen viewer for drop photos.
+   Lazily injects one reusable overlay into <body>. Caption shows the
+   pin's note/title when present. Closes on backdrop tap, ✕, or Esc.
+   --------------------------------------------------------------------- */
+function openImageLightbox(src, title) {
+  if (!src) return;
+  let lb = document.getElementById('imgLightbox');
+  if (!lb) {
+    lb = document.createElement('div');
+    lb.id = 'imgLightbox';
+    lb.className = 'img-lightbox';
+    lb.innerHTML = `
+      <button class="img-lightbox-close" type="button" aria-label="Close">✕</button>
+      <div class="img-lightbox-inner">
+        <img class="img-lightbox-img" alt=""/>
+        <div class="img-lightbox-cap"></div>
+      </div>`;
+    document.body.appendChild(lb);
+    lb.addEventListener('click', (e) => {
+      if (e.target === lb || e.target.classList.contains('img-lightbox-close')) {
+        closeImageLightbox();
+      }
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && lb.classList.contains('open')) closeImageLightbox();
+    });
+  }
+  lb.querySelector('.img-lightbox-img').src = src;
+  const cap = lb.querySelector('.img-lightbox-cap');
+  if (title) { cap.textContent = title; cap.style.display = ''; }
+  else       { cap.textContent = '';    cap.style.display = 'none'; }
+  requestAnimationFrame(() => lb.classList.add('open'));
+  vibrate(8); sfxTap();
+}
+
+function closeImageLightbox() {
+  const lb = document.getElementById('imgLightbox');
+  if (!lb) return;
+  lb.classList.remove('open');
+  // Drop the (possibly large base64) src after the fade-out to free memory.
+  setTimeout(() => {
+    const im = lb.querySelector('.img-lightbox-img');
+    if (im) im.src = '';
+  }, 260);
+}
+
 function openHexSheet(cell, tappedLatLng) {
   if (!cell) return;
   currentHexCell = cell;
@@ -3608,11 +3681,12 @@ function renderHexSheet(cell) {
     list.appendChild(frag);
   }
 
-  // ---- 3) YOUR drops — detailed rows (unchanged behaviour) -----------
+  // ---- 3) YOUR drops — detailed rows ---------------------------------
   const pinsList = $('hexPinsList');
   if (!myPins.length) {
     pinsList.innerHTML = `<div class="hex-empty">${escHtml(t('hexNoYourPins'))}</div>`;
   } else {
+    const viewLbl = state.lang === 'fr' ? 'Voir la photo' : 'View photo';
     const frag = document.createDocumentFragment();
     myPins.slice(0, 40).forEach(p => {
       const row = document.createElement('div');
@@ -3622,6 +3696,10 @@ function renderHexSheet(cell) {
         ? `<img src="${escHtml(p.photoURL)}" alt=""/>`
         : (p.avatarEmoji ? escHtml(p.avatarEmoji)
             : (state.avatar || (p.displayName ? escHtml(p.displayName[0].toUpperCase()) : '🍑')));
+      // Drop photo thumbnail — p.photo is the image attached to THIS pin.
+      const thumb = p.photo
+        ? `<button class="pin-thumb" type="button" aria-label="${escHtml(viewLbl)}"><img src="${escHtml(p.photo)}" alt=""/></button>`
+        : '';
       row.innerHTML = `
         <div class="ava">${ava}</div>
         <div class="info">
@@ -3629,8 +3707,16 @@ function renderHexSheet(cell) {
           <div class="meta">${ch ? ch.em + ' ' + escHtml(chName(ch)) + ' · +' + ch.xp + ' XP' : ''} · ${escHtml(relTime(p.ts))}</div>
           ${p.note ? `<div class="note">💬 ${escHtml(p.note)}</div>` : ''}
         </div>
+        ${thumb}
         <button class="ax" type="button" aria-label="${escHtml(t('hexFlyToBtn'))}">🗺️</button>
       `;
+      const thumbBtn = row.querySelector('.pin-thumb');
+      if (thumbBtn) {
+        thumbBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openImageLightbox(p.photo, p.note || p.placeName || (ch ? chName(ch) : ''));
+        });
+      }
       row.querySelector('.ax').addEventListener('click', () => {
         vibrate(8); sfxTap();
         closeAllSheets();
@@ -3646,6 +3732,7 @@ function renderHexSheet(cell) {
   if (!otherUsers.length) {
     othersList.innerHTML = `<div class="hex-empty">${escHtml(t('hexNoOthers'))}</div>`;
   } else {
+    const viewLbl = state.lang === 'fr' ? 'Voir la photo' : 'View photo';
     const frag = document.createDocumentFragment();
     otherUsers.slice(0, 40).forEach(u => {
       const c = userColorObj(u.key);
@@ -3659,10 +3746,17 @@ function renderHexSheet(cell) {
       const cntLabel = u.count === 1
         ? t('onePeach')
         : t('manyPeaches').replace('{n}', u.count);
-      // Most-recent pin from this user, for the flyTo button
+      // This user's pins in the cell — newest first wins for flyTo + caption.
       const userPins = pinsInCell.filter(p => pinUserKey(p) === u.key);
-      const lastPin = userPins.reduce((a, b) => ((b.ts || 0) > (a.ts || 0) ? b : a), userPins[0]);
+      const lastPin  = userPins.reduce((a, b) => ((b.ts || 0) > (a.ts || 0) ? b : a), userPins[0]);
       const ch = chById(lastPin && lastPin.challengeId);
+      // Prefer the most recent pin that actually HAS a photo for the thumbnail.
+      const photoPin = userPins
+        .filter(p => p.photo)
+        .reduce((a, b) => ((b.ts || 0) > ((a && a.ts) || 0) ? b : a), null);
+      const thumb = photoPin
+        ? `<button class="pin-thumb" type="button" aria-label="${escHtml(viewLbl)}"><img src="${escHtml(photoPin.photo)}" alt=""/></button>`
+        : '';
       row.innerHTML = `
         <div class="ava" style="box-shadow: 0 0 0 2px hsl(${c.h} ${c.s}% ${c.l}%);">${ava}</div>
         <div class="info">
@@ -3670,8 +3764,17 @@ function renderHexSheet(cell) {
           <div class="meta">${ch ? ch.em + ' ' : ''}${escHtml(cntLabel)} · ⚡ ${fmt(u.xp)} XP · ${escHtml(relTime(u.latestTs))}</div>
           ${lastPin && lastPin.note ? `<div class="note">💬 ${escHtml(lastPin.note)}</div>` : ''}
         </div>
+        ${thumb}
         <button class="ax" type="button" aria-label="${escHtml(t('hexFlyToBtn'))}">🗺️</button>
       `;
+      const thumbBtn = row.querySelector('.pin-thumb');
+      if (thumbBtn) {
+        thumbBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const cap = photoPin.note || (lastPin && lastPin.placeName) || name;
+          openImageLightbox(photoPin.photo, cap);
+        });
+      }
       row.querySelector('.ax').addEventListener('click', () => {
         vibrate(8); sfxTap();
         closeAllSheets();
