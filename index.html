@@ -3971,64 +3971,49 @@ function initMap() {
       const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
       const size = this._map.getSize();
 
+      // Rebuild the precomputed index only if data/visibility changed.
+      if (hexIndexDirty) rebuildHexIndex();
+
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, size.x, size.y);
       this._lastClusters.length = 0;
 
       const zoom = this._map.getZoom();
       if (zoom >= HEX_MIN_ZOOM) {
-        if (state.showZones) this._drawHexes(ctx);
+        if (state.showZones) this._drawHexes(ctx);  // territory fills (toggle)
+        this._drawHexChips(ctx);                     // per-cell markers (always)
       } else {
         this._drawClusters(ctx);
       }
     },
 
     /* HIGH ZOOM — fixed H3 grid, owner-coloured DipGo territories.
-       Each occupied cell is filled with the colour of the user who has
-       the highest XP total in that cell. Intensity scales with the
-       cell's total XP so contested zones glow brighter. */
+       Reads entirely from the precomputed hexIndex. Per frame we only
+       project cached boundaries and paint — no bucketing, no ranking. */
     _drawHexes(ctx) {
-      if (typeof h3 === 'undefined') return;
-      const map = this._map;
-      const bounds = map.getBounds().pad(0.1);
+      if (!hexIndex.length) return;
+      const map    = this._map;
+      const bounds = map.getBounds().pad(0.2);
       const myUid  = state.user && state.user.uid;
+      let drawn = 0;
 
-      // Bucket visible pins into hex cells (keep the full pin list per cell)
-      const cells = new Map();
-      for (const p of state.pins) {
-        const mine = myUid && p.uid === myUid;
-        // Respect the user's "show others" toggle for the territory layer
-        if (!mine && !state.showOthers) continue;
-        if (typeof p.lat !== 'number' || typeof p.lng !== 'number') continue;
-        if (!bounds.contains([p.lat, p.lng])) continue;
-        const cell = h3.latLngToCell(p.lat, p.lng, HEX_FIXED_RES);
-        let info = cells.get(cell);
-        if (!info) { info = { pins: [] }; cells.set(cell, info); }
-        info.pins.push(p);
-      }
-      if (cells.size > HEX_MAX_CELLS) return;
+      for (const info of hexIndex) {
+        // Cheap viewport cull on the cached centroid
+        if (!bounds.contains([info.lat, info.lng])) continue;
+        if (++drawn > HEX_MAX_CELLS) break;
 
-      cells.forEach((info, cell) => {
-        const boundary = cellBoundary(cell);
-        if (!boundary || boundary.length < 6) return;
+        const boundary = info.boundary;
+        if (!boundary || boundary.length < 6) continue;
 
-        // DipGo: rank users by XP, the top one OWNS this cell
-        const ranking = computeHexUserXp(info.pins);
-        if (!ranking.length) return;
-        const owner = ranking[0];
-        const isMine = myUid && owner.uid === myUid;
+        const owner  = info.owner;
+        const isMine = !!(myUid && owner.uid === myUid);
 
-        // Contested? second-place is within 25% of first
-        const contested = ranking.length > 1
-          && ranking[1].xp >= owner.xp * 0.75;
-
-        // Intensity from owner's XP in this cell (caps near ~100xp)
         const intensity = Math.min(1, owner.xp / 100);
         const baseAlpha = 0.22 + intensity * 0.42;
 
         const { h, s, l } = userColorObj(owner.key);
-        const fill   = `hsla(${h}, ${s}%, ${l}%, ${baseAlpha})`;
-        const stroke = `hsla(${h}, ${s}%, ${Math.max(30, l - 14)}%, ${Math.min(0.95, baseAlpha + 0.32)})`;
+        ctx.fillStyle   = `hsla(${h}, ${s}%, ${l}%, ${baseAlpha})`;
+        ctx.strokeStyle = `hsla(${h}, ${s}%, ${Math.max(30, l - 14)}%, ${Math.min(0.95, baseAlpha + 0.32)})`;
 
         ctx.beginPath();
         for (let i = 0; i < boundary.length; i++) {
@@ -4037,34 +4022,97 @@ function initMap() {
           else         ctx.lineTo(pt.x, pt.y);
         }
         ctx.closePath();
-
-        ctx.fillStyle = fill;
         ctx.fill();
 
-        ctx.lineJoin    = 'round';
-        ctx.lineWidth   = isMine ? 2.2 : (contested ? 1.75 : 1.25);
-        ctx.strokeStyle = stroke;
-
-        if (contested) {
-          // Dashed outline = under siege from another player
+        ctx.lineJoin  = 'round';
+        ctx.lineWidth = isMine ? 2.2 : (info.contested ? 1.75 : 1.25);
+        if (info.contested) {
           ctx.setLineDash([6, 4]);
           ctx.stroke();
           ctx.setLineDash([]);
         } else {
           ctx.stroke();
         }
-      });
+      }
     },
 
-    /* LOW ZOOM — friendly bubble clusters in screen space */
+    /* HIGH ZOOM — per-cell marker chips (replaces all DOM pin markers).
+       One owner-tinted bubble at each occupied cell centroid: emoji +
+       count badge, dashed ring when several distinct users share the hex.
+       Tapping resolves to the cell via the existing click handler, which
+       opens the hex sheet (full user list, photos, comments). */
+    _drawHexChips(ctx) {
+      if (!hexIndex.length) return;
+      const map    = this._map;
+      const bounds = map.getBounds().pad(0.1);
+      const myUid  = state.user && state.user.uid;
+      let drawn = 0;
+
+      for (const info of hexIndex) {
+        if (!bounds.contains([info.lat, info.lng])) continue;
+        if (++drawn > HEX_MAX_CELLS) break;
+
+        const pt     = map.latLngToContainerPoint([info.lat, info.lng]);
+        const owner  = info.owner;
+        const isMine = !!(myUid && owner.uid === myUid);
+        const { h, s, l } = userColorObj(owner.key);
+        const r = 15;
+
+        // Body
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, r, 0, Math.PI * 2);
+        ctx.fillStyle   = `hsl(${h} ${s}% ${l}%)`;
+        ctx.shadowColor = 'rgba(0,0,0,0.22)';
+        ctx.shadowBlur  = 6;
+        ctx.fill();
+        ctx.shadowBlur  = 0;
+
+        // Ring — dashed when more than one user has pinned here
+        ctx.lineWidth   = isMine ? 3 : 2;
+        ctx.strokeStyle = '#ffffff';
+        if (info.users > 1) {
+          ctx.setLineDash([4, 3]);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        } else {
+          ctx.stroke();
+        }
+
+        // Glyph — owner avatar emoji, else the challenge emoji, else peach
+        const firstCh = chById(info.pins[0].challengeId);
+        const glyph   = owner.avatarEmoji || (firstCh ? firstCh.em : '🍑');
+        ctx.fillStyle    = '#ffffff';
+        ctx.font         = '14px system-ui,-apple-system,Segoe UI,Roboto,sans-serif';
+        ctx.textAlign    = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(glyph, pt.x, pt.y + 0.5);
+
+        // Count badge (top-right) when the cell holds more than one drop
+        if (info.count > 1) {
+          const bx = pt.x + r * 0.8, by = pt.y - r * 0.8;
+          ctx.beginPath();
+          ctx.arc(bx, by, 8, 0, Math.PI * 2);
+          ctx.fillStyle   = '#2b2b3a';
+          ctx.fill();
+          ctx.lineWidth   = 1.5;
+          ctx.strokeStyle = '#ffffff';
+          ctx.stroke();
+          ctx.fillStyle = '#ffffff';
+          ctx.font      = '800 9px system-ui,-apple-system,Segoe UI,Roboto,sans-serif';
+          ctx.fillText(info.count > 99 ? '99+' : String(info.count), bx, by + 0.5);
+        }
+      }
+    },
+
+    /* LOW ZOOM — friendly bubble clusters in screen space.
+       Reads the pre-filtered pinDrawList (built in rebuildHexIndex), so
+       the per-frame work is just projection + bucketing. */
     _drawClusters(ctx) {
       const map  = this._map;
       const bounds = map.getBounds().pad(0.05);
       const grid = new Map();
 
-      for (const p of state.pins) {
-        const mine = state.user && p.uid === state.user.uid;
-        if (!mine && !state.showOthers) continue;
+      for (const p of pinDrawList) {
         if (!bounds.contains([p.lat, p.lng])) continue;
 
         const pt = map.latLngToContainerPoint([p.lat, p.lng]);
@@ -4080,7 +4128,7 @@ function initMap() {
         info.count++;
         info.sumX += pt.x; info.sumY += pt.y;
         info.sumLat += p.lat; info.sumLng += p.lng;
-        if (mine) info.mine++;
+        if (p.mine) info.mine++;
       }
 
       grid.forEach((info) => {
@@ -4207,21 +4255,10 @@ function initMap() {
   }
 }
 
-/* Toggle individual pin markers based on zoom. Below the threshold the
-   canvas cluster badges represent them, so we keep the DOM clean. */
+/* Markers are drawn entirely on the canvas now. A zoom change just needs
+   a repaint — the canvas _draw() picks chips vs. clusters by zoom level. */
 function updatePinMarkersForZoom() {
-  if (!map) return;
-  const showIndividual = map.getZoom() >= HEX_MIN_ZOOM;
-  if (showIndividual) {
-    // Make sure all eligible markers are on the map
-    state.pins.forEach((p) => {
-      if (!markersByPin.has(p.id)) addPinMarker(p);
-    });
-  } else {
-    // Detach all markers; cluster canvas takes over
-    markersByPin.forEach((m) => map.removeLayer(m));
-    markersByPin.clear();
-  }
+  scheduleHexUpdate();
 }
 
 function setUserMarker(latlng) {
@@ -4253,90 +4290,20 @@ function locateMe() {
   });
 }
 
-function pinIconFor(pin, mine) {
-  const ch = chById(pin.challengeId);
-  const em = ch ? ch.em : '🍑';
-  const inner = pin.avatarEmoji
-    ? `<span class="em">${escHtml(pin.avatarEmoji)}</span>`
-    : `<span class="em">${em}</span>`;
-  const cls = 'peach-marker' + (mine ? ' mine' : '') + ' drop-anim';
-  return L.divIcon({
-    className: '',
-    html: `<div class="${cls}"><div class="bubble"><div class="inner">${inner}</div></div></div>`,
-    iconSize: [44, 50],
-    iconAnchor: [22, 44],
-    popupAnchor: [0, -42]
-  });
-}
-
-function popupHtml(pin) {
-  const ch = chById(pin.challengeId);
-  const isMe = state.user && pin.uid === state.user.uid;
-  const canMod = !!state.user && (state.isModerator || state.isAdmin) && !isMe;
-  const avatarHtml = pin.photoURL
-    ? `<img src="${escHtml(pin.photoURL)}" alt=""/>`
-    : (pin.avatarEmoji
-       ? escHtml(pin.avatarEmoji)
-       : (pin.displayName ? escHtml(pin.displayName[0].toUpperCase()) : '🍑'));
-  const who = isMe ? t('you') : (pin.displayName || t('friend'));
-  const mineBadge = isMe ? `<span class="mine-tag">${t('mine')}</span>` : '';
-  let html = `<div class="pin-pop">
-    <div class="ph">
-      <div class="ava">${avatarHtml}</div>
-      <div class="who">
-        <div class="nm">${escHtml(who)}</div>
-        <div class="when">${escHtml(relTime(pin.ts))}</div>
-      </div>
-      ${mineBadge}
-    </div>`;
-  if (ch)            html += `<div class="ch-line"><span class="em">${ch.em}</span><span>${escHtml(chName(ch))}</span></div>`;
-  if (pin.placeName) html += `<div class="ploc">📍 ${escHtml(pin.placeName)}</div>`;
-  if (pin.note)      html += `<div style="font-size:12px;color:var(--ink-2);font-weight:500;margin-top:4px;">💬 ${escHtml(pin.note)}</div>`;
-  if (pin.photo)     html += `<img class="pimg" src="${pin.photo}" alt="drop photo"/>`;
-
-  // Action row — owner, mod, or admin sees a delete button
-  if (isMe) {
-    html += `<button class="pin-pop-act danger" data-act="del" data-pin="${escHtml(pin.id)}">🗑️ ${escHtml(t('deleteMine'))}</button>`;
-  } else if (canMod) {
-    const label = state.isAdmin ? t('deleteAsAdmin') : t('deleteAsMod');
-    html += `<button class="pin-pop-act warn" data-act="del" data-pin="${escHtml(pin.id)}">🛡️ ${escHtml(label)}</button>`;
-  }
-  html += `</div>`;
-  return html;
-}
-
-function addPinMarker(pin) {
-  if (!map) return;
-  if (markersByPin.has(pin.id)) return;
-  if (map.getZoom() < HEX_MIN_ZOOM) return;
-
-  const mine = state.user && pin.uid === state.user.uid;
-  if (!mine && !state.showOthers) return;
-
-  const m = L.marker([pin.lat, pin.lng], { icon: pinIconFor(pin, mine) })
-    .bindPopup(popupHtml(pin), { maxWidth: 260, closeButton: true })
-    .addTo(map);
-
-  // Wire the delete button after Leaflet renders the popup DOM
-  m.on('popupopen', (ev) => {
-    const root = ev.popup.getElement();
-    if (!root) return;
-    const btn = root.querySelector('.pin-pop-act[data-act="del"]');
-    if (btn) btn.addEventListener('click', () => { vibrate(15); sfxTap(); deletePin(pin); });
-  });
-
-  markersByPin.set(pin.id, m);
-}
+// Retained as a no-op for backward compatibility. Pins are no longer
+// individual DOM markers — they're drawn on the canvas as hex chips,
+// and tapping a hex opens the inspector sheet (users, photos, comments).
+function addPinMarker(_pin) { /* no-op — see HexCanvasLayer._drawHexChips */ }
 function removePinMarker(id) {
   const m = markersByPin.get(id);
   if (m) { map.removeLayer(m); markersByPin.delete(id); }
 }
 function refreshAllMarkers() {
-  markersByPin.forEach((m) => map.removeLayer(m));
+  // DOM pin markers are gone — everything is drawn on the canvas now.
+  // Clear any stragglers from older sessions, then rebuild + repaint once.
+  if (map) markersByPin.forEach((m) => map.removeLayer(m));
   markersByPin.clear();
-  // addPinMarker self-gates by zoom; clusters cover low zoom automatically
-  state.pins.forEach(addPinMarker);
-  // Force a canvas redraw so cluster counts match pin set immediately
+  markHexIndexDirty();
   scheduleHexUpdate();
 }
 /** Owner deletes their own. Mod/admin deletes anyone's. */
@@ -4388,6 +4355,67 @@ function cellBoundary(cell) {
     }
   }
   return b;
+}
+
+/* ---------------------------------------------------------------------
+   HEX INDEX — built ONCE when pins (or visibility toggles) change.
+   Per-frame drawing reads from this; it NEVER re-buckets or re-ranks.
+   This is the core mobile perf fix: H3 bucketing + XP ranking are O(n)
+   but now run on data change, not on every pan/zoom frame.
+   --------------------------------------------------------------------- */
+let hexIndex      = [];     // [{cell, lat, lng, boundary, pins, ranking, owner, contested, totalXp, users, count, mineCount}]
+let pinDrawList   = [];     // [{lat, lng, mine}] flat, pre-filtered list for the low-zoom cluster pass
+let hexIndexDirty = true;   // set true whenever pins or showOthers change
+
+function markHexIndexDirty() { hexIndexDirty = true; }
+
+function rebuildHexIndex() {
+  // Don't clear the dirty flag until H3 is actually available, otherwise an
+  // early call (before the h3 lib loads) would leave us with a permanently
+  // empty index.
+  if (typeof h3 === 'undefined') return;
+
+  hexIndex = [];
+  pinDrawList = [];
+  const myUid = state.user && state.user.uid;
+
+  // 1) Bucket every pin into its fixed-res cell — ONCE.
+  //    The "show others" toggle is honoured here, a single time, so neither
+  //    the cluster pass nor the hex pass has to re-check it per frame.
+  const cells = new Map();
+  for (const p of state.pins) {
+    if (typeof p.lat !== 'number' || typeof p.lng !== 'number') continue;
+    const mine = !!(myUid && p.uid === myUid);
+    if (!mine && !state.showOthers) continue;
+
+    pinDrawList.push({ lat: p.lat, lng: p.lng, mine });
+
+    const cell = p.h3_r9 || h3.latLngToCell(p.lat, p.lng, HEX_FIXED_RES);
+    let bucket = cells.get(cell);
+    if (!bucket) { bucket = []; cells.set(cell, bucket); }
+    bucket.push(p);
+  }
+
+  // 2) Pre-rank + pre-resolve geometry per cell — ONCE.
+  cells.forEach((pins, cell) => {
+    const ranking = computeHexUserXp(pins);
+    if (!ranking.length) return;
+    const owner     = ranking[0];
+    const contested = ranking.length > 1 && ranking[1].xp >= owner.xp * 0.75;
+    const totalXp   = ranking.reduce((s, r) => s + r.xp, 0);
+    const mineCount = myUid ? pins.filter(p => p.uid === myUid).length : 0;
+    const [lat, lng] = h3.cellToLatLng(cell);
+    hexIndex.push({
+      cell, lat, lng,
+      boundary: cellBoundary(cell),
+      pins, ranking, owner, contested, totalXp,
+      users: ranking.length,
+      count: pins.length,
+      mineCount
+    });
+  });
+
+  hexIndexDirty = false;
 }
 
 /* Public API kept for backward compatibility with the rest of the app —
