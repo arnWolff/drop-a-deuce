@@ -826,7 +826,8 @@ html.theme-dark .leaflet-tile-pane { filter: brightness(.85) contrast(1.05) hue-
 .photo-stage {
   position: relative;
   width: 100%;
-  aspect-ratio: 4 / 3;
+  height: 140px;
+  max-height: 140px;
   background: var(--surface-2);
   border: 1.5px dashed var(--border-2);
   border-radius: var(--r-lg);
@@ -849,6 +850,85 @@ html.theme-dark .leaflet-tile-pane { filter: brightness(.85) contrast(1.05) hue-
   font-size: 16px;
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
+}
+/* photo source action buttons */
+.photo-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+.photo-act {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  padding: 10px 6px;
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-md);
+  min-height: 62px;
+  transition: transform .12s var(--ease-out), border-color .15s var(--ease-out);
+}
+.photo-act:active { transform: scale(.95); }
+.photo-act .em  { font-size: 22px; line-height: 1; }
+.photo-act .lbl { font-size: 11px; font-weight: 700; color: var(--ink-2); }
+.photo-act.ai { background: var(--purple-grad); border-color: transparent; box-shadow: var(--sh-md); }
+.photo-act.ai .lbl { color: #fff; }
+
+/* AI studio */
+.ai-source, .ai-result {
+  width: 100%;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  min-height: 120px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+.ai-source img, .ai-result img { width: 100%; height: auto; display: block; }
+.ai-result.busy { min-height: 180px; }
+.ai-result.busy::after {
+  content: '✨'; font-size: 34px;
+  animation: ai-spin 1.4s linear infinite;
+}
+@keyframes ai-spin { 0%{transform:rotate(0) scale(1)} 50%{transform:rotate(180deg) scale(1.25)} 100%{transform:rotate(360deg) scale(1)} }
+.ai-hint { font-size: 11px; color: var(--ink-3); margin-top: 6px; font-weight: 500; line-height: 1.4; }
+.ai-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.ai-chip {
+  font-size: 12px; font-weight: 700;
+  padding: 7px 12px; border-radius: 999px;
+  background: var(--surface-2); border: 1.5px solid var(--border); color: var(--ink-2);
+  transition: transform .12s var(--ease-out), border-color .15s var(--ease-out);
+}
+.ai-chip:active { transform: scale(.92); border-color: var(--peach); }
+.segment .opt.disabled { opacity: .4; pointer-events: none; }
+.btn.loading { opacity: .7; pointer-events: none; }
+
+/* webcam capture modal */
+.cam-modal {
+  position: fixed; inset: 0; z-index: 9998;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: rgba(10,8,16,.93);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  opacity: 0; pointer-events: none; transition: opacity .22s var(--ease-out);
+  padding: max(20px, var(--safe-t)) 16px max(24px, var(--safe-b));
+}
+.cam-modal.open { opacity: 1; pointer-events: auto; }
+.cam-modal video {
+  width: 100%; max-width: 520px; max-height: 70vh;
+  border-radius: var(--r-lg); background: #000; object-fit: cover;
+  box-shadow: var(--sh-xl);
+}
+.cam-actions { display: flex; gap: 16px; margin-top: 22px; align-items: center; }
+.cam-shutter {
+  width: 70px; height: 70px; border-radius: 50%;
+  background: #fff; border: 5px solid rgba(255,255,255,.35);
+  box-shadow: var(--sh-lg);
+  transition: transform .12s var(--ease-out);
+}
+.cam-shutter:active { transform: scale(.9); }
+.cam-cancel {
+  color: #fff; font-weight: 700; font-size: 14px;
+  background: rgba(255,255,255,.14); border-radius: 999px; padding: 12px 22px;
 }
 
 /* =====================================================================
@@ -1942,12 +2022,24 @@ html.theme-dark .pin-pop-act.warn { color: #93c5fd; }
 
     <div class="section-label" data-i18n="dropPhotoLabel">Photo (optional)</div>
     <div class="photo-stage" id="photoStage">
-      <input type="file" accept="image/*" capture="environment" id="photoInput" style="display:none" />
       <div class="ph">
         <div class="em">📸</div>
-        <div class="lbl" data-i18n="photoTap">Tap to add photo</div>
-        <div class="hint" data-i18n="photoHint">JPEG, compressed on device</div>
+        <div class="lbl" data-i18n="photoTap">Snap, upload, or invent one ✨</div>
       </div>
+    </div>
+    <!-- two separate inputs: one forces camera, one opens the gallery/files -->
+    <input type="file" accept="image/*" capture="environment" id="photoInputCam" style="display:none" />
+    <input type="file" accept="image/*" id="photoInputGallery" style="display:none" />
+    <div class="photo-actions">
+      <button class="photo-act" id="photoActCam" type="button">
+        <span class="em">📷</span><span class="lbl" data-i18n="photoCam">Camera</span>
+      </button>
+      <button class="photo-act" id="photoActGallery" type="button">
+        <span class="em">🖼️</span><span class="lbl" data-i18n="photoGallery">Gallery</span>
+      </button>
+      <button class="photo-act ai" id="photoActAI" type="button">
+        <span class="em">✨</span><span class="lbl" data-i18n="photoAI">AI Studio</span>
+      </button>
     </div>
 
     <div class="section-label" data-i18n="dropNoteLabel">Note (optional)</div>
@@ -1959,6 +2051,60 @@ html.theme-dark .pin-pop-act.warn { color: #93c5fd; }
       <span data-i18n="dropAction">Drop the peach</span>
     </button>
     
+  </div>
+</div>
+
+<!-- AI STUDIO SHEET -->
+<div class="sheet" id="aiSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-head">
+    <div class="title-block">
+      <h2 data-i18n="aiTitle">AI Studio</h2>
+      <div class="sub" data-i18n="aiSub">Conjure or remix an image ✨</div>
+    </div>
+    <button class="sheet-close" data-close type="button">✕</button>
+  </div>
+  <div class="sheet-body">
+
+    <div class="segment" data-cols="2" id="aiModeSeg">
+      <div class="opt active" data-val="generate" data-i18n="aiModeGen">✨ Create</div>
+      <div class="opt" data-val="edit" data-i18n="aiModeEdit">🎨 Remix</div>
+    </div>
+
+    <div id="aiSourceWrap" style="display:none;">
+      <div class="section-label" data-i18n="aiSourceLabel">Your image</div>
+      <div class="ai-source" id="aiSource"></div>
+    </div>
+
+    <div class="section-label" data-i18n="aiPromptLabel">Your prompt</div>
+    <textarea class="textarea" id="aiPrompt" maxlength="500" placeholder="A majestic peach on a golden throne…"></textarea>
+    <div class="ai-chips" id="aiChips"></div>
+
+    <div class="section-label" data-i18n="aiEngineLabel">Engine</div>
+    <div class="segment" data-cols="2" id="aiProviderSeg">
+      <div class="opt active" data-val="puter" data-i18n="aiProvFree">🆓 Free</div>
+      <div class="opt" data-val="openai" data-i18n="aiProvKey">🔑 My key</div>
+    </div>
+    <div id="aiKeyWrap" style="display:none; margin-top:10px;">
+      <input class="input" id="aiKeyInput" type="password" placeholder="sk-…" autocomplete="off" />
+      <div class="ai-hint" data-i18n="aiKeyHint">Stored only on this device. Uses the OpenAI image API.</div>
+    </div>
+    <div class="ai-hint" id="aiFreeHint" data-i18n="aiFreeHint">Powered by Puter — first use may ask for a free Puter sign-in.</div>
+
+    <div style="height:16px"></div>
+    <button class="btn primary block lg" id="aiRunBtn" type="button">
+      <span class="ic">✨</span><span id="aiRunLabel" data-i18n="aiGenerate">Generate</span>
+    </button>
+
+    <div id="aiResultWrap" style="display:none;">
+      <div class="section-label" data-i18n="aiResultLabel">Result</div>
+      <div class="ai-result" id="aiResult"></div>
+      <div class="btn-row" style="margin-top:12px;">
+        <button class="btn ghost" id="aiRegenBtn" type="button"><span class="ic">🔄</span><span data-i18n="aiRegen">Again</span></button>
+        <button class="btn success" id="aiUseBtn" type="button"><span class="ic">✓</span><span data-i18n="aiUse">Use this</span></button>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -2522,6 +2668,22 @@ const I18N = {
     cantModAdmin: "Admin can't be a moderator (you're already the king 👑).",
     uidCopied: 'UID copied to clipboard',
     loading: 'Loading',
+    photoTap: 'Snap, upload, or invent one ✨',
+    photoCam: 'Camera', photoGallery: 'Gallery', photoAI: 'AI Studio',
+    camDenied: 'Camera access was blocked', camUnsupported: 'No camera available here',
+    aiTitle: 'AI Studio', aiSub: 'Conjure or remix an image ✨',
+    aiModeGen: '✨ Create', aiModeEdit: '🎨 Remix',
+    aiSourceLabel: 'Your image', aiPromptLabel: 'Your prompt', aiEngineLabel: 'Engine',
+    aiProvFree: '🆓 Free', aiProvKey: '🔑 My key',
+    aiKeyHint: 'Stored only on this device. Uses the OpenAI image API.',
+    aiFreeHint: 'Powered by Puter — first use may ask for a free Puter sign-in.',
+    aiGenerate: 'Generate', aiApply: 'Apply remix', aiWorking: 'Cooking pixels…',
+    aiResultLabel: 'Result', aiRegen: 'Again', aiUse: 'Use this',
+    aiAdded: '✨ Image added to your drop',
+    aiPhGen: 'A majestic peach on a golden throne…',
+    aiPhEdit: 'Turn this into a watercolour, add a tiny crown…',
+    aiNeedPrompt: 'Type a prompt first', aiNeedImage: 'Load an image to remix first',
+    aiNeedKey: 'Paste your API key first', aiFailed: 'Generation failed — try again',
   },
   fr: {
     appName: 'Pose ta Pêche', tagline: 'Trace ton trône',
@@ -2667,6 +2829,22 @@ const I18N = {
     cantModAdmin: "L'admin ne peut pas être modo (tu es déjà le roi 👑).",
     uidCopied: 'UID copié',
     loading: 'Chargement',
+    photoTap: 'Prends, importe ou invente ✨',
+    photoCam: 'Photo', photoGallery: 'Galerie', photoAI: 'Studio IA',
+    camDenied: "Accès caméra refusé", camUnsupported: 'Aucune caméra disponible ici',
+    aiTitle: 'Studio IA', aiSub: 'Crée ou remixe une image ✨',
+    aiModeGen: '✨ Créer', aiModeEdit: '🎨 Remixer',
+    aiSourceLabel: 'Ton image', aiPromptLabel: 'Ton prompt', aiEngineLabel: 'Moteur',
+    aiProvFree: '🆓 Gratuit', aiProvKey: '🔑 Ma clé',
+    aiKeyHint: "Stockée uniquement sur cet appareil. Utilise l'API image OpenAI.",
+    aiFreeHint: 'Propulsé par Puter — une connexion Puter gratuite peut être demandée.',
+    aiGenerate: 'Générer', aiApply: 'Appliquer le remix', aiWorking: 'Cuisson des pixels…',
+    aiResultLabel: 'Résultat', aiRegen: 'Encore', aiUse: 'Utiliser',
+    aiAdded: '✨ Image ajoutée à ta pêche',
+    aiPhGen: 'Une pêche majestueuse sur un trône doré…',
+    aiPhEdit: 'Transforme-la en aquarelle, ajoute une couronne…',
+    aiNeedPrompt: 'Écris un prompt d’abord', aiNeedImage: 'Charge une image à remixer',
+    aiNeedKey: 'Colle ta clé API d’abord', aiFailed: 'Échec de la génération — réessaie',
   }
 };
 const t = (k) => (I18N[state.lang] && I18N[state.lang][k]) || I18N.en[k] || k;
@@ -2710,7 +2888,9 @@ const DEFAULTS = {
   showZones: true,
   nickname: '',
   avatar: '🍑',
-  welcomed: false
+  welcomed: false,
+  aiProvider: 'puter',   // 'puter' (free) | 'openai' (own key)
+  aiApiKey: ''           // user's own OpenAI key, kept on-device only
 };
 const state = Object.assign({}, DEFAULTS, loadLS());
 // ephemeral
@@ -2724,6 +2904,8 @@ state.signedInReal = false;
 state.draftLoc = null;
 state.draftChallenge = null;
 state.draftPhoto = null;
+state.aiMode = 'generate';   // 'generate' | 'edit'
+state.aiResult = null;       // last generated data URL (ephemeral)
 state.editingPlace = null;
 state.pickMode = null;
 state.pickResolve = null;
@@ -2741,7 +2923,9 @@ function saveLS() {
       showOthers: state.showOthers,
       showZones: state.showZones,
       nickname: state.nickname, avatar: state.avatar,
-      welcomed: state.welcomed
+      welcomed: state.welcomed,
+      aiProvider: state.aiProvider,
+      aiApiKey: state.aiApiKey
     };
     localStorage.setItem(LS_KEY, JSON.stringify(persist));
   } catch (_) {}
@@ -2932,7 +3116,7 @@ function confettiBurst() {
 
 
 /* ---------- SHEETS ---------- */
-const SHEETS = ['dropSheet', 'questsSheet', 'placesSheet', 'addPlaceSheet', 'profileSheet', 'iosSheet', 'welcomeSheet', 'hexSheet', 'signInSheet', 'adminSheet'];
+const SHEETS = ['dropSheet', 'questsSheet', 'placesSheet', 'addPlaceSheet', 'profileSheet', 'iosSheet', 'welcomeSheet', 'hexSheet', 'signInSheet', 'adminSheet', 'aiSheet'];
 let currentSheet = null;
 
 /**
@@ -5236,6 +5420,312 @@ function renderPhotoStage() {
   }
 }
 
+/* =====================================================================
+   PHOTO SOURCES — camera / webcam / gallery / AI Studio
+   ===================================================================== */
+function isMobileDevice() {
+  return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
+      || (window.matchMedia && matchMedia('(pointer:coarse)').matches);
+}
+
+async function onPhotoFile(e) {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  try {
+    const data = await compressImage(f, 900, 0.78);
+    if (data.length > 900 * 1024) { toast(t('photoTooBig'), 'warn'); sfxErr(); return; }
+    state.draftPhoto = data;
+    renderPhotoStage();
+    vibrate(10); sfxTap();
+  } catch (_) {
+    toast(t('photoTooBig'), 'warn'); sfxErr();
+  }
+  e.target.value = '';
+}
+
+/* ---------- WEBCAM (laptop / desktop) ---------- */
+let _camStream = null;
+
+function buildCamModal() {
+  let m = document.getElementById('camModal');
+  if (m) return m;
+  m = document.createElement('div');
+  m.id = 'camModal';
+  m.className = 'cam-modal';
+  m.innerHTML = `
+    <video autoplay playsinline muted></video>
+    <div class="cam-actions">
+      <button class="cam-cancel" type="button" data-cam-cancel>${escHtml(t('cancel'))}</button>
+      <button class="cam-shutter" type="button" data-cam-snap aria-label="Capture"></button>
+    </div>`;
+  document.body.appendChild(m);
+  m.querySelector('[data-cam-cancel]').addEventListener('click', closeWebcam);
+  m.querySelector('[data-cam-snap]').addEventListener('click', snapWebcam);
+  return m;
+}
+
+async function openWebcam() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    toast(t('camUnsupported'), 'warn'); sfxErr(); return;
+  }
+  const m = buildCamModal();
+  try {
+    _camStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: { ideal: 1280 } }, audio: false
+    });
+  } catch (_) {
+    toast(t('camDenied'), 'err'); sfxErr(); return;
+  }
+  const v = m.querySelector('video');
+  v.srcObject = _camStream;
+  requestAnimationFrame(() => m.classList.add('open'));
+  vibrate(8); sfxTap();
+}
+
+function closeWebcam() {
+  const m = document.getElementById('camModal');
+  if (m) m.classList.remove('open');
+  if (_camStream) { _camStream.getTracks().forEach(t => t.stop()); _camStream = null; }
+}
+
+async function snapWebcam() {
+  const m = document.getElementById('camModal'); if (!m) return;
+  const v = m.querySelector('video');
+  if (!v || !v.videoWidth) return;
+  const c = document.createElement('canvas');
+  c.width = v.videoWidth; c.height = v.videoHeight;
+  c.getContext('2d').drawImage(v, 0, 0);
+  const raw = c.toDataURL('image/jpeg', 0.9);
+  closeWebcam();
+  try {
+    state.draftPhoto = await compressImageSrc(raw, 900, 0.78);
+    renderPhotoStage();
+    vibrate([20, 30]); sfxDrop();
+  } catch (_) { toast(t('photoTooBig'), 'warn'); sfxErr(); }
+}
+
+/* =====================================================================
+   AI STUDIO — generate from a prompt, or remix the loaded photo.
+   Free path = Puter.js (lazy-loaded). Power path = user's OpenAI key.
+   ===================================================================== */
+let _puterLoading = null;
+function ensurePuter() {
+  if (window.puter && window.puter.ai) return Promise.resolve();
+  if (_puterLoading) return _puterLoading;
+  _puterLoading = new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = 'https://js.puter.com/v2/';
+    s.onload = () => res();
+    s.onerror = () => rej(new Error('Puter failed to load'));
+    document.head.appendChild(s);
+  });
+  return _puterLoading;
+}
+
+function splitDataUrl(dataUrl) {
+  const m = /^data:([^;]+);base64,(.*)$/.exec(dataUrl || '');
+  if (!m) return { mime: 'image/jpeg', b64: '' };
+  return { mime: m[1], b64: m[2] };
+}
+
+const AI_CHIPS = {
+  en: ['Make it majestic 👑', 'Cartoon style', 'Add a rainbow 🌈', 'Vaporwave vibe', 'As an oil painting', 'Tiny and cute'],
+  fr: ['Rends-le majestueux 👑', 'Style cartoon', 'Ajoute un arc-en-ciel 🌈', 'Ambiance vaporwave', 'En peinture à l’huile', 'Tout petit et mignon']
+};
+
+function renderAIChips() {
+  const wrap = $('aiChips'); if (!wrap) return;
+  wrap.innerHTML = '';
+  (AI_CHIPS[state.lang] || AI_CHIPS.en).forEach(text => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'ai-chip'; b.textContent = text;
+    b.addEventListener('click', () => {
+      const ta = $('aiPrompt');
+      ta.value = (ta.value.trim() ? ta.value.trim() + ', ' : '') + text;
+      ta.focus(); vibrate(6); sfxTap();
+    });
+    wrap.appendChild(b);
+  });
+}
+
+function setAIProvider(p) {
+  state.aiProvider = p; saveLS();
+  qsa('#aiProviderSeg .opt').forEach(o => o.classList.toggle('active', o.dataset.val === p));
+  $('aiKeyWrap').style.display  = (p === 'openai') ? '' : 'none';
+  $('aiFreeHint').style.display = (p === 'openai') ? 'none' : '';
+}
+
+function setAIMode(mode) {
+  if (mode === 'edit' && !state.draftPhoto) { toast(t('aiNeedImage'), 'warn'); sfxErr(); return; }
+  state.aiMode = mode;
+  renderAIMode();
+  vibrate(6); sfxTap();
+}
+
+function renderAIMode() {
+  const editable = !!state.draftPhoto;
+  qsa('#aiModeSeg .opt').forEach(o => {
+    o.classList.toggle('active', o.dataset.val === state.aiMode);
+    o.classList.toggle('disabled', o.dataset.val === 'edit' && !editable);
+  });
+  $('aiSourceWrap').style.display = (state.aiMode === 'edit') ? '' : 'none';
+  if (state.aiMode === 'edit' && state.draftPhoto) {
+    $('aiSource').innerHTML = `<img src="${escHtml(state.draftPhoto)}" alt=""/>`;
+  }
+  $('aiRunLabel').textContent  = (state.aiMode === 'edit') ? t('aiApply') : t('aiGenerate');
+  $('aiPrompt').placeholder    = (state.aiMode === 'edit') ? t('aiPhEdit') : t('aiPhGen');
+}
+
+function openAIStudio() {
+  state.aiMode  = state.draftPhoto ? 'edit' : 'generate';
+  state.aiResult = null;
+  $('aiPrompt').value = '';
+  $('aiResultWrap').style.display = 'none';
+  $('aiKeyInput').value = state.aiApiKey || '';
+  setAIProvider(state.aiProvider || 'puter');
+  renderAIChips();
+  renderAIMode();
+  openSheet('aiSheet');
+}
+
+async function aiViaPuter(prompt) {
+  await ensurePuter();
+  let img;
+  if (state.aiMode === 'edit' && state.draftPhoto) {
+    const { b64, mime } = splitDataUrl(state.draftPhoto);
+    img = await puter.ai.txt2img(prompt, {
+      model: 'gemini-2.5-flash-image-preview',
+      input_image: b64,
+      input_image_mime_type: mime
+    });
+  } else {
+    img = await puter.ai.txt2img(prompt, { model: 'gemini-2.5-flash-image-preview' });
+  }
+  return img.src; // data URL
+}
+
+async function aiViaOpenAI(prompt) {
+  const key = ($('aiKeyInput').value || '').trim();
+  if (!key) throw new Error(t('aiNeedKey'));
+  state.aiApiKey = key; saveLS();
+
+  if (state.aiMode === 'edit' && state.draftPhoto) {
+    const blob = await (await fetch(state.draftPhoto)).blob();
+    const fd = new FormData();
+    fd.append('model', 'gpt-image-1');
+    fd.append('prompt', prompt);
+    fd.append('image', blob, 'image.png');
+    fd.append('size', '1024x1024');
+    const r = await fetch('https://api.openai.com/v1/images/edits', {
+      method: 'POST', headers: { 'Authorization': 'Bearer ' + key }, body: fd
+    });
+    const j = await r.json();
+    if (!r.ok) throw new Error((j.error && j.error.message) || 'OpenAI error');
+    return 'data:image/png;base64,' + j.data[0].b64_json;
+  } else {
+    const r = await fetch('https://api.openai.com/v1/images/generations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      body: JSON.stringify({ model: 'gpt-image-1', prompt, size: '1024x1024', n: 1 })
+    });
+    const j = await r.json();
+    if (!r.ok) throw new Error((j.error && j.error.message) || 'OpenAI error');
+    const d = j.data[0];
+    return d.b64_json ? ('data:image/png;base64,' + d.b64_json) : d.url;
+  }
+}
+
+async function runAIStudio() {
+  const prompt = ($('aiPrompt').value || '').trim();
+  if (!prompt) { toast(t('aiNeedPrompt'), 'warn'); sfxErr(); return; }
+  if (state.aiMode === 'edit' && !state.draftPhoto) { toast(t('aiNeedImage'), 'warn'); sfxErr(); return; }
+
+  const btn = $('aiRunBtn');
+  const oldLabel = $('aiRunLabel').textContent;
+  btn.classList.add('loading'); btn.disabled = true;
+  $('aiRunLabel').textContent = t('aiWorking');
+  $('aiResultWrap').style.display = '';
+  $('aiResult').innerHTML = ''; $('aiResult').classList.add('busy');
+  vibrate(10); sfxTap();
+
+  try {
+    const dataUrl = (state.aiProvider === 'openai')
+      ? await aiViaOpenAI(prompt)
+      : await aiViaPuter(prompt);
+    const compact = await compressImageSrc(dataUrl, 900, 0.82);
+    state.aiResult = compact;
+    $('aiResult').classList.remove('busy');
+    $('aiResult').innerHTML = `<img src="${escHtml(compact)}" alt=""/>`;
+    sfxWin(); vibrate(20);
+    $('aiResultWrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  } catch (e) {
+    console.error(e);
+    $('aiResult').classList.remove('busy');
+    $('aiResultWrap').style.display = state.aiResult ? '' : 'none';
+    toast('❌ ' + (e.message || t('aiFailed')), 'err'); sfxErr();
+  } finally {
+    btn.classList.remove('loading'); btn.disabled = false;
+    $('aiRunLabel').textContent = oldLabel;
+  }
+}
+
+function useAIResult() {
+  if (!state.aiResult) return;
+  state.draftPhoto = state.aiResult;
+  renderPhotoStage();
+  toast(t('aiAdded'), 'win'); vibrate(20); sfxWin();
+  closeAllSheets();
+  setTimeout(() => openSheet('dropSheet'), 80);
+}
+
+/* ---------- WIRE PHOTO + AI EVENTS ---------- */
+function wireMediaEvents() {
+  // Empty-stage tap → gallery (friendly shortcut)
+  $('photoStage').addEventListener('click', () => { if (!state.draftPhoto) $('photoInputGallery').click(); });
+
+  // File inputs
+  $('photoInputCam').addEventListener('change', onPhotoFile);
+  $('photoInputGallery').addEventListener('change', onPhotoFile);
+
+  // Action buttons
+  $('photoActCam').addEventListener('click', () => {
+    vibrate(8); sfxTap();
+    if (isMobileDevice()) $('photoInputCam').click();   // native camera on phones
+    else openWebcam();                                  // webcam modal on laptop/desktop
+  });
+  $('photoActGallery').addEventListener('click', () => {
+    vibrate(8); sfxTap(); $('photoInputGallery').click();
+  });
+  $('photoActAI').addEventListener('click', () => { vibrate(8); sfxTap(); openAIStudio(); });
+
+  // AI Studio controls
+  qsa('#aiModeSeg .opt').forEach(o => o.addEventListener('click', () => setAIMode(o.dataset.val)));
+  qsa('#aiProviderSeg .opt').forEach(o => o.addEventListener('click', () => setAIProvider(o.dataset.val)));
+  $('aiRunBtn').addEventListener('click', runAIStudio);
+  $('aiRegenBtn').addEventListener('click', runAIStudio);
+  $('aiUseBtn').addEventListener('click', useAIResult);
+}
+
+async function compressImageSrc(src, maxDim = 900, quality = 0.78) {
+  const img = await new Promise((res, rej) => {
+    const i = new Image();
+    i.crossOrigin = 'anonymous';
+    i.onload = () => res(i);
+    i.onerror = rej;
+    i.src = src;
+  });
+  const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+  const w = Math.round(img.width * scale);
+  const h = Math.round(img.height * scale);
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#ffffff';        // flatten any transparency
+  ctx.fillRect(0, 0, w, h);
+  ctx.drawImage(img, 0, 0, w, h);
+  return c.toDataURL('image/jpeg', quality);
+}
+
 async function compressImage(file, maxDim = 900, quality = 0.78) {
   const dataUrl = await new Promise((res, rej) => {
     const r = new FileReader();
@@ -5243,19 +5733,7 @@ async function compressImage(file, maxDim = 900, quality = 0.78) {
     r.onerror = rej;
     r.readAsDataURL(file);
   });
-  const img = await new Promise((res, rej) => {
-    const i = new Image();
-    i.onload = () => res(i);
-    i.onerror = rej;
-    i.src = dataUrl;
-  });
-  const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
-  const w = Math.round(img.width * scale);
-  const h = Math.round(img.height * scale);
-  const c = document.createElement('canvas');
-  c.width = w; c.height = h;
-  c.getContext('2d').drawImage(img, 0, 0, w, h);
-  return c.toDataURL('image/jpeg', quality);
+  return compressImageSrc(dataUrl, maxDim, quality);
 }
 
 async function performDrop() {
@@ -5753,22 +6231,7 @@ function wireEvents() {
     setNavActive('quests');
   });
 
-  // Drop sheet
-  $('photoStage').addEventListener('click', () => { if (!state.draftPhoto) $('photoInput').click(); });
-  $('photoInput').addEventListener('change', async (e) => {
-    const f = e.target.files && e.target.files[0];
-    if (!f) return;
-    try {
-      const data = await compressImage(f, 900, 0.78);
-      if (data.length > 900 * 1024) { toast(t('photoTooBig'), 'warn'); sfxErr(); return; }
-      state.draftPhoto = data;
-      renderPhotoStage();
-      vibrate(10); sfxTap();
-    } catch (_) {
-      toast(t('photoTooBig'), 'warn'); sfxErr();
-    }
-    e.target.value = '';
-  });
+  // Drop sheet — photo/AI wiring lives in wireMediaEvents()
   $('dropConfirm').addEventListener('click', () => { performDrop(); });
 
   // Pick on map
@@ -5929,6 +6392,7 @@ async function boot() {
   loadAmenitiesCache();
   initMap();
   wireEvents();
+  wireMediaEvents();
   // Reflect persisted zones state on the side-stack button
   if ($('zonesBtn')) $('zonesBtn').style.opacity = state.showZones ? '1' : '.55';
   setupInstall();
