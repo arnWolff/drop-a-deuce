@@ -902,6 +902,35 @@ html.theme-dark .leaflet-tile-pane { filter: brightness(.85) contrast(1.05) hue-
 .ai-chip:active { transform: scale(.92); border-color: var(--peach); }
 .segment .opt.disabled { opacity: .4; pointer-events: none; }
 .btn.loading { opacity: .7; pointer-events: none; }
+/* AI provider selector — clear, tappable rows with cost badges */
+.ai-providers { display: flex; flex-direction: column; gap: 8px; }
+.ai-prov {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; padding: 12px 14px;
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-md);
+  text-align: left;
+  transition: transform .12s var(--ease-out), border-color .15s var(--ease-out), background .15s var(--ease-out);
+}
+.ai-prov:active { transform: scale(.99); }
+.ai-prov.selected { border-color: var(--peach); background: var(--peach-grad-soft); }
+.ai-prov.disabled { opacity: .45; pointer-events: none; }
+.ai-prov-em { font-size: 24px; width: 34px; text-align: center; flex-shrink: 0; }
+.ai-prov-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ai-prov-name { font-weight: 800; font-size: 14px; color: var(--ink); display: flex; align-items: center; gap: 8px; }
+.ai-prov-sub { font-size: 11.5px; color: var(--ink-3); font-weight: 500;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ai-prov-check { font-size: 16px; color: var(--peach); opacity: 0; flex-shrink: 0; }
+.ai-prov.selected .ai-prov-check { opacity: 1; }
+.ai-prov-badge {
+  font-size: 9px; font-weight: 900; letter-spacing: .05em;
+  padding: 2px 7px; border-radius: 999px; text-transform: uppercase;
+}
+.ai-prov-badge.free    { background: rgba(16,185,129,.15); color: var(--mint); }
+.ai-prov-badge.freekey { background: rgba(56,189,248,.16); color: var(--sky); }
+.ai-prov-badge.yourkey { background: rgba(124,92,231,.14); color: var(--purple); }
+.ai-key-link { color: var(--peach-2); font-weight: 700; text-decoration: none; }
 
 /* webcam capture modal */
 .cam-modal {
@@ -2081,15 +2110,17 @@ html.theme-dark .pin-pop-act.warn { color: #93c5fd; }
     <div class="ai-chips" id="aiChips"></div>
 
     <div class="section-label" data-i18n="aiEngineLabel">Engine</div>
-    <div class="segment" data-cols="2" id="aiProviderSeg">
-      <div class="opt active" data-val="puter" data-i18n="aiProvFree">🆓 Free</div>
-      <div class="opt" data-val="openai" data-i18n="aiProvKey">🔑 My key</div>
+    <div class="ai-providers" id="aiProviders"></div>
+
+    <div id="aiModelWrap" style="display:none; margin-top:12px;">
+      <div class="section-label" data-i18n="aiModelLabel">Model</div>
+      <div class="segment" id="aiModelSeg" data-cols="2"></div>
     </div>
-    <div id="aiKeyWrap" style="display:none; margin-top:10px;">
-      <input class="input" id="aiKeyInput" type="password" placeholder="sk-…" autocomplete="off" />
-      <div class="ai-hint" data-i18n="aiKeyHint">Stored only on this device. Uses the OpenAI image API.</div>
+
+    <div id="aiKeyWrap" style="display:none; margin-top:12px;">
+      <input class="input" id="aiKeyInput" type="password" placeholder="" autocomplete="off" />
+      <div class="ai-hint" id="aiKeyHint"></div>
     </div>
-    <div class="ai-hint" id="aiFreeHint" data-i18n="aiFreeHint">Powered by Puter — first use may ask for a free Puter sign-in.</div>
 
     <div style="height:16px"></div>
     <button class="btn primary block lg" id="aiRunBtn" type="button">
@@ -2684,6 +2715,15 @@ const I18N = {
     aiPhEdit: 'Turn this into a watercolour, add a tiny crown…',
     aiNeedPrompt: 'Type a prompt first', aiNeedImage: 'Load an image to remix first',
     aiNeedKey: 'Paste your API key first', aiFailed: 'Generation failed — try again',
+    aiModelLabel: 'Model', aiGetKey: 'Get a key',
+    aiBadgeFree: 'Free', aiBadgeFreeKey: 'Free key', aiBadgeYourKey: 'Your key',
+    aiCreateOnly: 'Creation only — pick another to remix',
+    pSubPollinations: 'No key needed · unlimited creations',
+    pSubPuter: 'Free tier · can remix your photo',
+    pSubGemini: 'Free Google AI key · creates & remixes',
+    pSubOpenAI: 'Your OpenAI key · best quality',
+    aiKeyHintGemini: 'Free at Google AI Studio. Stored on this device only.',
+    aiKeyHintOpenAI: 'Stored on this device only.',
   },
   fr: {
     appName: 'Pose ta Pêche', tagline: 'Trace ton trône',
@@ -2845,6 +2885,15 @@ const I18N = {
     aiPhEdit: 'Transforme-la en aquarelle, ajoute une couronne…',
     aiNeedPrompt: 'Écris un prompt d’abord', aiNeedImage: 'Charge une image à remixer',
     aiNeedKey: 'Colle ta clé API d’abord', aiFailed: 'Échec de la génération — réessaie',
+    aiModelLabel: 'Modèle', aiGetKey: 'Obtenir une clé',
+    aiBadgeFree: 'Gratuit', aiBadgeFreeKey: 'Clé gratuite', aiBadgeYourKey: 'Ta clé',
+    aiCreateOnly: 'Création seulement — choisis-en un autre pour remixer',
+    pSubPollinations: 'Sans clé · créations illimitées',
+    pSubPuter: 'Offre gratuite · peut remixer ta photo',
+    pSubGemini: 'Clé Google AI gratuite · crée & remixe',
+    pSubOpenAI: 'Ta clé OpenAI · meilleure qualité',
+    aiKeyHintGemini: 'Gratuit sur Google AI Studio. Stockée sur cet appareil.',
+    aiKeyHintOpenAI: 'Stockée sur cet appareil uniquement.',
   }
 };
 const t = (k) => (I18N[state.lang] && I18N[state.lang][k]) || I18N.en[k] || k;
@@ -2877,8 +2926,7 @@ const AVATAR_EMOJIS = ['🍑','🐱','🐶','🦊','🦝','🐼','🐨','🐯','
 const LS_KEY = 'peach-app-v2';
 const DEFAULTS = {
   lang: (navigator.language || 'en').startsWith('fr') ? 'fr' : 'en',
-  // ROLES — derived at runtime, never persisted from LS
-  role: 'guest',        // 'guest' | 'user' | 'moderator' | 'admin'
+  role: 'guest',
   isModerator: false,
   isAdmin: false,
   theme: 'auto',
@@ -2889,8 +2937,8 @@ const DEFAULTS = {
   nickname: '',
   avatar: '🍑',
   welcomed: false,
-  aiProvider: 'puter',   // 'puter' (free) | 'openai' (own key)
-  aiApiKey: ''           // user's own OpenAI key, kept on-device only
+  aiProvider: 'pollinations',                 // free + no key by default
+  aiKeys: { pollinations: '', gemini: '', openai: '' }   // kept on-device only
 };
 const state = Object.assign({}, DEFAULTS, loadLS());
 // ephemeral
@@ -2905,7 +2953,11 @@ state.draftLoc = null;
 state.draftChallenge = null;
 state.draftPhoto = null;
 state.aiMode = 'generate';   // 'generate' | 'edit'
+state.aiModel = null;        // current provider's model id (ephemeral)
 state.aiResult = null;       // last generated data URL (ephemeral)
+// migrate older single-key field, and guarantee aiKeys exists
+if (!state.aiKeys || typeof state.aiKeys !== 'object') state.aiKeys = { pollinations: '', gemini: '', openai: '' };
+if (state.aiApiKey && !state.aiKeys.openai) state.aiKeys.openai = state.aiApiKey;
 state.editingPlace = null;
 state.pickMode = null;
 state.pickResolve = null;
@@ -2925,7 +2977,7 @@ function saveLS() {
       nickname: state.nickname, avatar: state.avatar,
       welcomed: state.welcomed,
       aiProvider: state.aiProvider,
-      aiApiKey: state.aiApiKey
+      aiKeys: state.aiKeys
     };
     localStorage.setItem(LS_KEY, JSON.stringify(persist));
   } catch (_) {}
@@ -5548,16 +5600,125 @@ function renderAIChips() {
   });
 }
 
-function setAIProvider(p) {
-  state.aiProvider = p; saveLS();
-  qsa('#aiProviderSeg .opt').forEach(o => o.classList.toggle('active', o.dataset.val === p));
-  $('aiKeyWrap').style.display  = (p === 'openai') ? '' : 'none';
-  $('aiFreeHint').style.display = (p === 'openai') ? 'none' : '';
+/* =====================================================================
+   AI PROVIDERS — switchable engines with free tiers.
+   Pollinations: free, no key (default). Puter: free tier. Gemini: free
+   Google AI key. OpenAI: paid key. Order = cheapest first.
+   ===================================================================== */
+const AI_PROVIDERS = {
+  pollinations: {
+    name: 'Pollinations', em: '🌸', badge: 'free',
+    gen: true, remix: false,
+    models: { flux: 'Flux', turbo: 'Turbo ⚡', zimage: 'Z-Image' },
+    defModel: 'flux',
+    subKey: 'pSubPollinations'
+  },
+  puter: {
+    name: 'Puter', em: '🪐', badge: 'free',
+    gen: true, remix: true,
+    models: { 'gemini-2.5-flash-image-preview': 'Nano Banana 🍌', 'flux': 'Flux', 'gpt-image-2': 'GPT Image' },
+    defModel: 'gemini-2.5-flash-image-preview',
+    subKey: 'pSubPuter'
+  },
+  gemini: {
+    name: 'Gemini', em: '✨', badge: 'freekey',
+    gen: true, remix: true,
+    models: { 'gemini-2.5-flash-image': 'Nano Banana 🍌' },
+    defModel: 'gemini-2.5-flash-image',
+    keyName: 'gemini', keyPlaceholder: 'AIza…',
+    keyUrl: 'aistudio.google.com/apikey', keyHint: 'aiKeyHintGemini',
+    subKey: 'pSubGemini'
+  },
+  openai: {
+    name: 'OpenAI', em: '🔑', badge: 'yourkey',
+    gen: true, remix: true,
+    models: { 'gpt-image-1': 'GPT Image 1' },
+    defModel: 'gpt-image-1',
+    keyName: 'openai', keyPlaceholder: 'sk-…',
+    keyUrl: 'platform.openai.com/api-keys', keyHint: 'aiKeyHintOpenAI',
+    subKey: 'pSubOpenAI'
+  }
+};
+
+function badgeText(b) {
+  return b === 'free' ? t('aiBadgeFree') : b === 'freekey' ? t('aiBadgeFreeKey') : t('aiBadgeYourKey');
+}
+
+function selectProvider(id) {
+  const p = AI_PROVIDERS[id];
+  if (state.aiMode === 'edit' && !p.remix) { toast(t('aiCreateOnly'), 'warn'); sfxErr(); return; }
+  state.aiProvider = id;
+  state.aiModel = p.defModel;
+  saveLS();
+  renderAIProviders();
+  vibrate(6); sfxTap();
+}
+
+function renderAIProviders() {
+  const wrap = $('aiProviders'); if (!wrap) return;
+  wrap.innerHTML = '';
+  Object.keys(AI_PROVIDERS).forEach(id => {
+    const p = AI_PROVIDERS[id];
+    const canDo = (state.aiMode === 'edit') ? p.remix : p.gen;
+    const selected = state.aiProvider === id;
+    const sub = (state.aiMode === 'edit' && !p.remix) ? t('aiCreateOnly') : t(p.subKey);
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'ai-prov' + (selected ? ' selected' : '') + (canDo ? '' : ' disabled');
+    btn.innerHTML = `
+      <span class="ai-prov-em">${p.em}</span>
+      <span class="ai-prov-main">
+        <span class="ai-prov-name">${escHtml(p.name)} <span class="ai-prov-badge ${p.badge}">${escHtml(badgeText(p.badge))}</span></span>
+        <span class="ai-prov-sub">${escHtml(sub)}</span>
+      </span>
+      <span class="ai-prov-check">✓</span>`;
+    if (canDo) btn.addEventListener('click', () => selectProvider(id));
+    wrap.appendChild(btn);
+  });
+  renderAIModel();
+  renderAIKey();
+}
+
+function renderAIModel() {
+  const wrap = $('aiModelWrap'), seg = $('aiModelSeg');
+  const p = AI_PROVIDERS[state.aiProvider];
+  const ids = Object.keys(p.models || {});
+  if (ids.length < 2) { wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+  seg.setAttribute('data-cols', String(Math.min(ids.length, 3)));
+  seg.innerHTML = '';
+  ids.forEach(mid => {
+    const o = document.createElement('div');
+    o.className = 'opt' + (state.aiModel === mid ? ' active' : '');
+    o.textContent = p.models[mid];
+    o.addEventListener('click', () => { state.aiModel = mid; renderAIModel(); vibrate(6); sfxTap(); });
+    seg.appendChild(o);
+  });
+}
+
+function renderAIKey() {
+  const wrap = $('aiKeyWrap'), inp = $('aiKeyInput'), hint = $('aiKeyHint');
+  const p = AI_PROVIDERS[state.aiProvider];
+  if (!p.keyName) { wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+  inp.placeholder = p.keyPlaceholder || '';
+  inp.value = state.aiKeys[p.keyName] || '';
+  const link = p.keyUrl
+    ? ` <a class="ai-key-link" href="https://${p.keyUrl}" target="_blank" rel="noopener">${escHtml(t('aiGetKey'))} ↗</a>`
+    : '';
+  hint.innerHTML = escHtml(t(p.keyHint)) + link;
 }
 
 function setAIMode(mode) {
   if (mode === 'edit' && !state.draftPhoto) { toast(t('aiNeedImage'), 'warn'); sfxErr(); return; }
   state.aiMode = mode;
+  // if current provider can't remix, switch to a free remix-capable one
+  if (mode === 'edit' && !AI_PROVIDERS[state.aiProvider].remix) {
+    state.aiProvider = 'puter';
+    state.aiModel = AI_PROVIDERS.puter.defModel;
+    saveLS();
+  }
+  renderAIProviders();
   renderAIMode();
   vibrate(6); sfxTap();
 }
@@ -5572,62 +5733,103 @@ function renderAIMode() {
   if (state.aiMode === 'edit' && state.draftPhoto) {
     $('aiSource').innerHTML = `<img src="${escHtml(state.draftPhoto)}" alt=""/>`;
   }
-  $('aiRunLabel').textContent  = (state.aiMode === 'edit') ? t('aiApply') : t('aiGenerate');
-  $('aiPrompt').placeholder    = (state.aiMode === 'edit') ? t('aiPhEdit') : t('aiPhGen');
+  $('aiRunLabel').textContent = (state.aiMode === 'edit') ? t('aiApply') : t('aiGenerate');
+  $('aiPrompt').placeholder   = (state.aiMode === 'edit') ? t('aiPhEdit') : t('aiPhGen');
 }
 
 function openAIStudio() {
-  state.aiMode  = state.draftPhoto ? 'edit' : 'generate';
+  state.aiMode = state.draftPhoto ? 'edit' : 'generate';
   state.aiResult = null;
   $('aiPrompt').value = '';
   $('aiResultWrap').style.display = 'none';
-  $('aiKeyInput').value = state.aiApiKey || '';
-  setAIProvider(state.aiProvider || 'puter');
+  // make sure the selected provider is valid for this mode
+  if (state.aiMode === 'edit' && !AI_PROVIDERS[state.aiProvider].remix) state.aiProvider = 'puter';
+  state.aiModel = AI_PROVIDERS[state.aiProvider].defModel;
   renderAIChips();
+  renderAIProviders();
   renderAIMode();
   openSheet('aiSheet');
 }
 
-async function aiViaPuter(prompt) {
+function blobToDataUrl(blob) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result);
+    r.onerror = rej;
+    r.readAsDataURL(blob);
+  });
+}
+
+/* ---------- PROVIDER METHODS ---------- */
+async function aiViaPollinations(prompt) {           // free, no key (generate only)
+  const model = state.aiModel || AI_PROVIDERS.pollinations.defModel;
+  const seed = Math.floor(Math.random() * 1e6);
+  const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}`
+            + `?model=${encodeURIComponent(model)}&width=1024&height=1024&seed=${seed}&nologo=true&enhance=true`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Pollinations ' + res.status);
+  const blob = await res.blob();
+  if (!blob.type.startsWith('image')) throw new Error(t('aiFailed'));
+  return await blobToDataUrl(blob);
+}
+
+async function aiViaPuter(prompt) {                   // free tier (generate + remix)
   await ensurePuter();
+  const model = state.aiModel || AI_PROVIDERS.puter.defModel;
   let img;
   if (state.aiMode === 'edit' && state.draftPhoto) {
     const { b64, mime } = splitDataUrl(state.draftPhoto);
-    img = await puter.ai.txt2img(prompt, {
-      model: 'gemini-2.5-flash-image-preview',
-      input_image: b64,
-      input_image_mime_type: mime
-    });
+    img = await puter.ai.txt2img(prompt, { model, input_image: b64, input_image_mime_type: mime });
   } else {
-    img = await puter.ai.txt2img(prompt, { model: 'gemini-2.5-flash-image-preview' });
+    img = await puter.ai.txt2img(prompt, { model });
   }
-  return img.src; // data URL
+  return img.src;
 }
 
-async function aiViaOpenAI(prompt) {
-  const key = ($('aiKeyInput').value || '').trim();
+async function aiViaGemini(prompt) {                  // free Google AI key (generate + remix)
+  const key = (state.aiKeys.gemini || '').trim();
   if (!key) throw new Error(t('aiNeedKey'));
-  state.aiApiKey = key; saveLS();
+  const model = state.aiModel || AI_PROVIDERS.gemini.defModel;
+  const parts = [{ text: prompt }];
+  if (state.aiMode === 'edit' && state.draftPhoto) {
+    const { b64, mime } = splitDataUrl(state.draftPhoto);
+    parts.push({ inline_data: { mime_type: mime, data: b64 } });
+  }
+  const r = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`,
+    { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts }], generationConfig: { responseModalities: ['TEXT', 'IMAGE'] } }) }
+  );
+  const j = await r.json();
+  if (!r.ok) throw new Error((j.error && j.error.message) || 'Gemini error');
+  const cand = j.candidates && j.candidates[0];
+  const ps = (cand && cand.content && cand.content.parts) || [];
+  const imgPart = ps.find(x => x.inline_data || x.inlineData);
+  if (!imgPart) throw new Error(t('aiFailed'));
+  const d = imgPart.inline_data || imgPart.inlineData;
+  return `data:${d.mime_type || d.mimeType || 'image/png'};base64,${d.data}`;
+}
 
+async function aiViaOpenAI(prompt) {                  // your key (generate + remix)
+  const key = (state.aiKeys.openai || '').trim();
+  if (!key) throw new Error(t('aiNeedKey'));
+  const model = state.aiModel || AI_PROVIDERS.openai.defModel;
   if (state.aiMode === 'edit' && state.draftPhoto) {
     const blob = await (await fetch(state.draftPhoto)).blob();
     const fd = new FormData();
-    fd.append('model', 'gpt-image-1');
+    fd.append('model', model);
     fd.append('prompt', prompt);
     fd.append('image', blob, 'image.png');
     fd.append('size', '1024x1024');
-    const r = await fetch('https://api.openai.com/v1/images/edits', {
-      method: 'POST', headers: { 'Authorization': 'Bearer ' + key }, body: fd
-    });
+    const r = await fetch('https://api.openai.com/v1/images/edits',
+      { method: 'POST', headers: { 'Authorization': 'Bearer ' + key }, body: fd });
     const j = await r.json();
     if (!r.ok) throw new Error((j.error && j.error.message) || 'OpenAI error');
     return 'data:image/png;base64,' + j.data[0].b64_json;
   } else {
-    const r = await fetch('https://api.openai.com/v1/images/generations', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
-      body: JSON.stringify({ model: 'gpt-image-1', prompt, size: '1024x1024', n: 1 })
-    });
+    const r = await fetch('https://api.openai.com/v1/images/generations',
+      { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+        body: JSON.stringify({ model, prompt, size: '1024x1024', n: 1 }) });
     const j = await r.json();
     if (!r.ok) throw new Error((j.error && j.error.message) || 'OpenAI error');
     const d = j.data[0];
@@ -5639,6 +5841,10 @@ async function runAIStudio() {
   const prompt = ($('aiPrompt').value || '').trim();
   if (!prompt) { toast(t('aiNeedPrompt'), 'warn'); sfxErr(); return; }
   if (state.aiMode === 'edit' && !state.draftPhoto) { toast(t('aiNeedImage'), 'warn'); sfxErr(); return; }
+  if (state.aiMode === 'edit' && !AI_PROVIDERS[state.aiProvider].remix) { toast(t('aiCreateOnly'), 'warn'); sfxErr(); return; }
+
+  const runners = { pollinations: aiViaPollinations, puter: aiViaPuter, gemini: aiViaGemini, openai: aiViaOpenAI };
+  const run = runners[state.aiProvider];
 
   const btn = $('aiRunBtn');
   const oldLabel = $('aiRunLabel').textContent;
@@ -5649,9 +5855,7 @@ async function runAIStudio() {
   vibrate(10); sfxTap();
 
   try {
-    const dataUrl = (state.aiProvider === 'openai')
-      ? await aiViaOpenAI(prompt)
-      : await aiViaPuter(prompt);
+    const dataUrl = await run(prompt);
     const compact = await compressImageSrc(dataUrl, 900, 0.82);
     state.aiResult = compact;
     $('aiResult').classList.remove('busy');
@@ -5700,7 +5904,10 @@ function wireMediaEvents() {
 
   // AI Studio controls
   qsa('#aiModeSeg .opt').forEach(o => o.addEventListener('click', () => setAIMode(o.dataset.val)));
-  qsa('#aiProviderSeg .opt').forEach(o => o.addEventListener('click', () => setAIProvider(o.dataset.val)));
+  $('aiKeyInput').addEventListener('input', () => {
+    const p = AI_PROVIDERS[state.aiProvider];
+    if (p && p.keyName) { state.aiKeys[p.keyName] = $('aiKeyInput').value.trim(); saveLS(); }
+  });
   $('aiRunBtn').addEventListener('click', runAIStudio);
   $('aiRegenBtn').addEventListener('click', runAIStudio);
   $('aiUseBtn').addEventListener('click', useAIResult);
