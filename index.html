@@ -1942,6 +1942,80 @@ html.theme-dark .pin-pop-act.warn { color: #93c5fd; }
   opacity: 0 !important;
 }
 
+/* ===== DROP SHEET: auto-detected amenity quest chip ===== */
+.drop-amen-chip {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; border-radius: var(--r-lg);
+  background: var(--peach-grad-soft); border: 1.5px solid var(--peach);
+}
+.drop-amen-chip .em { font-size: 26px; line-height: 1; flex-shrink: 0; }
+.drop-amen-chip .txt { flex: 1; min-width: 0; }
+.drop-amen-chip .nm { font-weight: 800; font-size: 14px; color: var(--ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.drop-amen-chip .sub { font-size: 11px; font-weight: 700; color: var(--peach-2); margin-top: 2px; }
+.drop-amen-chip .badge { font-size: 20px; flex-shrink: 0; }
+
+/* ===== PIN ROW ACTIONS (your drops / others / my drops) ===== */
+.hex-pin-row .hex-row-acts { display: flex; gap: 6px; flex-shrink: 0; }
+.hex-pin-row .ax.del { color: var(--danger); border-color: rgba(239,68,68,.3); background: rgba(239,68,68,.08); }
+.hex-pin-row .ax.report { color: #d97706; border-color: rgba(245,158,11,.32); background: rgba(245,158,11,.10); }
+html.theme-dark .hex-pin-row .ax.report { color: #fbbf24; }
+
+/* ===== SOFT BUTTON + PROFILE ACTIONS ===== */
+.btn.soft { background: var(--surface-2); border: 1.5px solid var(--border); color: var(--ink); }
+.btn.sm { min-height: 38px; padding: 8px 12px; font-size: 12px; }
+.profile-actions { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+
+/* ===== REPORT REASON CHOOSER ===== */
+.report-pin-card {
+  display: flex; gap: 12px; padding: 12px 14px; border-radius: var(--r-lg);
+  background: var(--surface-2); border: 1.5px solid var(--border); margin-bottom: 12px;
+}
+.report-pin-card .em { font-size: 26px; flex-shrink: 0; }
+.report-pin-card .info { flex: 1; min-width: 0; }
+.report-pin-card .nm { font-weight: 800; font-size: 14px; color: var(--ink); }
+.report-pin-card .sub { font-size: 11px; color: var(--ink-3); margin-top: 2px; font-weight: 600; }
+.report-pin-card .note { font-size: 12px; color: var(--ink-2); margin-top: 4px; }
+.report-reasons { display: flex; flex-direction: column; gap: 8px; }
+.report-reason {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  padding: 14px; border-radius: var(--r-md);
+  background: var(--surface); border: 1.5px solid var(--border);
+  font-weight: 700; font-size: 14px; color: var(--ink); cursor: pointer;
+  transition: transform .12s var(--ease-out), border-color .15s var(--ease-out);
+}
+.report-reason:active { transform: scale(.97); }
+.report-reason .em { font-size: 20px; }
+
+/* ===== REPORTS QUEUE ROWS ===== */
+.report-row {
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 12px 14px; border-radius: var(--r-lg);
+  background: var(--surface-2); border: 1.5px solid var(--border); margin-bottom: 10px;
+}
+.report-row .rr-top { display: flex; align-items: center; justify-content: space-between; }
+.report-row .rr-reason { font-weight: 800; font-size: 13px; color: var(--ink); }
+.report-row .rr-when { font-size: 11px; color: var(--ink-3); font-weight: 600; }
+.report-row .rr-pin { display: flex; gap: 10px; }
+.report-row .rr-pin .em { font-size: 22px; flex-shrink: 0; }
+.report-row .rr-pin .info { flex: 1; min-width: 0; }
+.report-row .rr-pin .nm { font-weight: 800; font-size: 14px; color: var(--ink); }
+.report-row .rr-pin .note { font-size: 12px; color: var(--ink-2); margin-top: 4px; }
+.report-row .rr-pin .sub { font-size: 11px; color: var(--ink-3); margin-top: 2px; font-weight: 600; }
+.report-row .rr-acts { display: flex; gap: 8px; }
+.report-row .rr-acts .btn { flex: 1; }
+
+/* ===== DESKTOP: usable scrollbar for mouse users with no wheel ===== */
+@media (hover: hover) and (pointer: fine) {
+  .sheet-body { overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border-2) transparent; }
+  .sheet-body::-webkit-scrollbar { width: 10px; display: block; }
+  .sheet-body::-webkit-scrollbar-thumb {
+    background: var(--border-2); border-radius: 8px;
+    border: 2px solid transparent; background-clip: padding-box;
+  }
+  .sheet-body::-webkit-scrollbar-track { background: transparent; }
+}
+
 </style>
 </head>
 <body>
@@ -2046,8 +2120,9 @@ html.theme-dark .pin-pop-act.warn { color: #93c5fd; }
     <div class="section-label" data-i18n="dropLocLabel">Where</div>
     <div class="loc-grid" id="dropLocRow"></div>
 
-    <div class="section-label" data-i18n="dropChallengeLabel">Which quest</div>
+    <div class="section-label" id="dropChalLabel" data-i18n="dropChallengeLabel">Which quest</div>
     <div class="chal-grid" id="dropChalGrid"></div>
+    <div id="dropAmenityChip" style="display:none;"></div>
 
     <div class="section-label" data-i18n="dropPhotoLabel">Photo (optional)</div>
     <div class="photo-stage" id="photoStage">
@@ -2275,6 +2350,15 @@ html.theme-dark .pin-pop-act.warn { color: #93c5fd; }
       <div class="stat-card"><div class="em">🔥</div><div class="v mono" id="statStreak">0</div><div class="l" data-i18n="statStreak">Streak</div></div>
     </div>
 
+    <div class="profile-actions">
+      <button class="btn soft block" id="myDropsBtn" type="button">
+        <span class="ic">🍑</span><span data-i18n="myDropsOpen">My drops</span>
+      </button>
+      <button class="btn soft block" id="reportsBtn" type="button" style="display:none;">
+        <span class="ic">🚩</span><span data-i18n="reportsOpen">Review reports</span>
+      </button>
+    </div>
+
     <div class="section-label" data-i18n="accountLabel">Account</div>
     <div id="authBlock"></div>
 
@@ -2330,6 +2414,53 @@ html.theme-dark .pin-pop-act.warn { color: #93c5fd; }
     <button class="btn ghost block" id="resetBtn" type="button">
       <span class="ic">♻️</span><span data-i18n="resetLocal">Clear local cache</span>
     </button>
+  </div>
+</div>
+
+<!-- MY DROPS SHEET -->
+<div class="sheet" id="myDropsSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-head">
+    <div class="title-block">
+      <h2 data-i18n="myDropsTitle">Your drops</h2>
+      <div class="sub" data-i18n="myDropsSub">Review and delete your peaches</div>
+    </div>
+    <button class="sheet-close" data-close type="button">✕</button>
+  </div>
+  <div class="sheet-body">
+    <div id="myDropsList"></div>
+  </div>
+</div>
+
+<!-- REPORT (reason picker) SHEET -->
+<div class="sheet" id="reportSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-head">
+    <div class="title-block">
+      <h2 data-i18n="reportTitle">Report this drop</h2>
+      <div class="sub" data-i18n="reportSub">Tell the mods what's wrong</div>
+    </div>
+    <button class="sheet-close" data-close type="button">✕</button>
+  </div>
+  <div class="sheet-body">
+    <div id="reportPreview"></div>
+    <div class="section-label" data-i18n="reportReasonLabel">Reason</div>
+    <div class="report-reasons" id="reportReasons"></div>
+  </div>
+</div>
+
+<!-- REPORTS QUEUE (mods/admins) SHEET -->
+<div class="sheet" id="reportsSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-head">
+    <div class="title-block">
+      <h2 data-i18n="reportsTitle">Reported drops</h2>
+      <div class="sub" data-i18n="reportsSub">Review &amp; moderate</div>
+    </div>
+    <button class="sheet-close" data-close type="button">✕</button>
+  </div>
+  <div class="sheet-body">
+    <div id="reportsList"></div>
   </div>
 </div>
 
@@ -2724,6 +2855,26 @@ const I18N = {
     pSubOpenAI: 'Your OpenAI key · best quality',
     aiKeyHintGemini: 'Free at Google AI Studio. Stored on this device only.',
     aiKeyHintOpenAI: 'Stored on this device only.',
+    dropAutoQuest: 'Detected quest',
+    myDropsTitle: 'Your drops',
+    myDropsSub: 'Review and delete your peaches',
+    myDropsOpen: 'My drops',
+    myDropsEmpty: 'No drops yet — go make history 🍑',
+    reportPinBtn: 'Report',
+    reportTitle: 'Report this drop',
+    reportSub: "Tell the mods what's wrong",
+    reportReasonLabel: 'Reason',
+    reportThanks: '🚩 Thanks — the mods will take a look',
+    reportOwnPin: "You can't report your own drop 🙂",
+    reportsOpen: 'Review reports',
+    reportsTitle: 'Reported drops',
+    reportsSub: 'Review & moderate',
+    reportsEmpty: 'No reports. All clean ✨',
+    reportedBy: 'Reported by',
+    reportGoPin: 'Show',
+    reportDeletePin: 'Delete',
+    reportDismiss: 'Dismiss',
+    reportDismissed: 'Report dismissed',
   },
   fr: {
     appName: 'Pose ta Pêche', tagline: 'Trace ton trône',
@@ -2894,6 +3045,26 @@ const I18N = {
     pSubOpenAI: 'Ta clé OpenAI · meilleure qualité',
     aiKeyHintGemini: 'Gratuit sur Google AI Studio. Stockée sur cet appareil.',
     aiKeyHintOpenAI: 'Stockée sur cet appareil uniquement.',
+    dropAutoQuest: 'Quête détectée',
+    myDropsTitle: 'Tes pêches',
+    myDropsSub: 'Revois et supprime tes pêches',
+    myDropsOpen: 'Mes pêches',
+    myDropsEmpty: "Aucune pêche pour l'instant — lance-toi ! 🍑",
+    reportPinBtn: 'Signaler',
+    reportTitle: 'Signaler cette pêche',
+    reportSub: 'Dis aux modos ce qui ne va pas',
+    reportReasonLabel: 'Raison',
+    reportThanks: '🚩 Merci — les modos vont jeter un œil',
+    reportOwnPin: 'Tu ne peux pas signaler ta propre pêche 🙂',
+    reportsOpen: 'Voir les signalements',
+    reportsTitle: 'Pêches signalées',
+    reportsSub: 'Examiner & modérer',
+    reportsEmpty: 'Aucun signalement. Tout est clean ✨',
+    reportedBy: 'Signalé par',
+    reportGoPin: 'Voir',
+    reportDeletePin: 'Supprimer',
+    reportDismiss: 'Ignorer',
+    reportDismissed: 'Signalement ignoré',
   }
 };
 const t = (k) => (I18N[state.lang] && I18N[state.lang][k]) || I18N.en[k] || k;
@@ -2919,6 +3090,48 @@ const CHALLENGES = [
 ];
 
 const PLACE_EMOJIS = ['🏠','💼','🎓','☕','🍽️','💪','🛍️','✈️','🚆','🚌','🚗','🚉','🏥','🏛️','🏨','🛏️','🌳','🌊','⛰️','🍻','🎉','🎬','🎭','🎟️','⛪','🛕','🕌','⛩️','🏟️','🚐'];
+/* Maps an OSM amenity category (an AMENITY_CATS key) to the closest DipGo
+   quest. Used when a user drops on a SPECIFIC amenity so we can pre-pick the
+   quest and hide the manual picker. Falls back to 'civic' for special
+   landmarks and 'home' (the default throne) otherwise. */
+const AMENITY_CHALLENGE = {
+  restaurant:'restaurant', fast_food:'restaurant', cafe:'cafe', bar:'night', pub:'night',
+  nightclub:'night', ice_cream:'cafe',
+  school:'school', university:'school', kindergarten:'school',
+  hospital:'civic', clinic:'civic', doctors:'civic', pharmacy:'civic', dentist:'civic', veterinary:'civic',
+  toilets:'home',
+  police:'civic', fire_station:'civic', bank:'civic', atm:'mall', post_office:'civic',
+  library:'school', cinema:'event', theatre:'event',
+  fuel:'travel', parking:'travel', bus_station:'travel',
+  place_of_worship:'civic',
+  embassy:'civic', townhall:'civic', courthouse:'civic', prison:'civic',
+  community_centre:'civic', marketplace:'mall',
+  government:'civic', diplomatic:'civic', ngo:'civic',
+  monument:'event', castle:'event', memorial:'civic', ruins:'wild',
+  bakery:'cafe', supermarket:'mall', convenience:'mall', butcher:'mall', mall:'mall',
+  hairdresser:'mall', florist:'mall', books:'school',
+  fitness_centre:'gym', swimming_pool:'gym', playground:'park', park:'park',
+  stadium:'event', garden:'park', sports_centre:'gym',
+  hotel:'travel', hostel:'travel', museum:'event', gallery:'event',
+  attraction:'event', viewpoint:'mountain', artwork:'event', zoo:'event', theme_park:'event'
+};
+function challengeForAmenityKey(key, isSpecial) {
+  if (key && AMENITY_CHALLENGE[key] && chById(AMENITY_CHALLENGE[key])) return AMENITY_CHALLENGE[key];
+  return isSpecial ? 'civic' : 'home';
+}
+
+/* Report reasons for the abuse-signal flow. */
+const REPORT_REASONS = [
+  { id:'spam',      em:'🗑️', en:'Spam',               fr:'Spam' },
+  { id:'abuse',     em:'😡', en:'Abuse / harassment', fr:'Abus / harcèlement' },
+  { id:'offensive', em:'🚫', en:'Offensive content',  fr:'Contenu offensant' },
+  { id:'wrong',     em:'📍', en:'Wrong / fake place',  fr:'Lieu faux' },
+  { id:'other',     em:'❓', en:'Something else',      fr:'Autre chose' }
+];
+function reportReasonLabel(id) {
+  const r = REPORT_REASONS.find(x => x.id === id);
+  return r ? (r.em + ' ' + (state.lang === 'fr' ? r.fr : r.en)) : id;
+}
 const AVATAR_EMOJIS = ['🍑','🐱','🐶','🦊','🦝','🐼','🐨','🐯','🦁','🐸','🐧','🦄','🐲','🐳','🦋','🌻','🌈','⭐','🔥','💎','🎯','🚀','👑','🎩','🧙','🦸','🥷','🧚','🤖','👽'];
 
 
@@ -2952,6 +3165,9 @@ state.signedInReal = false;
 state.draftLoc = null;
 state.draftChallenge = null;
 state.draftPhoto = null;
+state.dropLockChallenge = false;   // amenity drops lock the quest picker
+state.dropAmenity = null;          // amenity context for the auto-detected chip
+state.reportTarget = null;         // pin currently being reported
 state.aiMode = 'generate';   // 'generate' | 'edit'
 state.aiModel = null;        // current provider's model id (ephemeral)
 state.aiResult = null;       // last generated data URL (ephemeral)
@@ -3168,7 +3384,7 @@ function confettiBurst() {
 
 
 /* ---------- SHEETS ---------- */
-const SHEETS = ['dropSheet', 'questsSheet', 'placesSheet', 'addPlaceSheet', 'profileSheet', 'iosSheet', 'welcomeSheet', 'hexSheet', 'signInSheet', 'adminSheet', 'aiSheet'];
+const SHEETS = ['dropSheet', 'questsSheet', 'placesSheet', 'addPlaceSheet', 'profileSheet', 'iosSheet', 'welcomeSheet', 'hexSheet', 'signInSheet', 'adminSheet', 'aiSheet', 'myDropsSheet', 'reportSheet', 'reportsSheet'];
 let currentSheet = null;
 
 /**
@@ -3194,6 +3410,10 @@ function openSheet(id) {
   // Wipe any leftover inline styles from a previous drag gesture.
   el.style.transition = '';
   el.style.transform  = '';
+  // Always reveal a freshly-opened sheet from the TOP — never mid-scroll
+  // from a previous visit. Also helps desktop users with no scroll wheel.
+  const sb = el.querySelector('.sheet-body');
+  if (sb) sb.scrollTop = 0;
   // Double-rAF so the browser paints the CSS baseline position first,
   // then triggers the spring transition into the open position.
   requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('open')));
@@ -3917,7 +4137,7 @@ function renderHexSheet(cell) {
     list.appendChild(frag);
   }
 
-  // ---- 3) YOUR drops — detailed rows ---------------------------------
+  // ---- 3) YOUR drops — detailed rows (with delete) -------------------
   const pinsList = $('hexPinsList');
   if (!myPins.length) {
     pinsList.innerHTML = `<div class="hex-empty">${escHtml(t('hexNoYourPins'))}</div>`;
@@ -3932,7 +4152,6 @@ function renderHexSheet(cell) {
         ? `<img src="${escHtml(p.photoURL)}" alt=""/>`
         : (p.avatarEmoji ? escHtml(p.avatarEmoji)
             : (state.avatar || (p.displayName ? escHtml(p.displayName[0].toUpperCase()) : '🍑')));
-      // Drop photo thumbnail — p.photo is the image attached to THIS pin.
       const thumb = p.photo
         ? `<button class="pin-thumb" type="button" aria-label="${escHtml(viewLbl)}"><img src="${escHtml(p.photo)}" alt=""/></button>`
         : '';
@@ -3944,7 +4163,10 @@ function renderHexSheet(cell) {
           ${p.note ? `<div class="note">💬 ${escHtml(p.note)}</div>` : ''}
         </div>
         ${thumb}
-        <button class="ax" type="button" aria-label="${escHtml(t('hexFlyToBtn'))}">🗺️</button>
+        <div class="hex-row-acts">
+          <button class="ax fly" type="button" aria-label="${escHtml(t('hexFlyToBtn'))}">🗺️</button>
+          <button class="ax del" type="button" aria-label="${escHtml(t('deleteMine'))}">🗑️</button>
+        </div>
       `;
       const thumbBtn = row.querySelector('.pin-thumb');
       if (thumbBtn) {
@@ -3953,22 +4175,29 @@ function renderHexSheet(cell) {
           openImageLightbox(p.photo, p.note || p.placeName || (ch ? chName(ch) : ''));
         });
       }
-      row.querySelector('.ax').addEventListener('click', () => {
+      row.querySelector('.fly').addEventListener('click', () => {
         vibrate(8); sfxTap();
         closeAllSheets();
         if (map) map.flyTo([p.lat, p.lng], 17, { duration: 0.6 });
+      });
+      row.querySelector('.del').addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const ok = await deletePin(p);
+        if (ok) row.remove();
       });
       frag.appendChild(row);
     });
     pinsList.appendChild(frag);
   }
 
-  // ---- 4) OTHER peach-droppers — one row per user --------------------
+  // ---- 4) OTHER peach-droppers — one row per user (report + moderate) -
   const othersList = $('hexOthersList');
   if (!otherUsers.length) {
     othersList.innerHTML = `<div class="hex-empty">${escHtml(t('hexNoOthers'))}</div>`;
   } else {
     const viewLbl = state.lang === 'fr' ? 'Voir la photo' : 'View photo';
+    const canModerate = !!(state.isModerator || state.isAdmin);
+    const canReport   = !!state.user;
     const frag = document.createDocumentFragment();
     otherUsers.slice(0, 40).forEach(u => {
       const c = userColorObj(u.key);
@@ -3982,17 +4211,19 @@ function renderHexSheet(cell) {
       const cntLabel = u.count === 1
         ? t('onePeach')
         : t('manyPeaches').replace('{n}', u.count);
-      // This user's pins in the cell — newest first wins for flyTo + caption.
       const userPins = pinsInCell.filter(p => pinUserKey(p) === u.key);
       const lastPin  = userPins.reduce((a, b) => ((b.ts || 0) > (a.ts || 0) ? b : a), userPins[0]);
       const ch = chById(lastPin && lastPin.challengeId);
-      // Prefer the most recent pin that actually HAS a photo for the thumbnail.
       const photoPin = userPins
         .filter(p => p.photo)
         .reduce((a, b) => ((b.ts || 0) > ((a && a.ts) || 0) ? b : a), null);
       const thumb = photoPin
         ? `<button class="pin-thumb" type="button" aria-label="${escHtml(viewLbl)}"><img src="${escHtml(photoPin.photo)}" alt=""/></button>`
         : '';
+      const reportBtn = (canReport && lastPin)
+        ? `<button class="ax report" type="button" aria-label="${escHtml(t('reportPinBtn'))}">🚩</button>` : '';
+      const modBtn = (canModerate && lastPin)
+        ? `<button class="ax del" type="button" aria-label="${escHtml(t('deleteAsMod'))}">🗑️</button>` : '';
       row.innerHTML = `
         <div class="ava" style="box-shadow: 0 0 0 2px hsl(${c.h} ${c.s}% ${c.l}%);">${ava}</div>
         <div class="info">
@@ -4001,7 +4232,11 @@ function renderHexSheet(cell) {
           ${lastPin && lastPin.note ? `<div class="note">💬 ${escHtml(lastPin.note)}</div>` : ''}
         </div>
         ${thumb}
-        <button class="ax" type="button" aria-label="${escHtml(t('hexFlyToBtn'))}">🗺️</button>
+        <div class="hex-row-acts">
+          <button class="ax fly" type="button" aria-label="${escHtml(t('hexFlyToBtn'))}">🗺️</button>
+          ${reportBtn}
+          ${modBtn}
+        </div>
       `;
       const thumbBtn = row.querySelector('.pin-thumb');
       if (thumbBtn) {
@@ -4011,10 +4246,18 @@ function renderHexSheet(cell) {
           openImageLightbox(photoPin.photo, cap);
         });
       }
-      row.querySelector('.ax').addEventListener('click', () => {
+      row.querySelector('.fly').addEventListener('click', () => {
         vibrate(8); sfxTap();
         closeAllSheets();
         if (map && lastPin) map.flyTo([lastPin.lat, lastPin.lng], 17, { duration: 0.6 });
+      });
+      const rep = row.querySelector('.report');
+      if (rep) rep.addEventListener('click', (e) => { e.stopPropagation(); reportPin(lastPin); });
+      const del = row.querySelector('.del');
+      if (del) del.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const ok = await deletePin(lastPin);
+        if (ok) row.remove();
       });
       frag.appendChild(row);
     });
@@ -4185,9 +4428,14 @@ function paintAmenities(cell, list, pins) {
         vibrate(sp ? 20 : 12); sfxTap();   // beefier haptic on legendary drops
         if (!requireAuth('drop')) return;
         state.draftLoc = { src: 'pick', lat: a.lat, lng: a.lng, name: a.name || label };
-        if (!state.draftChallenge) state.draftChallenge = sp ? 'civic' : 'home';
+        // Pinning a SPECIFIC amenity → derive the quest from its category and
+        // lock the picker (the user already chose "this place").
+        const derived = challengeForAmenityKey(key, !!sp);
         closeAllSheets();
-        setTimeout(() => openDrop(), 80);
+        setTimeout(() => openDrop(derived, {
+          lockChallenge: true,
+          amenity: { key, name: a.name || label, em: leadEm }
+        }), 80);
       });
       rows.appendChild(row);
     });
@@ -4645,25 +4893,237 @@ function refreshAllMarkers() {
   markHexIndexDirty();
   scheduleHexUpdate();
 }
-/** Owner deletes their own. Mod/admin deletes anyone's. */
+/** Owner deletes their own. Mod/admin deletes anyone's. Returns true on success. */
 async function deletePin(pin) {
-  if (!state.user || !fbReady()) return;
+  if (!state.user || !fbReady() || !pin || !pin.id) return false;
   const canDelete = pin.uid === state.user.uid || state.isModerator || state.isAdmin;
-  if (!canDelete) { toast(t('notAllowed'), 'err'); return; }
+  if (!canDelete) { toast(t('notAllowed'), 'err'); return false; }
   const isMine = pin.uid === state.user.uid;
   const msg = isMine ? t('confirmDeleteMine')
                      : t('confirmDeleteAsMod').replace('{name}', pin.displayName || t('friend'));
-  if (!confirm(msg)) return;
+  if (!confirm(msg)) return false;
   try {
     const { db, doc, deleteDoc } = FB();
     await deleteDoc(doc(db, 'pins', pin.id));
-    map.closePopup();
+    // Optimistic local removal so any open list/map updates instantly; the
+    // pins snapshot listener will reconcile shortly (idempotent).
+    state.pins = state.pins.filter(p => p.id !== pin.id);
+    if (map && map.closePopup) map.closePopup();
+    markHexIndexDirty();
+    scheduleHexUpdate();
+    recomputeStats();
+    renderQuests();
     toast(t('pinDeleted'), 'win');
     sfxWin(); vibrate(20);
+    return true;
   } catch (e) {
     console.error('Pin delete failed:', e);
     toast('❌ ' + (e.message || 'Delete failed'), 'err');
+    return false;
   }
+}
+
+/* =====================================================================
+   REPORTING — users signal abusive drops; mods/admins review & act.
+   ===================================================================== */
+function reportPin(pin) {
+  if (!pin) return;
+  if (!requireAuth('generic')) return;
+  if (pin.uid && pin.uid === state.user.uid) { toast(t('reportOwnPin'), 'warn'); sfxErr(); return; }
+  state.reportTarget = pin;
+  renderReportSheet(pin);
+  openSheet('reportSheet');
+}
+
+function renderReportSheet(pin) {
+  const prev = $('reportPreview');
+  if (prev) {
+    const ch = chById(pin.challengeId);
+    prev.innerHTML = `
+      <div class="report-pin-card">
+        <div class="em">${ch ? ch.em : '🍑'}</div>
+        <div class="info">
+          <div class="nm">${escHtml(pin.displayName || t('friend'))}</div>
+          <div class="sub">${ch ? escHtml(chName(ch)) + ' · ' : ''}${escHtml(relTime(pin.ts))}</div>
+          ${pin.note ? `<div class="note">💬 ${escHtml(pin.note)}</div>` : ''}
+        </div>
+      </div>`;
+  }
+  const wrap = $('reportReasons'); if (!wrap) return;
+  wrap.innerHTML = '';
+  REPORT_REASONS.forEach(r => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'report-reason';
+    b.innerHTML = `<span class="em">${r.em}</span><span class="lbl">${escHtml(state.lang === 'fr' ? r.fr : r.en)}</span>`;
+    b.addEventListener('click', () => { vibrate(10); sfxTap(); submitReport(r.id); });
+    wrap.appendChild(b);
+  });
+}
+
+async function submitReport(reasonId) {
+  const pin = state.reportTarget;
+  if (!pin || !state.user || !fbReady()) return;
+  try {
+    const { db, collection, addDoc, serverTimestamp } = FB();
+    await addDoc(collection(db, 'reports'), {
+      pinId: pin.id,
+      pinUid: pin.uid || null,
+      pinNote: pin.note || '',
+      pinChallengeId: pin.challengeId || null,
+      pinLat: pin.lat, pinLng: pin.lng,
+      pinDisplayName: pin.displayName || null,
+      reason: reasonId,
+      reporterUid: state.user.uid,
+      reporterName: state.nickname || state.user.displayName || null,
+      status: 'open',
+      ts: Date.now(),
+      createdAt: serverTimestamp()
+    });
+    state.reportTarget = null;
+    closeAllSheets();
+    toast(t('reportThanks'), 'win'); sfxWin(); vibrate(20);
+  } catch (e) {
+    console.error('Report failed:', e);
+    toast('❌ ' + (e.message || e.code || 'Failed'), 'err'); sfxErr();
+  }
+}
+
+async function deleteReport(id) {
+  if (!fbReady()) return;
+  try {
+    const { db, doc, deleteDoc } = FB();
+    await deleteDoc(doc(db, 'reports', id));
+  } catch (e) { console.warn('Report delete failed:', e); }
+}
+
+/* Mod/admin queue of open reports. */
+async function openReports() {
+  if (!(state.isModerator || state.isAdmin)) { toast(t('notAllowed'), 'err'); return; }
+  openSheet('reportsSheet');
+  await renderReports();
+}
+
+async function renderReports() {
+  const list = $('reportsList'); if (!list) return;
+  list.innerHTML = `<div class="hex-empty">${escHtml(t('loading'))}…</div>`;
+  if (!fbReady()) { list.innerHTML = `<div class="hex-empty">—</div>`; return; }
+  const { db, collection, query, where, getDocs } = FB();
+  try {
+    const snap = await getDocs(query(collection(db, 'reports'), where('status', '==', 'open')));
+    const reports = [];
+    snap.forEach(d => reports.push({ id: d.id, ...d.data() }));
+    reports.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+    if (!reports.length) {
+      list.innerHTML = `<div class="hex-empty">${escHtml(t('reportsEmpty'))}</div>`;
+      return;
+    }
+    list.innerHTML = '';
+    const frag = document.createDocumentFragment();
+    reports.forEach(r => {
+      const ch = chById(r.pinChallengeId);
+      const row = document.createElement('div');
+      row.className = 'report-row';
+      row.innerHTML = `
+        <div class="rr-top">
+          <span class="rr-reason">${escHtml(reportReasonLabel(r.reason))}</span>
+          <span class="rr-when">${escHtml(relTime(r.ts))}</span>
+        </div>
+        <div class="rr-pin">
+          <span class="em">${ch ? ch.em : '🍑'}</span>
+          <div class="info">
+            <div class="nm">${escHtml(r.pinDisplayName || t('friend'))}</div>
+            ${r.pinNote ? `<div class="note">💬 ${escHtml(r.pinNote)}</div>` : ''}
+            <div class="sub">${escHtml(t('reportedBy'))} ${escHtml(r.reporterName || t('friend'))}</div>
+          </div>
+        </div>
+        <div class="rr-acts">
+          <button class="btn soft sm rr-go" type="button">🗺️ ${escHtml(t('reportGoPin'))}</button>
+          <button class="btn danger sm rr-del" type="button">🗑️ ${escHtml(t('reportDeletePin'))}</button>
+          <button class="btn soft sm rr-dismiss" type="button">✓ ${escHtml(t('reportDismiss'))}</button>
+        </div>`;
+      row.querySelector('.rr-go').addEventListener('click', () => {
+        vibrate(8); sfxTap(); closeAllSheets();
+        if (map && typeof r.pinLat === 'number') map.flyTo([r.pinLat, r.pinLng], 17, { duration: 0.6 });
+      });
+      row.querySelector('.rr-del').addEventListener('click', async () => {
+        const ok = await deletePin({ id: r.pinId, uid: r.pinUid, displayName: r.pinDisplayName });
+        if (ok) {
+          await deleteReport(r.id);
+          row.remove();
+          if (!list.children.length) renderReports();
+        }
+      });
+      row.querySelector('.rr-dismiss').addEventListener('click', async () => {
+        await deleteReport(r.id);
+        row.remove();
+        toast(t('reportDismissed'), 'win'); vibrate(10);
+        if (!list.children.length) renderReports();
+      });
+      frag.appendChild(row);
+    });
+    list.appendChild(frag);
+  } catch (e) {
+    list.innerHTML = `<div class="hex-empty" style="color:var(--danger)">❌ ${escHtml(e.message || e.code || 'Error')}</div>`;
+  }
+}
+
+/* =====================================================================
+   MY DROPS — global list of the user's own pins, with delete.
+   ===================================================================== */
+function openMyDrops() {
+  if (!requireAuth('generic')) return;
+  openSheet('myDropsSheet');
+  renderMyDrops();
+}
+
+function renderMyDrops() {
+  const list = $('myDropsList'); if (!list) return;
+  const myUid = state.user && state.user.uid;
+  const mine = (myUid ? state.pins.filter(p => p.uid === myUid) : [])
+                 .sort((a, b) => (b.ts || 0) - (a.ts || 0));
+  if (!mine.length) {
+    list.innerHTML = `<div class="hex-empty">${escHtml(t('myDropsEmpty'))}</div>`;
+    return;
+  }
+  const viewLbl = state.lang === 'fr' ? 'Voir la photo' : 'View photo';
+  const frag = document.createDocumentFragment();
+  mine.forEach(p => {
+    const ch = chById(p.challengeId);
+    const ava = p.avatarEmoji ? escHtml(p.avatarEmoji) : (state.avatar || '🍑');
+    const thumb = p.photo
+      ? `<button class="pin-thumb" type="button" aria-label="${escHtml(viewLbl)}"><img src="${escHtml(p.photo)}" alt=""/></button>`
+      : '';
+    const row = document.createElement('div');
+    row.className = 'hex-pin-row';
+    row.innerHTML = `
+      <div class="ava">${ava}</div>
+      <div class="info">
+        <div class="who">${ch ? ch.em + ' ' + escHtml(chName(ch)) : escHtml(t('you'))}</div>
+        <div class="meta">${p.placeName ? escHtml(p.placeName) + ' · ' : ''}${escHtml(relTime(p.ts))}${ch ? ' · +' + ch.xp + ' XP' : ''}</div>
+        ${p.note ? `<div class="note">💬 ${escHtml(p.note)}</div>` : ''}
+      </div>
+      ${thumb}
+      <div class="hex-row-acts">
+        <button class="ax fly" type="button" aria-label="${escHtml(t('hexFlyToBtn'))}">🗺️</button>
+        <button class="ax del" type="button" aria-label="${escHtml(t('deleteMine'))}">🗑️</button>
+      </div>`;
+    const tb = row.querySelector('.pin-thumb');
+    if (tb) tb.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openImageLightbox(p.photo, p.note || p.placeName || (ch ? chName(ch) : ''));
+    });
+    row.querySelector('.fly').addEventListener('click', () => {
+      vibrate(8); sfxTap(); closeAllSheets();
+      if (map) map.flyTo([p.lat, p.lng], 17, { duration: 0.6 });
+    });
+    row.querySelector('.del').addEventListener('click', async () => {
+      const ok = await deletePin(p);
+      if (ok) renderMyDrops();
+    });
+    frag.appendChild(row);
+  });
+  list.innerHTML = '';
+  list.appendChild(frag);
 }
 
 /* =====================================================================
@@ -4949,6 +5409,7 @@ function subscribePins() {
     scheduleHexUpdate();
     recomputeStats();
     renderQuests();
+    if (currentSheet === 'myDropsSheet') renderMyDrops();
   }, (err) => {
     console.warn('Pins snapshot error:', err);
   });
@@ -5434,14 +5895,53 @@ function renderDropChalGrid() {
   });
 }
 
-function openDrop(presetChallenge) {
+function openDrop(presetChallenge, opts = {}) {
+  // Amenity drops lock the quest to a derived category and hide the picker.
+  state.dropLockChallenge = !!opts.lockChallenge;
+  state.dropAmenity = opts.amenity || null;
+
   if (presetChallenge) state.draftChallenge = presetChallenge;
   if (!state.draftChallenge) state.draftChallenge = 'home';
+
+  // Every fresh drop starts with a clean photo stage — no leftover image.
+  state.draftPhoto = null;
+
   renderDropLocRow();
   renderDropChalGrid();
   renderPhotoStage();
   $('dropNote').value = '';
+  applyDropChallengeVisibility();
   openSheet('dropSheet');
+}
+
+/* Show or hide the quest picker. When a specific amenity is being pinned,
+   the picker + its label are hidden and an auto-detected quest chip shown. */
+function applyDropChallengeVisibility() {
+  const lock  = !!state.dropLockChallenge;
+  const label = $('dropChalLabel');
+  const grid  = $('dropChalGrid');
+  if (label) label.style.display = lock ? 'none' : '';
+  if (grid)  grid.style.display  = lock ? 'none' : '';
+  renderDropAmenityChip();
+}
+
+function renderDropAmenityChip() {
+  const wrap = $('dropAmenityChip'); if (!wrap) return;
+  if (!state.dropLockChallenge || !state.dropAmenity) {
+    wrap.style.display = 'none'; wrap.innerHTML = ''; return;
+  }
+  const ch = chById(state.draftChallenge);
+  const am = state.dropAmenity;
+  wrap.style.display = '';
+  wrap.innerHTML = `
+    <div class="drop-amen-chip">
+      <span class="em">${escHtml(am.em || (ch ? ch.em : '🍑'))}</span>
+      <div class="txt">
+        <div class="nm">${escHtml(am.name || '')}</div>
+        <div class="sub">${escHtml(t('dropAutoQuest'))}: ${escHtml(ch ? chName(ch) : '')}${ch ? ' · +' + ch.xp + ' XP' : ''}</div>
+      </div>
+      <span class="badge">${escHtml(ch ? ch.em : '🍑')}</span>
+    </div>`;
 }
 
 function renderPhotoStage() {
@@ -6247,6 +6747,10 @@ function renderProfile() {
   }
 
   recomputeStats();
+  const repBtn = $('reportsBtn');
+  if (repBtn) repBtn.style.display = (state.isModerator || state.isAdmin) ? '' : 'none';
+  const myDropsBtn = $('myDropsBtn');
+  if (myDropsBtn) myDropsBtn.style.display = state.user ? '' : 'none';
   $('nicknameInput').value = state.nickname || '';
   renderAvatarGrid();
   $('hapticsSwitch') && $('hapticsSwitch').classList.toggle('on', state.haptics);
@@ -6441,6 +6945,9 @@ function wireEvents() {
   // Drop sheet — photo/AI wiring lives in wireMediaEvents()
   $('dropConfirm').addEventListener('click', () => { performDrop(); });
 
+  // Profile: my drops + (mod/admin) reports queue
+  $('myDropsBtn') && $('myDropsBtn').addEventListener('click', () => { vibrate(10); sfxTap(); openMyDrops(); });
+  $('reportsBtn') && $('reportsBtn').addEventListener('click', () => { vibrate(10); sfxTap(); openReports(); });
   // Pick on map
   $('pickConfirm').addEventListener('click', () => {
     if (!map) return;
