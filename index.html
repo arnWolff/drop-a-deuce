@@ -900,6 +900,19 @@ html.theme-dark .leaflet-tile-pane { filter: brightness(.85) contrast(1.05) hue-
   transition: transform .12s var(--ease-out), border-color .15s var(--ease-out);
 }
 .ai-chip:active { transform: scale(.92); border-color: var(--peach); }
+.ai-chip.active { border-color: var(--peach); color: var(--ink); background: var(--peach-grad-soft); }
+.ai-space-try { font-size: 11px; font-weight: 800; color: var(--ink-3); margin: 10px 0 2px; text-transform: uppercase; letter-spacing: .04em; }
+.ai-space-status {
+  margin-top: 8px; font-size: 12px; font-weight: 700; line-height: 1.4;
+  padding: 9px 11px; border-radius: var(--r-md);
+  background: var(--surface-2); border: 1.5px solid var(--border); color: var(--ink-2);
+  display: flex; align-items: center; gap: 7px;
+}
+.ai-space-status.load::before { content: '⏳'; }
+.ai-space-status.ok { border-color: #34c759; color: #1f9d4d; }
+.ai-space-status.ok::before { content: '✓'; }
+.ai-space-status.err { border-color: #ff3b30; color: #d62b22; }
+.ai-space-status.err::before { content: '⚠️'; }
 .segment .opt.disabled { opacity: .4; pointer-events: none; }
 .btn.loading { opacity: .7; pointer-events: none; }
 /* AI provider selector — clear, tappable rows with cost badges */
@@ -2184,8 +2197,17 @@ html.theme-dark .hex-pin-row .ax.report { color: #fbbf24; }
     <textarea class="textarea" id="aiPrompt" maxlength="500" placeholder="A majestic peach on a golden throne…"></textarea>
     <div class="ai-chips" id="aiChips"></div>
 
-    <div class="section-label" data-i18n="aiEngineLabel">Engine</div>
-    <div class="ai-providers" id="aiProviders"></div>
+    <div id="aiSpaceWrap" style="display:none; margin-top:12px;">
+      <div class="section-label" data-i18n="aiSpaceLabel">Hugging Face Space</div>
+      <input class="input" id="aiSpaceInput" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="owner/space-name" />
+      <div class="ai-space-try"><span data-i18n="aiSpaceTry">Try one:</span></div>
+      <div class="ai-chips" id="aiSpaceChips"></div>
+      <div class="ai-space-status" id="aiSpaceStatus" style="display:none;"></div>
+      <div class="ai-hint">
+        <span data-i18n="aiSpaceHint">Paste any image-editing Space, add a photo + prompt — we auto-detect its inputs ✨</span>
+        <a class="ai-key-link" href="https://huggingface.co/spaces?q=text+modify+image" target="_blank" rel="noopener"><span data-i18n="aiSpaceBrowse">Browse Spaces</span> ↗</a>
+      </div>
+    </div>
 
     <div id="aiModelWrap" style="display:none; margin-top:12px;">
       <div class="section-label" data-i18n="aiModelLabel">Model</div>
@@ -2855,6 +2877,19 @@ const I18N = {
     pSubOpenAI: 'Your OpenAI key · best quality',
     aiKeyHintGemini: 'Free at Google AI Studio. Stored on this device only.',
     aiKeyHintOpenAI: 'Stored on this device only.',
+    pSubHF: 'Any HF image Space · bring your own',
+    aiKeyHintHF: 'Optional token raises rate limits. Stored on this device only.',
+    aiSpaceLabel: 'Hugging Face Space',
+    aiSpaceHint: 'Paste any image-editing Space, add a photo + prompt — we auto-detect its inputs ✨',
+    aiSpaceBrowse: 'Browse Spaces',
+    aiSpaceTry: 'Try one:',
+    aiNeedSpace: 'Pick or paste a Space first 🤗',
+    aiHfConnecting: 'Waking the Space… (first hit can take a minute) ⏳',
+    aiHfRunning: 'Sending your image to the Space… 🤗',
+    aiHfDone: 'Done via',
+    aiHfNoConnect: "Couldn't reach that Space — check the id or try another",
+    aiHfNoEndpoint: "That Space doesn't expose an image-edit API",
+    aiHfNoLib: 'Could not load the Hugging Face client — check your connection',
     dropAutoQuest: 'Detected quest',
     myDropsTitle: 'Your drops',
     myDropsSub: 'Review and delete your peaches',
@@ -3045,6 +3080,19 @@ const I18N = {
     pSubOpenAI: 'Ta clé OpenAI · meilleure qualité',
     aiKeyHintGemini: 'Gratuit sur Google AI Studio. Stockée sur cet appareil.',
     aiKeyHintOpenAI: 'Stockée sur cet appareil uniquement.',
+    pSubHF: 'N’importe quel Space image HF · le tien',
+    aiKeyHintHF: 'Un token optionnel augmente les limites. Stocké sur cet appareil.',
+    aiSpaceLabel: 'Space Hugging Face',
+    aiSpaceHint: 'Colle n’importe quel Space d’édition d’image, ajoute une photo + un prompt — on détecte ses entrées ✨',
+    aiSpaceBrowse: 'Parcourir les Spaces',
+    aiSpaceTry: 'Essaie :',
+    aiNeedSpace: 'Choisis ou colle un Space d’abord 🤗',
+    aiHfConnecting: 'Réveil du Space… (le 1er appel peut prendre une minute) ⏳',
+    aiHfRunning: 'Envoi de ton image au Space… 🤗',
+    aiHfDone: 'Fait via',
+    aiHfNoConnect: 'Impossible de joindre ce Space — vérifie l’id ou essaie un autre',
+    aiHfNoEndpoint: 'Ce Space n’expose pas d’API d’édition d’image',
+    aiHfNoLib: 'Impossible de charger le client Hugging Face — vérifie ta connexion',
     dropAutoQuest: 'Quête détectée',
     myDropsTitle: 'Tes pêches',
     myDropsSub: 'Revois et supprime tes pêches',
@@ -3151,7 +3199,8 @@ const DEFAULTS = {
   avatar: '🍑',
   welcomed: false,
   aiProvider: 'pollinations',                 // free + no key by default
-  aiKeys: { pollinations: '', gemini: '', openai: '' }   // kept on-device only
+  hfSpace: '',                                // last-used Hugging Face Space id
+  aiKeys: { pollinations: '', huggingface: '', gemini: '', openai: '' }   // kept on-device only
 };
 const state = Object.assign({}, DEFAULTS, loadLS());
 // ephemeral
@@ -3172,7 +3221,9 @@ state.aiMode = 'generate';   // 'generate' | 'edit'
 state.aiModel = null;        // current provider's model id (ephemeral)
 state.aiResult = null;       // last generated data URL (ephemeral)
 // migrate older single-key field, and guarantee aiKeys exists
-if (!state.aiKeys || typeof state.aiKeys !== 'object') state.aiKeys = { pollinations: '', gemini: '', openai: '' };
+if (!state.aiKeys || typeof state.aiKeys !== 'object') state.aiKeys = {};
+['pollinations', 'huggingface', 'gemini', 'openai'].forEach(k => { if (!(k in state.aiKeys)) state.aiKeys[k] = ''; });
+if (typeof state.hfSpace !== 'string') state.hfSpace = '';
 if (state.aiApiKey && !state.aiKeys.openai) state.aiKeys.openai = state.aiApiKey;
 state.editingPlace = null;
 state.pickMode = null;
@@ -3193,6 +3244,7 @@ function saveLS() {
       nickname: state.nickname, avatar: state.avatar,
       welcomed: state.welcomed,
       aiProvider: state.aiProvider,
+      hfSpace: state.hfSpace,
       aiKeys: state.aiKeys
     };
     localStorage.setItem(LS_KEY, JSON.stringify(persist));
@@ -6120,6 +6172,16 @@ const AI_PROVIDERS = {
     defModel: 'gemini-2.5-flash-image-preview',
     subKey: 'pSubPuter'
   },
+  huggingface: {
+    name: 'HF Spaces', em: '🤗', badge: 'free',
+    gen: false, remix: true,
+    models: {},                 // no model picker — uses the Space picker instead
+    defModel: null,
+    space: true,                // flag → show the Space picker panel
+    keyName: 'huggingface', keyPlaceholder: 'hf_… (optional)',
+    keyUrl: 'huggingface.co/settings/tokens', keyHint: 'aiKeyHintHF',
+    subKey: 'pSubHF'
+  },
   gemini: {
     name: 'Gemini', em: '✨', badge: 'freekey',
     gen: true, remix: true,
@@ -6177,6 +6239,7 @@ function renderAIProviders() {
   });
   renderAIModel();
   renderAIKey();
+  renderAISpace();
 }
 
 function renderAIModel() {
@@ -6242,9 +6305,12 @@ function openAIStudio() {
   state.aiResult = null;
   $('aiPrompt').value = '';
   $('aiResultWrap').style.display = 'none';
-  // make sure the selected provider is valid for this mode
-  if (state.aiMode === 'edit' && !AI_PROVIDERS[state.aiProvider].remix) state.aiProvider = 'puter';
+  // ensure the selected provider can handle the resolved mode; else pick a sensible default
+  const p = AI_PROVIDERS[state.aiProvider];
+  const ok = state.aiMode === 'edit' ? (p && p.remix) : (p && p.gen);
+  if (!ok) state.aiProvider = (state.aiMode === 'edit') ? 'puter' : 'pollinations';
   state.aiModel = AI_PROVIDERS[state.aiProvider].defModel;
+  setAISpaceStatus('', '');
   renderAIChips();
   renderAIProviders();
   renderAIMode();
@@ -6337,13 +6403,166 @@ async function aiViaOpenAI(prompt) {                  // your key (generate + re
   }
 }
 
+/* =====================================================================
+   HUGGING FACE SPACES — connect to ANY image-edit Space, auto-detect its
+   API via view_api(), and map the user's photo + prompt onto its inputs.
+   Lazy-loaded Gradio client, GitHub-Pages safe (no build step).
+   ===================================================================== */
+
+// Suggested image-edit Spaces (just prefill the input — same auto-detect path)
+const HF_SUGGESTED = [
+  { id: 'multimodalart/Qwen-Image-Edit-Fast',     label: '✏️ Qwen Edit' },
+  { id: 'black-forest-labs/FLUX.1-Kontext-Dev',   label: '🎨 FLUX Kontext' },
+  { id: 'timbrooks/instruct-pix2pix',             label: '🖼️ Pix2Pix' }
+];
+
+let _gradioLoading = null;
+function ensureGradio() {
+  if (window.__gradio) return Promise.resolve(window.__gradio);
+  if (_gradioLoading) return _gradioLoading;
+  // esm.sh resolves the package's deps for the browser. Swap this URL if needed.
+  _gradioLoading = import('https://esm.sh/@gradio/client@1')
+    .then(m => (window.__gradio = m))
+    .catch(() => { _gradioLoading = null; throw new Error(t('aiHfNoLib')); });
+  return _gradioLoading;
+}
+
+// --- schema heuristics ---
+const _HF_IMG_IN  = ['image', 'imageeditor', 'sketchpad', 'imagemask'];
+const _HF_IMG_OUT = ['image', 'gallery', 'annotatedimage'];
+const _HF_TXT     = ['textbox', 'text'];
+const _comp   = p => String(p.component || '').toLowerCase();
+const _isImgIn  = p => _HF_IMG_IN.includes(_comp(p));
+const _isImgOut = p => _HF_IMG_OUT.includes(_comp(p));
+const _isStr    = p => _HF_TXT.includes(_comp(p)) || (p.python_type && /str/i.test(p.python_type.type || ''));
+
+// Pick the endpoint most likely to be "image + text -> image"
+function pickHFEndpoint(api) {
+  const cands = [];
+  const consider = (name, def, kind) => {
+    const params  = def.parameters || [];
+    const returns = def.returns || [];
+    if (!returns.some(_isImgOut)) return;          // must return an image
+    let score = 2;                                  // has image output
+    if (params.some(_isImgIn)) score += 3;
+    if (params.some(_isStr))   score += 2;
+    score -= params.length * 0.05;                  // prefer simpler signatures
+    cands.push({ name, def, kind, score });
+  };
+  const named = api.named_endpoints || {};
+  Object.keys(named).forEach(n => consider(n, named[n], 'named'));
+  const unnamed = api.unnamed_endpoints || {};
+  Object.keys(unnamed).forEach(n => consider(Number(n), unnamed[n], 'unnamed'));
+  cands.sort((a, b) => b.score - a.score);
+  return cands[0] || null;
+}
+
+// Build the positional args array the Space expects
+function buildHFArgs(params, imgFile, prompt, handle_file) {
+  let imgUsed = false, txtUsed = false;
+  return params.map(p => {
+    if (!imgUsed && _isImgIn(p)) { imgUsed = true; return handle_file(imgFile); }
+    if (!txtUsed && _isStr(p))   { txtUsed = true; return prompt; }
+    if (p.parameter_has_default) return p.parameter_default;
+    const c = _comp(p);
+    if (c === 'slider' || c === 'number') return 0;
+    if (c === 'checkbox') return false;
+    if (_HF_TXT.includes(c)) return '';
+    return null;
+  });
+}
+
+// Pull an image URL out of whatever shape the Space returned
+function _hfUrl(v) {
+  if (!v) return null;
+  if (typeof v === 'string') return /^https?:|^data:/.test(v) ? v : null;
+  if (Array.isArray(v)) { for (const x of v) { const u = _hfUrl(x && (x.image || x)); if (u) return u; } return null; }
+  if (typeof v === 'object') return v.url || (v.image && (v.image.url || v.image)) || null;
+  return null;
+}
+function extractHFImage(result, returns) {
+  const data = (result && result.data) || [];
+  for (let i = 0; i < data.length; i++) {
+    if (!returns[i] || _isImgOut(returns[i])) { const u = _hfUrl(data[i]); if (u) return u; }
+  }
+  for (const v of data) { const u = _hfUrl(v); if (u) return u; }
+  return null;
+}
+
+async function aiViaHuggingFace(prompt) {            // any HF Space (remix only)
+  const space = (state.hfSpace || '').trim();
+  if (!space) throw new Error(t('aiNeedSpace'));
+  if (!state.draftPhoto) throw new Error(t('aiNeedImage'));
+
+  const { Client, handle_file } = await ensureGradio();
+  const token = (state.aiKeys.huggingface || '').trim();
+
+  setAISpaceStatus(t('aiHfConnecting'), 'load');
+  let app;
+  try {
+    app = await Client.connect(space, token ? { hf_token: token } : {});
+  } catch (e) {
+    console.error(e);
+    throw new Error(t('aiHfNoConnect'));
+  }
+
+  const api  = await app.view_api();
+  const pick = pickHFEndpoint(api);
+  if (!pick) throw new Error(t('aiHfNoEndpoint'));
+
+  setAISpaceStatus(t('aiHfRunning'), 'load');
+  const blob = await (await fetch(state.draftPhoto)).blob();
+  const args = buildHFArgs(pick.def.parameters || [], blob, prompt, handle_file);
+
+  const result = await app.predict(pick.name, args);
+  const url = extractHFImage(result, pick.def.returns || []);
+  if (!url) throw new Error(t('aiFailed'));
+
+  setAISpaceStatus(t('aiHfDone') + ' ' + String(pick.name), 'ok');
+  // normalize remote URL -> data URL (avoids canvas CORS taint in compressImageSrc)
+  const out = await (await fetch(url)).blob();
+  return await blobToDataUrl(out);
+}
+
+/* ---------- HF SPACE PICKER UI ---------- */
+function setAISpaceStatus(msg, kind) {
+  const el = $('aiSpaceStatus'); if (!el) return;
+  el.textContent = msg || '';
+  el.className = 'ai-space-status' + (kind ? ' ' + kind : '');
+  el.style.display = msg ? '' : 'none';
+}
+
+function renderAISpace() {
+  const wrap = $('aiSpaceWrap'); if (!wrap) return;
+  const p = AI_PROVIDERS[state.aiProvider];
+  if (!p || !p.space) { wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+  $('aiSpaceInput').value = state.hfSpace || '';
+  const chips = $('aiSpaceChips');
+  chips.innerHTML = '';
+  HF_SUGGESTED.forEach(s => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'ai-chip' + (state.hfSpace === s.id ? ' active' : '');
+    b.textContent = s.label;
+    b.addEventListener('click', () => {
+      state.hfSpace = s.id; saveLS();
+      $('aiSpaceInput').value = s.id;
+      setAISpaceStatus('', '');
+      renderAISpace();
+      vibrate(6); sfxTap();
+    });
+    chips.appendChild(b);
+  });
+}
+
 async function runAIStudio() {
   const prompt = ($('aiPrompt').value || '').trim();
   if (!prompt) { toast(t('aiNeedPrompt'), 'warn'); sfxErr(); return; }
   if (state.aiMode === 'edit' && !state.draftPhoto) { toast(t('aiNeedImage'), 'warn'); sfxErr(); return; }
   if (state.aiMode === 'edit' && !AI_PROVIDERS[state.aiProvider].remix) { toast(t('aiCreateOnly'), 'warn'); sfxErr(); return; }
 
-  const runners = { pollinations: aiViaPollinations, puter: aiViaPuter, gemini: aiViaGemini, openai: aiViaOpenAI };
+  const runners = { pollinations: aiViaPollinations, puter: aiViaPuter, huggingface: aiViaHuggingFace, gemini: aiViaGemini, openai: aiViaOpenAI };
   const run = runners[state.aiProvider];
 
   const btn = $('aiRunBtn');
@@ -6366,6 +6585,7 @@ async function runAIStudio() {
     console.error(e);
     $('aiResult').classList.remove('busy');
     $('aiResultWrap').style.display = state.aiResult ? '' : 'none';
+    if (AI_PROVIDERS[state.aiProvider].space) setAISpaceStatus(e.message || t('aiFailed'), 'err');
     toast('❌ ' + (e.message || t('aiFailed')), 'err'); sfxErr();
   } finally {
     btn.classList.remove('loading'); btn.disabled = false;
@@ -6407,6 +6627,11 @@ function wireMediaEvents() {
   $('aiKeyInput').addEventListener('input', () => {
     const p = AI_PROVIDERS[state.aiProvider];
     if (p && p.keyName) { state.aiKeys[p.keyName] = $('aiKeyInput').value.trim(); saveLS(); }
+  });
+  const spaceInp = $('aiSpaceInput');
+  if (spaceInp) spaceInp.addEventListener('input', () => {
+    state.hfSpace = spaceInp.value.trim(); saveLS();
+    setAISpaceStatus('', '');
   });
   $('aiRunBtn').addEventListener('click', runAIStudio);
   $('aiRegenBtn').addEventListener('click', runAIStudio);
