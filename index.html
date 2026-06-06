@@ -2029,6 +2029,82 @@ html.theme-dark .hex-pin-row .ax.report { color: #fbbf24; }
   .sheet-body::-webkit-scrollbar-track { background: transparent; }
 }
 
+/* ===================== HEX PIN FEED ===================== */
+.feed-bar{display:flex;align-items:center;gap:8px;margin:2px 0 10px;flex-wrap:wrap;}
+.feed-sort{display:flex;gap:4px;background:var(--surface-2);border:1.5px solid var(--border);
+  border-radius:999px;padding:3px;}
+.fs-opt{border:none;background:transparent;color:var(--ink-2);font-weight:700;font-size:12px;
+  padding:6px 10px;border-radius:999px;cursor:pointer;transition:all .15s var(--ease-out);}
+.fs-opt.on{background:var(--peach-grad);color:#fff;box-shadow:var(--sh-sm);}
+.feed-acting{margin-left:auto;border:1.5px dashed var(--peach);background:var(--peach-grad-soft);
+  color:var(--ink);font-weight:800;font-size:12px;padding:6px 12px;border-radius:999px;cursor:pointer;}
+
+.feed-card{position:relative;background:var(--surface-2);border:1.5px solid var(--border);
+  border-radius:var(--r-lg);padding:12px;margin-bottom:10px;overflow:hidden;isolation:isolate;}
+.feed-card::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(120% 100% at 0% 0%,hsla(var(--uc-h),var(--uc-s),var(--uc-l),.14),transparent 60%);}
+.feed-card.mine{border-color:var(--peach);}
+.fc-head{display:flex;align-items:center;gap:10px;}
+.fc-rank{width:24px;text-align:center;font-weight:800;color:var(--ink-2);font-size:15px;flex-shrink:0;}
+.fc-ava{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  color:#fff;font-weight:800;font-size:18px;overflow:hidden;flex-shrink:0;border:2px solid #fff;box-shadow:var(--sh-sm);}
+.fc-ava img{width:100%;height:100%;object-fit:cover;}
+.fc-id{flex:1;min-width:0;}
+.fc-name{font-weight:800;font-size:14px;color:var(--ink);display:flex;align-items:center;gap:6px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.fc-meta{color:var(--ink-3);font-size:11px;font-weight:600;margin-top:2px;}
+.fc-xp{text-align:right;flex-shrink:0;font-family:'Bagel Fat One',system-ui,sans-serif;}
+.fc-xp .n{font-size:22px;line-height:1;color:var(--ink);}
+.fc-xp .u{font-size:9px;color:var(--ink-3);font-weight:800;letter-spacing:.1em;}
+.fc-note{margin-top:8px;font-size:13px;color:var(--ink);background:var(--surface);border-radius:var(--r-md);
+  padding:8px 10px;border:1px solid var(--border);}
+.pin-thumb.sm{display:block;margin-top:8px;width:84px;height:84px;border:none;padding:0;border-radius:var(--r-md);
+  overflow:hidden;cursor:pointer;background:var(--surface-3);}
+.pin-thumb.sm img{width:100%;height:100%;object-fit:cover;}
+
+.fc-acts{display:flex;align-items:center;gap:8px;margin-top:10px;}
+.vote-pill{display:flex;align-items:center;gap:2px;background:var(--surface);border:1.5px solid var(--border);
+  border-radius:999px;padding:2px;}
+.vb{border:none;background:transparent;cursor:pointer;font-size:14px;line-height:1;padding:6px 9px;
+  border-radius:999px;color:var(--ink-3);transition:all .12s var(--ease-out);}
+.vb:active{transform:scale(.85);}
+.vb.up.on{background:rgba(34,197,94,.18);color:#16a34a;}
+.vb.down.on{background:rgba(239,68,68,.18);color:#dc2626;}
+.vscore{min-width:22px;text-align:center;font-weight:800;font-size:13px;color:var(--ink-2);
+  font-variant-numeric:tabular-nums;}
+.vscore.pos{color:#16a34a;}.vscore.neg{color:#dc2626;}
+.fc-cmt{border:1.5px solid var(--border);background:var(--surface);color:var(--ink-2);font-weight:700;
+  font-size:12px;padding:7px 12px;border-radius:999px;cursor:pointer;}
+.fc-cmt b{color:var(--peach-2);}
+.fc-del{margin-left:auto;border:1.5px solid var(--border);background:var(--surface);font-size:14px;
+  padding:6px 10px;border-radius:999px;cursor:pointer;}
+
+/* ===================== COMMENT THREAD ===================== */
+.fc-thread{margin-top:10px;border-top:1.5px dashed var(--border);padding-top:10px;}
+.ct-load,.ct-empty{color:var(--ink-3);font-size:12px;font-weight:600;padding:6px 2px;}
+.ct-item{display:flex;gap:10px;padding:8px 0;}
+.ct-ava{width:30px;height:30px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;color:#fff;font-weight:800;font-size:14px;overflow:hidden;}
+.ct-ava img{width:100%;height:100%;object-fit:cover;}
+.ct-body{flex:1;min-width:0;}
+.ct-who{font-weight:800;font-size:12px;color:var(--ink);}
+.ct-when{font-weight:600;color:var(--ink-3);margin-left:6px;font-size:11px;}
+.ct-text{font-size:13px;color:var(--ink);margin:2px 0 4px;word-break:break-word;}
+.ct-acts{display:flex;align-items:center;gap:4px;}
+.cvb{border:none;background:transparent;cursor:pointer;font-size:12px;color:var(--ink-3);padding:3px 5px;
+  border-radius:8px;}
+.cvb.up.on{color:#16a34a;}.cvb.down.on{color:#dc2626;}
+.cvscore{min-width:18px;text-align:center;font-weight:800;font-size:12px;color:var(--ink-2);}
+.cvscore.pos{color:#16a34a;}.cvscore.neg{color:#dc2626;}
+.ct-del{margin-left:6px;border:none;background:transparent;cursor:pointer;font-size:12px;opacity:.7;}
+.ct-compose{display:flex;gap:6px;margin-top:8px;}
+.ct-input{flex:1;border:1.5px solid var(--border);background:var(--surface);border-radius:999px;
+  padding:9px 14px;font-size:13px;color:var(--ink);outline:none;}
+.ct-input:focus{border-color:var(--peach);}
+.ct-send{border:none;background:var(--peach-grad);color:#fff;font-weight:800;font-size:13px;
+  padding:9px 16px;border-radius:999px;cursor:pointer;}
+.ct-send:disabled{opacity:.5;}
+
 </style>
 </head>
 <body>
@@ -2913,6 +2989,14 @@ const I18N = {
     reportDeletePin: 'Delete',
     reportDismiss: 'Dismiss',
     reportDismissed: 'Report dismissed',
+    sortXp: 'Top', sortDate: 'New', sortUser: 'By user',
+    comments: 'Comments', noComments: 'No comments yet — break the ice 🧊',
+    addComment: 'Drop a witty comment…', send: 'Send',
+    upvote: 'Upvote', downvote: 'Downvote',
+    deletePin: 'Delete pin', voteSelf: "Can't vote on your own stuff 😅",
+    loading: 'Loading…',
+    actAsSelf: 'You', puppetPrompt: 'Act as which name? (creates a hidden alias)',
+    puppetSelfWord: 'me',
   },
   fr: {
     appName: 'Pose ta Pêche', tagline: 'Trace ton trône',
@@ -3116,6 +3200,14 @@ const I18N = {
     reportDeletePin: 'Supprimer',
     reportDismiss: 'Ignorer',
     reportDismissed: 'Signalement ignoré',
+    sortXp: 'Top', sortDate: 'Récent', sortUser: 'Par membre',
+    comments: 'Commentaires', noComments: 'Aucun commentaire — lance-toi 🧊',
+    addComment: 'Lâche un commentaire malin…', send: 'Envoyer',
+    upvote: 'Voter pour', downvote: 'Voter contre',
+    deletePin: 'Supprimer', voteSelf: 'Pas de vote sur tes propres trucs 😅',
+    loading: 'Chargement…',
+    actAsSelf: 'Toi', puppetPrompt: 'Agir sous quel nom ? (crée un alias caché)',
+    puppetSelfWord: 'moi',
   }
 };
 const t = (k) => (I18N[state.lang] && I18N[state.lang][k]) || I18N.en[k] || k;
@@ -3220,6 +3312,8 @@ state.draftPhoto = null;
 state.dropLockChallenge = false;   // amenity drops lock the quest picker
 state.dropAmenity = null;          // amenity context for the auto-detected chip
 state.reportTarget = null;         // pin currently being reported
+state.hexSort = 'xp';     // 'xp' | 'date' | 'user'
+state.actingAs = null;    // admin puppet identity (null = act as self)
 state.aiMode = 'generate';   // 'generate' | 'edit'
 state.aiModel = null;        // current provider's model id (ephemeral)
 state.aiResult = null;       // last generated data URL (ephemeral)
@@ -3346,21 +3440,251 @@ function computeHexUserXp(pinsInCell) {
       byKey.set(key, g);
     }
     const ch = chById(p.challengeId);
-    g.xp += ch ? ch.xp : 5; // 5 = safety fallback if challenge id is unknown
+    const baseXp = ch ? ch.xp : 0;
+    // DipGo social: net pin votes adjust the owner's XP (+5 up / -5 down).
+    const voteXp = (typeof pinVoteScore === 'function' ? pinVoteScore(p.id) : 0) * 5;
+    g.xp += baseXp + voteXp;
     g.count += 1;
+    if ((p.ts || 0) > g.latestTs) g.latestTs = p.ts || 0;
     if (p.challengeId) g.challenges.add(p.challengeId);
-    if ((p.ts || 0) > g.latestTs) {
-      g.latestTs = p.ts || 0;
-      if (p.displayName) g.displayName = p.displayName;
-      if (p.photoURL)    g.photoURL    = p.photoURL;
-      if (p.avatarEmoji) g.avatarEmoji = p.avatarEmoji;
-    }
   }
-  return [...byKey.values()].sort((a, b) => {
-    if (b.xp    !== a.xp)    return b.xp    - a.xp;
-    if (b.count !== a.count) return b.count - a.count;
-    return b.latestTs - a.latestTs;
-  });
+  return Array.from(byKey.values()).sort((a, b) =>
+    b.xp - a.xp || b.count - a.count || b.latestTs - a.latestTs
+  );
+}
+
+/* =====================================================================
+   DIPGO SOCIAL LAYER — votes + comments (static-hosting friendly)
+   XP from votes is DERIVED at render time (no cross-user writes).
+     · pin upvote   = +5 XP to owner, downvote = -5
+     · comment upvote = +1 XP to author, downvote = -1
+   One vote per user per target = vote doc id IS the voter key.
+   Admin "puppets" = display-name aliases with their own vote keys.
+   ===================================================================== */
+
+// pinId -> { byKey:Map<voterKey,value>, score:int, up:int, down:int, mine:int }
+const pinVoteCache = new Map();
+// pinId -> [{id,uid,puppet,displayName,photoURL,avatarEmoji,text,ts}]
+const commentCache = new Map();
+// commentId -> { score:int, up:int, down:int, mine:int }
+const commentVoteCache = new Map();
+// pinId set whose votes were already fetched this session (avoid refetch storms)
+const pinVotesLoaded = new Set();
+
+/* ---- ADMIN PUPPET IDENTITY -----------------------------------------
+   actingAs === null  -> act as yourself.
+   actingAs = { key:'puppet:rosalie', name:'Rosalie', emoji:'🦊' }
+   Stored on state; puppet roster persisted in localStorage via saveLS(). */
+function myVoterKey() {
+  if (state.actingAs && state.actingAs.key) return state.actingAs.key;
+  return (state.user && state.user.uid) || null;
+}
+function myAuthorIdentity() {
+  if (state.actingAs && state.actingAs.key) {
+    return {
+      uid: state.user.uid,                 // real owner stays admin (rules require it)
+      puppet: state.actingAs.key,
+      displayName: state.actingAs.name || 'Anon',
+      avatarEmoji: state.actingAs.emoji || '🎭',
+      photoURL: null
+    };
+  }
+  return {
+    uid: state.user.uid,
+    puppet: null,
+    displayName: state.nickname || state.user.displayName || null,
+    avatarEmoji: state.avatar || null,
+    photoURL: state.user.photoURL || null
+  };
+}
+
+/* ---- READ: load all votes for a set of pins (batched, one-shot) ----- */
+async function loadPinVotes(pinIds) {
+  if (!fbReady() || !pinIds.length) return;
+  const { db, collection, getDocs } = FB();
+  const myKey = myVoterKey();
+  await Promise.all(pinIds.map(async (pinId) => {
+    if (pinVotesLoaded.has(pinId)) return;
+    try {
+      const snap = await getDocs(collection(db, 'pins', pinId, 'votes'));
+      const byKey = new Map(); let up = 0, down = 0;
+      snap.forEach(d => {
+        const v = d.data().value === -1 ? -1 : 1;
+        byKey.set(d.id, v);
+        if (v === 1) up++; else down++;
+      });
+      pinVoteCache.set(pinId, {
+        byKey, up, down, score: up - down,
+        mine: (myKey && byKey.has(myKey)) ? byKey.get(myKey) : 0
+      });
+      pinVotesLoaded.add(pinId);
+    } catch (e) { console.warn('loadPinVotes', pinId, e); }
+  }));
+}
+
+function pinVoteScore(pinId) {
+  const v = pinVoteCache.get(pinId);
+  return v ? v.score : 0;
+}
+
+/* ---- WRITE: cast / toggle / switch a pin vote ----------------------- */
+async function castPinVote(pin, value) {
+  if (!requireAuth('generic')) return;
+  if (!fbReady()) return;
+  const ownerKey = pin.uid;
+  const myKey = myVoterKey();
+  // Block self-vote (own pin) unless acting as a puppet / admin alias.
+  if (!state.actingAs && state.user.uid === ownerKey && !state.isAdmin) {
+    toast(t('voteSelf'), 'warn'); vibrate(30); sfxErr(); return;
+  }
+  const { db, doc, setDoc, deleteDoc, serverTimestamp } = FB();
+  const ref = doc(db, 'pins', pin.id, 'votes', myKey);
+  const cache = pinVoteCache.get(pin.id) || { byKey: new Map(), up: 0, down: 0, score: 0, mine: 0 };
+  const prev = cache.byKey.get(myKey) || 0;
+
+  try {
+    if (prev === value) {                 // tap same arrow again -> undo
+      await deleteDoc(ref);
+      cache.byKey.delete(myKey);
+      if (value === 1) cache.up--; else cache.down--;
+    } else {
+      await setDoc(ref, {
+        value,
+        voterUid: state.user.uid,
+        puppet: state.actingAs ? state.actingAs.key : null,
+        ts: Date.now(),
+        createdAt: serverTimestamp()
+      });
+      if (prev === 1) cache.up--; else if (prev === -1) cache.down--;
+      if (value === 1) cache.up++; else cache.down++;
+      cache.byKey.set(myKey, value);
+    }
+    cache.score = cache.up - cache.down;
+    cache.mine = cache.byKey.get(myKey) || 0;
+    pinVoteCache.set(pin.id, cache);
+    pinVotesLoaded.add(pin.id);
+    vibrate(value === 1 ? 12 : [10, 20]); value === 1 ? sfxTap() : sfxTap();
+    markHexIndexDirty();                  // territory colours reflect new XP
+    scheduleHexUpdate();
+    renderHexPinFeed(currentHexCell);     // re-rank + repaint the feed
+  } catch (e) {
+    console.error('castPinVote', e);
+    toast('❌ ' + (e.message || 'Vote failed'), 'err');
+  }
+}
+
+/* ---- COMMENTS: read --------------------------------------------------- */
+async function loadComments(pinId) {
+  if (!fbReady()) return [];
+  const { db, collection, query, orderBy, getDocs } = FB();
+  try {
+    const snap = await getDocs(query(collection(db, 'pins', pinId, 'comments'), orderBy('ts', 'asc')));
+    const list = [];
+    snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+    commentCache.set(pinId, list);
+    // load each comment's votes (small N per thread)
+    await Promise.all(list.map(c => loadCommentVotes(pinId, c.id)));
+    return list;
+  } catch (e) { console.warn('loadComments', e); return []; }
+}
+
+async function loadCommentVotes(pinId, commentId) {
+  if (!fbReady()) return;
+  const { db, collection, getDocs } = FB();
+  const myKey = myVoterKey();
+  try {
+    const snap = await getDocs(collection(db, 'pins', pinId, 'comments', commentId, 'votes'));
+    let up = 0, down = 0, mine = 0;
+    snap.forEach(d => {
+      const v = d.data().value === -1 ? -1 : 1;
+      if (v === 1) up++; else down++;
+      if (myKey && d.id === myKey) mine = v;
+    });
+    commentVoteCache.set(commentId, { up, down, score: up - down, mine });
+  } catch (e) { console.warn('loadCommentVotes', e); }
+}
+
+/* ---- COMMENTS: write -------------------------------------------------- */
+async function postComment(pinId, text) {
+  if (!requireAuth('generic')) return false;
+  text = (text || '').trim().slice(0, 500);
+  if (!text) return false;
+  if (!fbReady()) return false;
+  const { db, collection, addDoc, serverTimestamp } = FB();
+  const me = myAuthorIdentity();
+  try {
+    const ref = await addDoc(collection(db, 'pins', pinId, 'comments'), {
+      uid: me.uid,
+      puppet: me.puppet,
+      displayName: me.displayName,
+      avatarEmoji: me.avatarEmoji,
+      photoURL: me.photoURL,
+      text,
+      ts: Date.now(),
+      createdAt: serverTimestamp()
+    });
+    const list = commentCache.get(pinId) || [];
+    list.push({ id: ref.id, uid: me.uid, puppet: me.puppet, displayName: me.displayName,
+                avatarEmoji: me.avatarEmoji, photoURL: me.photoURL, text, ts: Date.now() });
+    commentCache.set(pinId, list);
+    commentVoteCache.set(ref.id, { up: 0, down: 0, score: 0, mine: 0 });
+    vibrate([20, 30]); sfxTap();
+    return true;
+  } catch (e) {
+    console.error('postComment', e);
+    toast('❌ ' + (e.message || 'Comment failed'), 'err');
+    return false;
+  }
+}
+
+async function deleteComment(pinId, commentId) {
+  if (!fbReady()) return false;
+  const { db, doc, deleteDoc } = FB();
+  try {
+    await deleteDoc(doc(db, 'pins', pinId, 'comments', commentId));
+    const list = (commentCache.get(pinId) || []).filter(c => c.id !== commentId);
+    commentCache.set(pinId, list);
+    commentVoteCache.delete(commentId);
+    vibrate(15); sfxTap();
+    return true;
+  } catch (e) {
+    console.error('deleteComment', e);
+    toast('❌ ' + (e.message || 'Delete failed'), 'err');
+    return false;
+  }
+}
+
+async function castCommentVote(pinId, commentId, ownerUid, value) {
+  if (!requireAuth('generic')) return;
+  if (!fbReady()) return;
+  if (!state.actingAs && state.user.uid === ownerUid && !state.isAdmin) {
+    toast(t('voteSelf'), 'warn'); vibrate(30); sfxErr(); return;
+  }
+  const { db, doc, setDoc, deleteDoc, serverTimestamp } = FB();
+  const myKey = myVoterKey();
+  const ref = doc(db, 'pins', pinId, 'comments', commentId, 'votes', myKey);
+  const c = commentVoteCache.get(commentId) || { up: 0, down: 0, score: 0, mine: 0 };
+  try {
+    if (c.mine === value) {
+      await deleteDoc(ref);
+      if (value === 1) c.up--; else c.down--;
+      c.mine = 0;
+    } else {
+      await setDoc(ref, { value, voterUid: state.user.uid,
+        puppet: state.actingAs ? state.actingAs.key : null, ts: Date.now(),
+        createdAt: serverTimestamp() });
+      if (c.mine === 1) c.up--; else if (c.mine === -1) c.down--;
+      if (value === 1) c.up++; else c.down++;
+      c.mine = value;
+    }
+    c.score = c.up - c.down;
+    commentVoteCache.set(commentId, c);
+    vibrate(value === 1 ? 12 : [10, 20]); sfxTap();
+    refreshCommentThread(pinId);
+  } catch (e) {
+    console.error('castCommentVote', e);
+    toast('❌ ' + (e.message || 'Vote failed'), 'err');
+  }
 }
 
 function relTime(ts) {
@@ -4151,45 +4475,15 @@ function renderHexSheet(cell) {
       <div class="terr-list" id="hexTerritoryList"></div>
     `;
 
-    // Full ranked list (owner included as #1, then everyone else by XP desc)
-    const list = $('hexTerritoryList');
-    const frag = document.createDocumentFragment();
-    ranking.forEach((u, idx) => {
-      const c = userColorObj(u.key);
-      const isMe = !!(myUid && u.uid === myUid);
-      const name = isMe ? t('you') : (u.displayName || t('friend'));
-      const ava = u.photoURL
-        ? `<img src="${escHtml(u.photoURL)}" alt=""/>`
-        : (u.avatarEmoji ? escHtml(u.avatarEmoji)
-            : (u.displayName ? escHtml(u.displayName[0].toUpperCase()) : '🍑'));
-      const pct = totalXp ? Math.round((u.xp / totalXp) * 100) : 0;
-      const medal = idx === 0 ? '🥇' : (idx === 1 ? '🥈' : (idx === 2 ? '🥉' : (idx + 1 + '·')));
-      const row = document.createElement('div');
-      row.className = 'terr-row' + (isMe ? ' me' : '') + (idx === 0 ? ' top' : '');
-      row.innerHTML = `
-        <div class="terr-rank">${medal}</div>
-        <span class="terr-dot" style="background: hsl(${c.h} ${c.s}% ${c.l}%);"></span>
-        <div class="terr-ava sm" style="background: hsl(${c.h} ${c.s}% ${c.l}%);">${ava}</div>
-        <div class="terr-row-info">
-          <div class="terr-row-name">
-            ${escHtml(name)}
-            ${isMe ? `<span class="mine-tag">${escHtml(t('mine'))}</span>` : ''}
-          </div>
-          <div class="terr-bar">
-            <div class="terr-bar-fill"
-                 style="width:${pct}%; background: linear-gradient(90deg,
-                   hsl(${c.h} ${c.s}% ${c.l}%),
-                   hsl(${c.h} ${c.s}% ${Math.min(70, c.l + 10)}%));"></div>
-          </div>
-          <div class="terr-row-meta">
-            ⚡ ${fmt(u.xp)} XP · 🍑 ${u.count} · ${escHtml(relTime(u.latestTs))}
-          </div>
-        </div>
-        <div class="terr-row-share">${pct}%</div>
-      `;
-      frag.appendChild(row);
+    // DipGo: the list below is now the sortable PIN feed (votes + comments).
+    renderHexPinFeed(cell, pinsInCell);
+  }
+
+  // Lazy-load this cell's pin votes, then repaint the feed + territory.
+  if (typeof loadPinVotes === 'function') {
+    loadPinVotes(pinsInCell.slice(0, 60).map(p => p.id)).then(() => {
+      if (currentHexCell === cell) { renderHexPinFeed(cell); markHexIndexDirty(); scheduleHexUpdate(); }
     });
-    list.appendChild(frag);
   }
 
   // ---- 3) YOUR drops — detailed rows (with delete) -------------------
@@ -4341,6 +4635,282 @@ function renderHexSheet(cell) {
       if (currentHexCell !== cell) return;
       paintAmenitiesError(cell);
     });
+}
+
+/* =====================================================================
+   HEX PIN FEED — sortable list of pins in a cell, each with vote
+   controls + a collapsible comment thread. Replaces the old per-user
+   ranking inside #hexTerritoryList.
+   ===================================================================== */
+function effectivePinXp(p) {
+  const ch = chById(p.challengeId);
+  const base = ch ? ch.xp : 0;
+  return base + (typeof pinVoteScore === 'function' ? pinVoteScore(p.id) : 0) * 5;
+}
+
+function sortHexPins(pins) {
+  const arr = pins.slice();
+  if (state.hexSort === 'date') {
+    arr.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+  } else if (state.hexSort === 'user') {
+    arr.sort((a, b) =>
+      (a.displayName || 'zzz').localeCompare(b.displayName || 'zzz') ||
+      effectivePinXp(b) - effectivePinXp(a));
+  } else { // 'xp' (default)
+    arr.sort((a, b) => effectivePinXp(b) - effectivePinXp(a) || (b.ts || 0) - (a.ts || 0));
+  }
+  return arr;
+}
+
+function renderHexPinFeed(cell, pinsInCell) {
+  const list = $('hexTerritoryList');
+  if (!list) return;
+
+  if (!pinsInCell) {
+    pinsInCell = (typeof h3 !== 'undefined')
+      ? state.pins.filter(p => typeof p.lat === 'number' && typeof p.lng === 'number'
+          && h3.latLngToCell(p.lat, p.lng, HEX_FIXED_RES) === cell)
+      : state.pins.filter(p => p.h3_r9 === cell);
+  }
+
+  const myUid = state.user && state.user.uid;
+  const canMod = state.isModerator || state.isAdmin;
+  const pins = sortHexPins(pinsInCell);
+  const viewLbl = state.lang === 'fr' ? 'Voir la photo' : 'View photo';
+
+  // --- Sort control bar -------------------------------------------------
+  const sorts = [
+    ['xp',   '⚡ ' + t('sortXp')],
+    ['date', '🕒 ' + t('sortDate')],
+    ['user', '🧑 ' + t('sortUser')]
+  ];
+  const adminBar = state.isAdmin ? `
+    <button class="feed-acting" id="hexActingBtn" type="button">
+      🎭 ${escHtml(state.actingAs ? state.actingAs.name : t('actAsSelf'))}
+    </button>` : '';
+
+  let html = `
+    <div class="feed-bar">
+      <div class="feed-sort" id="hexFeedSort">
+        ${sorts.map(([k, lbl]) =>
+          `<button class="fs-opt${state.hexSort === k ? ' on' : ''}" data-sort="${k}" type="button">${lbl}</button>`
+        ).join('')}
+      </div>
+      ${adminBar}
+    </div>`;
+
+  if (!pins.length) {
+    html += `<div class="hex-empty">${escHtml(t('hexNoPins'))}</div>`;
+    list.innerHTML = html;
+    return;
+  }
+
+  pins.forEach((p, idx) => {
+    const ch = chById(p.challengeId);
+    const c = userColorObj(typeof pinUserKey === 'function' ? pinUserKey(p) : (p.uid || ''));
+    const isMine = !!(myUid && p.uid === myUid);
+    const name = isMine ? t('you') : (p.displayName || t('friend'));
+    const ava = p.photoURL
+      ? `<img src="${escHtml(p.photoURL)}" alt=""/>`
+      : (p.avatarEmoji ? escHtml(p.avatarEmoji)
+          : (p.displayName ? escHtml(p.displayName[0].toUpperCase()) : '🍑'));
+    const v = (typeof pinVoteCache !== 'undefined' && pinVoteCache.get(p.id)) || { score: 0, mine: 0 };
+    const xp = effectivePinXp(p);
+    const cCount = (typeof commentCache !== 'undefined' && commentCache.get(p.id)) ? commentCache.get(p.id).length : null;
+    const medal = state.hexSort === 'xp'
+      ? (idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : (idx + 1) + '·')
+      : '🍑';
+    const thumb = p.photo
+      ? `<button class="pin-thumb sm" data-photo="1" type="button" aria-label="${escHtml(viewLbl)}"><img src="${escHtml(p.photo)}" alt=""/></button>`
+      : '';
+
+    html += `
+    <div class="feed-card${isMine ? ' mine' : ''}" data-pid="${escHtml(p.id)}"
+         style="--uc-h:${c.h};--uc-s:${c.s}%;--uc-l:${c.l}%;">
+      <div class="fc-head">
+        <span class="fc-rank">${medal}</span>
+        <div class="fc-ava" style="background:hsl(${c.h} ${c.s}% ${c.l}%);">${ava}</div>
+        <div class="fc-id">
+          <div class="fc-name">${escHtml(name)}${isMine ? ` <span class="mine-tag">${escHtml(t('mine'))}</span>` : ''}</div>
+          <div class="fc-meta">${ch ? ch.em + ' ' + escHtml(chName(ch)) + ' · ' : ''}${escHtml(relTime(p.ts))}</div>
+        </div>
+        <div class="fc-xp"><div class="n">${fmt(xp)}</div><div class="u">XP</div></div>
+      </div>
+      ${p.note ? `<div class="fc-note">💬 ${escHtml(p.note)}</div>` : ''}
+      ${thumb}
+      <div class="fc-acts">
+        <div class="vote-pill">
+          <button class="vb up${v.mine === 1 ? ' on' : ''}" data-vote="1" type="button" aria-label="${escHtml(t('upvote'))}">▲</button>
+          <span class="vscore${v.score > 0 ? ' pos' : v.score < 0 ? ' neg' : ''}">${v.score}</span>
+          <button class="vb down${v.mine === -1 ? ' on' : ''}" data-vote="-1" type="button" aria-label="${escHtml(t('downvote'))}">▼</button>
+        </div>
+        <button class="fc-cmt" data-toggle type="button">💬 ${escHtml(t('comments'))}${cCount != null ? ` <b>${cCount}</b>` : ''}</button>
+        ${(canMod || isMine) ? `<button class="fc-del" data-del type="button" aria-label="${escHtml(t('deletePin'))}">🗑️</button>` : ''}
+      </div>
+      <div class="fc-thread" data-thread hidden></div>
+    </div>`;
+  });
+
+  list.innerHTML = html;
+  wireHexFeed(list, cell, pins);
+}
+
+function wireHexFeed(list, cell, pins) {
+  const byId = id => pins.find(p => p.id === id);
+
+  list.querySelectorAll('.fs-opt').forEach(b =>
+    b.addEventListener('click', () => {
+      state.hexSort = b.dataset.sort; vibrate(8); sfxTap();
+      renderHexPinFeed(cell);
+    }));
+
+  const acting = list.querySelector('#hexActingBtn');
+  if (acting) acting.addEventListener('click', () => { pickActingIdentity(); });
+
+  list.querySelectorAll('.feed-card').forEach(card => {
+    const pid = card.dataset.pid;
+    const p = byId(pid);
+    if (!p) return;
+
+    const ph = card.querySelector('[data-photo]');
+    if (ph) ph.addEventListener('click', e => {
+      e.stopPropagation();
+      openImageLightbox(p.photo, p.note || p.placeName || '');
+    });
+
+    card.querySelectorAll('.vb').forEach(b =>
+      b.addEventListener('click', () => castPinVote(p, parseInt(b.dataset.vote, 10))));
+
+    const del = card.querySelector('[data-del]');
+    if (del) del.addEventListener('click', async () => {
+      const ok = await deletePin(p);
+      if (ok) renderHexPinFeed(cell);
+    });
+
+    const toggle = card.querySelector('[data-toggle]');
+    const thread = card.querySelector('[data-thread]');
+    if (toggle && thread) toggle.addEventListener('click', async () => {
+      const opening = thread.hasAttribute('hidden');
+      vibrate(8); sfxTap();
+      if (opening) {
+        thread.removeAttribute('hidden');
+        thread.innerHTML = `<div class="ct-load">${escHtml(t('loading'))}</div>`;
+        if (!commentCache.has(pid)) await loadComments(pid);
+        renderCommentThread(pid, thread, p);
+      } else {
+        thread.setAttribute('hidden', '');
+      }
+    });
+  });
+}
+
+function refreshCommentThread(pinId) {
+  const card = document.querySelector(`.feed-card[data-pid="${CSS.escape(pinId)}"]`);
+  if (!card) return;
+  const thread = card.querySelector('[data-thread]');
+  if (thread && !thread.hasAttribute('hidden')) {
+    const p = state.pins.find(x => x.id === pinId);
+    renderCommentThread(pinId, thread, p);
+  }
+  // keep the 💬 count badge fresh
+  const btn = card.querySelector('[data-toggle] b');
+  const n = (commentCache.get(pinId) || []).length;
+  if (btn) btn.textContent = n;
+}
+
+function renderCommentThread(pinId, thread, pin) {
+  const comments = commentCache.get(pinId) || [];
+  const myUid = state.user && state.user.uid;
+  const canMod = state.isModerator || state.isAdmin;
+
+  let html = '<div class="ct-list">';
+  if (!comments.length) {
+    html += `<div class="ct-empty">${escHtml(t('noComments'))}</div>`;
+  } else {
+    comments.forEach(c => {
+      const col = userColorObj(c.puppet || c.uid || 'anon');
+      const isMine = !!(myUid && c.uid === myUid && !c.puppet);
+      const cv = commentVoteCache.get(c.id) || { score: 0, mine: 0 };
+      const ava = c.photoURL ? `<img src="${escHtml(c.photoURL)}" alt=""/>`
+        : (c.avatarEmoji ? escHtml(c.avatarEmoji)
+            : (c.displayName ? escHtml(c.displayName[0].toUpperCase()) : '🍑'));
+      html += `
+        <div class="ct-item" data-cid="${escHtml(c.id)}">
+          <div class="ct-ava" style="background:hsl(${col.h} ${col.s}% ${col.l}%);">${ava}</div>
+          <div class="ct-body">
+            <div class="ct-who">${escHtml(c.displayName || t('friend'))} <span class="ct-when">${escHtml(relTime(c.ts))}</span></div>
+            <div class="ct-text">${escHtml(c.text)}</div>
+            <div class="ct-acts">
+              <button class="cvb up${cv.mine === 1 ? ' on' : ''}" data-cv="1" type="button">▲</button>
+              <span class="cvscore${cv.score > 0 ? ' pos' : cv.score < 0 ? ' neg' : ''}">${cv.score}</span>
+              <button class="cvb down${cv.mine === -1 ? ' on' : ''}" data-cv="-1" type="button">▼</button>
+              ${(canMod || isMine) ? `<button class="ct-del" data-cdel type="button">🗑️</button>` : ''}
+            </div>
+          </div>
+        </div>`;
+    });
+  }
+  html += '</div>';
+
+  // composer
+  html += `
+    <div class="ct-compose">
+      <input class="ct-input" type="text" maxlength="500" placeholder="${escHtml(t('addComment'))}"/>
+      <button class="ct-send" type="button">${escHtml(t('send'))}</button>
+    </div>`;
+
+  thread.innerHTML = html;
+
+  thread.querySelectorAll('.ct-item').forEach(item => {
+    const cid = item.dataset.cid;
+    const c = comments.find(x => x.id === cid);
+    item.querySelectorAll('.cvb').forEach(b =>
+      b.addEventListener('click', () =>
+        castCommentVote(pinId, cid, c ? c.uid : null, parseInt(b.dataset.cv, 10))));
+    const cdel = item.querySelector('[data-cdel]');
+    if (cdel) cdel.addEventListener('click', async () => {
+      const ok = await deleteComment(pinId, cid);
+      if (ok) refreshCommentThread(pinId);
+    });
+  });
+
+  const input = thread.querySelector('.ct-input');
+  const send = thread.querySelector('.ct-send');
+  const submit = async () => {
+    const txt = input.value;
+    if (!txt.trim()) return;
+    send.disabled = true;
+    const ok = await postComment(pinId, txt);
+    send.disabled = false;
+    if (ok) { input.value = ''; refreshCommentThread(pinId); }
+  };
+  if (send) send.addEventListener('click', submit);
+  if (input) input.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+}
+
+/* Admin-only: choose a puppet identity (or revert to self). Static-safe
+   alias, NOT a real auth account. */
+function pickActingIdentity() {
+  if (!state.isAdmin) return;
+  if (!Array.isArray(state.puppets)) state.puppets = [];
+  const names = state.puppets.map(p => p.name).join(', ');
+  const ans = prompt(t('puppetPrompt') + (names ? `\n(${names})` : '') + `\n"${t('actAsSelf')}" → ${t('puppetSelfWord')}`, '');
+  if (ans === null) return;
+  const v = ans.trim();
+  if (!v || v.toLowerCase() === t('puppetSelfWord').toLowerCase()) {
+    state.actingAs = null;
+  } else {
+    let pp = state.puppets.find(p => p.name.toLowerCase() === v.toLowerCase());
+    if (!pp) {
+      pp = { key: 'puppet:' + v.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+             name: v, emoji: AVATAR_EMOJIS[Math.floor(Math.random() * AVATAR_EMOJIS.length)] };
+      state.puppets.push(pp);
+    }
+    state.actingAs = pp;
+  }
+  saveLS();
+  vibrate(12); sfxTap();
+  renderHexPinFeed(currentHexCell);
 }
 
 function paintAmenities(cell, list, pins) {
