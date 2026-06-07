@@ -2082,6 +2082,18 @@ html.theme-dark .hex-pin-row .ax.report { color: #fbbf24; }
   padding:6px 10px;border-radius:999px;cursor:pointer;transition:transform .12s var(--ease-out);}
 .fc-fly:active{transform:scale(.9);}
 .fc-persona-tag{font-size:11px;opacity:.85;flex-shrink:0;}
+/* note sits to the right of the thumbnail */
+.fc-media{display:flex;gap:10px;align-items:stretch;margin-top:8px;}
+.fc-media .pin-thumb.sm{margin-top:0;flex-shrink:0;}
+.fc-media .fc-note{margin-top:0;flex:1 1 auto;min-width:0;}
+
+/* comment toggle: expanded state */
+.fc-cmt.on{border-color:var(--peach);color:var(--ink);}
+
+/* territory owner "that's you" pill (replaces the old mine-tag) */
+.terr-you{display:inline-block;margin-left:6px;font-size:10px;font-weight:800;
+  letter-spacing:.02em;background:var(--peach-grad);color:#fff;padding:2px 8px;
+  border-radius:999px;vertical-align:middle;}
 
 /* ===================== COMMENT THREAD ===================== */
 .fc-thread{margin-top:10px;border-top:1.5px dashed var(--border);padding-top:10px;}
@@ -3014,7 +3026,7 @@ const I18N = {
     bathroomEmoji: 'Bathroom',
     today: 'today', yesterday: 'yesterday', daysAgo: '{n}d ago',
     hoursAgo: '{n}h ago', minutesAgo: '{n}m ago', justNow: 'just now',
-    you: 'You', friend: 'A friend', mine: 'YOURS',
+    you: 'You', friend: 'A friend', mine: 'YOURS', ownedByYou: "that's you 🫵",
     cacheCleared: 'Local cache cleared',
     confirmReset: 'Clear local settings? Your account stays.',
     needName: 'Name your place first',
@@ -3260,7 +3272,7 @@ const I18N = {
     bathroomEmoji: 'Toilettes',
     today: "aujourd'hui", yesterday: 'hier', daysAgo: 'il y a {n}j',
     hoursAgo: 'il y a {n}h', minutesAgo: 'il y a {n}min', justNow: "à l'instant",
-    you: 'Toi', friend: 'Un ami', mine: 'TOI',
+    you: 'Toi', friend: 'Un ami', mine: 'TOI', ownedByYou: "c'est toi 🫵",
     cacheCleared: 'Cache local vidé',
     confirmReset: 'Vider les réglages locaux ? Ton compte reste.',
     needName: 'Donne un nom au lieu',
@@ -3693,6 +3705,96 @@ const commentCache = new Map();
 const commentVoteCache = new Map();
 // pinId set whose votes were already fetched this session (avoid refetch storms)
 const pinVotesLoaded = new Set();
+
+// pinId set whose comments were fetched from the network this session.
+const commentsLoaded = new Set();
+
+/* ---- COMMENT BROWSER CACHE (localStorage) ---------------------------
+   Persists comment threads for the most-viewed pins so they paint
+   instantly on the next visit. Capacity-bounded, ranked by view count.
+   Avatar data-URLs are dropped to stay lean — re-hydrated from network. */
+const COMMENT_LS_KEY = 'dipgo.cmtCache.v1';
+const COMMENT_LS_MAX = 40;   // how many pins' threads to persist
+const AUTO_CMT_MAX   = 40;   // max pins to auto-load comments for per cell
+
+let commentLS = (() => {
+  try { return JSON.parse(localStorage.getItem(COMMENT_LS_KEY)) || {}; }
+  catch (_) { return {}; }
+})();
+
+function bumpCommentViews(pinId) {
+  const e = commentLS[pinId] || { views: 0, comments: null };
+  e.views = (e.views || 0) + 1;
+  e.lastSeen = Date.now();
+  commentLS[pinId] = e;
+}
+
+function cacheCommentsLS(pinId, comments) {
+  const e = commentLS[pinId] || { views: 0 };
+  e.comments = (comments || []).map(c => ({
+    id: c.id, uid: c.uid || null, puppet: c.puppet || null,
+    displayName: c.displayName || null, avatarEmoji: c.avatarEmoji || null,
+    // keep only lightweight http(s) avatars — never base64 (would blow quota)
+    photoURL: (c.photoURL && /^https?:/i.test(c.photoURL)) ? c.photoURL : null,
+    text: c.text, ts: c.ts
+  }));
+  e.ts = Date.now();
+  commentLS[pinId] = e;
+  persistCommentLS();
+}
+
+function persistCommentLS() {
+  // Keep only the most-viewed entries to bound storage.
+  const rank = (a, b) =>
+    (commentLS[b].views || 0) - (commentLS[a].views || 0) ||
+    (commentLS[b].lastSeen || 0) - (commentLS[a].lastSeen || 0);
+  let ids = Object.keys(commentLS).sort(rank);
+  if (ids.length > COMMENT_LS_MAX) {
+    const keep = {};
+    ids.slice(0, COMMENT_LS_MAX).forEach(id => keep[id] = commentLS[id]);
+    commentLS = keep;
+  }
+  try { localStorage.setItem(COMMENT_LS_KEY, JSON.stringify(commentLS)); }
+  catch (_) {
+    // Quota hit — shed to the 12 most-viewed and try once more.
+    try {
+      const top = Object.keys(commentLS).sort(rank).slice(0, 12);
+      const lean = {}; top.forEach(id => lean[id] = commentLS[id]);
+      commentLS = lean;
+      localStorage.setItem(COMMENT_LS_KEY, JSON.stringify(commentLS));
+    } catch (_) {}
+  }
+}
+
+function seedCommentCacheFromLS(pinId) {
+  const e = commentLS[pinId];
+  if (e && Array.isArray(e.comments) && !commentCache.has(pinId)) {
+    commentCache.set(pinId, e.comments.slice());
+    return true;
+  }
+  return false;
+}
+
+/* Auto-load comment threads for the pins shown in a cell (bounded), then
+   refresh each card as fresh comments + votes arrive. Safe for signed-out
+   viewers (reads only) and skips anything already loaded this session. */
+async function hydrateFeedComments(cell, pins) {
+  if (!fbReady() || !pins || !pins.length) return;
+  const targets = pins.slice(0, AUTO_CMT_MAX).filter(p => !commentsLoaded.has(p.id));
+  const BATCH = 6;
+  for (let i = 0; i < targets.length; i += BATCH) {
+    if (currentHexCell !== cell) return;        // user navigated away
+    const slice = targets.slice(i, i + BATCH);
+    await Promise.all(slice.map(async p => {
+      try {
+        await loadComments(p.id);               // fills commentCache + votes
+        commentsLoaded.add(p.id);
+        cacheCommentsLS(p.id, commentCache.get(p.id) || []);
+        if (currentHexCell === cell) refreshCommentThread(p.id);
+      } catch (e) { console.warn('hydrateFeedComments', p.id, e); }
+    }));
+  }
+}
 
 /* ---- ADMIN PUPPET IDENTITY -----------------------------------------
    actingAs === null  -> act as yourself.
@@ -5093,9 +5195,10 @@ function renderHexSheet(cell) {
     // Owner card (big, branded with their colour)
     const oc   = userColorObj(owner.key);
     const isMineOwner = !!(myUid && owner.uid === myUid);
-    const ownerName = isMineOwner
-      ? t('you')
-      : (owner.displayName || t('friend'));
+    const ownerIsPersona = !!owner.uid && owner.key !== owner.uid;   // posted via a persona
+    // Show the identity (persona or account) that earned the most XP here.
+    const ownerName = owner.displayName
+      || (isMineOwner ? (state.nickname || t('you')) : t('friend'));
     const ownerAva = owner.photoURL
       ? `<img src="${escHtml(owner.photoURL)}" alt=""/>`
       : (owner.avatarEmoji ? escHtml(owner.avatarEmoji)
@@ -5114,8 +5217,8 @@ function renderHexSheet(cell) {
         <div class="terr-ava" style="background: hsl(${oc.h} ${oc.s}% ${oc.l}%);">${ownerAva}</div>
         <div class="terr-info">
           <div class="terr-name">
-            ${escHtml(ownerName)}
-            ${isMineOwner ? `<span class="mine-tag">${escHtml(t('mine'))}</span>` : ''}
+            ${ownerIsPersona ? '🎭 ' : ''}${escHtml(ownerName)}
+            ${isMineOwner ? `<span class="terr-you">${escHtml(t('ownedByYou'))}</span>` : ''}
           </div>
           <div class="terr-sub">${escHtml(t('hexOwnerLabel'))} · ${ownerShare}% ${escHtml(t('hexShare'))}</div>
         </div>
@@ -5202,13 +5305,10 @@ function renderHexPinFeed(cell, pinsInCell) {
   const canMod = state.isModerator || state.isAdmin;
   const viewLbl = state.lang === 'fr' ? 'Voir la photo' : 'View photo';
 
-  // "Just me" filter: only the signed-in human's own drops (personas still
-  // carry the real uid, so they're included). No filter when signed out.
   const onlyMine = state.hexSort === 'mine' && !!myUid;
   const sourcePins = onlyMine ? pinsInCell.filter(p => p.uid === myUid) : pinsInCell;
   const pins = sortHexPins(sourcePins);
 
-  // --- Sort control bar -------------------------------------------------
   const sorts = [
     ['xp',   '⚡ ' + t('sortXp')],
     ['date', '🕒 ' + t('sortDate')],
@@ -5242,8 +5342,7 @@ function renderHexPinFeed(cell, pinsInCell) {
     const ch = chById(p.challengeId);
     const c = userColorObj(typeof pinUserKey === 'function' ? pinUserKey(p) : (p.uid || ''));
     const isMine = !!(myUid && p.uid === myUid);
-    // DipGo: show the identity actually used to post (persona or real name) —
-    // never a generic "You". Persona-authored drops get a little mask.
+    // Show the identity actually used to post (persona or real name).
     const name = p.displayName
       || (isMine ? (state.nickname || t('you')) : t('friend'));
     const personaTag = p.puppet ? ` <span class="fc-persona-tag" title="persona">🎭</span>` : '';
@@ -5260,6 +5359,8 @@ function renderHexPinFeed(cell, pinsInCell) {
     const thumb = p.photo
       ? `<button class="pin-thumb sm" data-photo="1" type="button" aria-label="${escHtml(viewLbl)}"><img src="${escHtml(p.photo)}" alt=""/></button>`
       : '';
+    const note = p.note ? `<div class="fc-note">💬 ${escHtml(p.note)}</div>` : '';
+    const media = (thumb || note) ? `<div class="fc-media">${thumb}${note}</div>` : '';
 
     html += `
     <div class="feed-card${isMine ? ' mine' : ''}" data-pid="${escHtml(p.id)}"
@@ -5273,24 +5374,24 @@ function renderHexPinFeed(cell, pinsInCell) {
         </div>
         <div class="fc-xp"><div class="n">${fmt(xp)}</div><div class="u">XP</div></div>
       </div>
-      ${p.note ? `<div class="fc-note">💬 ${escHtml(p.note)}</div>` : ''}
-      ${thumb}
+      ${media}
       <div class="fc-acts">
         <div class="vote-pill">
           <button class="vb up${v.mine === 1 ? ' on' : ''}" data-vote="1" type="button" aria-label="${escHtml(t('upvote'))}">▲</button>
           <span class="vscore${v.score > 0 ? ' pos' : v.score < 0 ? ' neg' : ''}">${v.score}</span>
           <button class="vb down${v.mine === -1 ? ' on' : ''}" data-vote="-1" type="button" aria-label="${escHtml(t('downvote'))}">▼</button>
         </div>
-        <button class="fc-cmt" data-toggle type="button">💬 ${escHtml(t('comments'))}${cCount != null ? ` <b>${cCount}</b>` : ''}</button>
+        <button class="fc-cmt on" data-toggle type="button" aria-expanded="true">💬 ${escHtml(t('comments'))} <b>${cCount != null ? cCount : 0}</b></button>
         <button class="fc-fly" data-fly type="button" aria-label="${escHtml(t('hexFlyToBtn'))}">🗺️</button>
         ${(canMod || isMine) ? `<button class="fc-del" data-del type="button" aria-label="${escHtml(t('deletePin'))}">🗑️</button>` : ''}
       </div>
-      <div class="fc-thread" data-thread hidden></div>
+      <div class="fc-thread" data-thread></div>
     </div>`;
   });
 
   list.innerHTML = html;
   wireHexFeed(list, cell, pins);
+  hydrateFeedComments(cell, pins);
 }
 
 function wireHexFeed(list, cell, pins) {
@@ -5332,19 +5433,26 @@ function wireHexFeed(list, cell, pins) {
       if (ok) renderHexPinFeed(cell);
     });
 
+    // Comments OPEN by default: seed from browser cache for an instant first
+    // paint, then hydrateFeedComments() refreshes from the network.
     const toggle = card.querySelector('[data-toggle]');
     const thread = card.querySelector('[data-thread]');
-    if (toggle && thread) toggle.addEventListener('click', async () => {
-      const opening = thread.hasAttribute('hidden');
+    if (thread) {
+      if (!commentCache.has(pid)) seedCommentCacheFromLS(pid);
+      renderCommentThread(pid, thread, p);
+      bumpCommentViews(pid);
+    }
+    if (toggle && thread) toggle.addEventListener('click', () => {
+      const collapsed = thread.hasAttribute('hidden');
       vibrate(8); sfxTap();
-      if (opening) {
+      if (collapsed) {
         thread.removeAttribute('hidden');
-        thread.innerHTML = `<div class="ct-load">${escHtml(t('loading'))}</div>`;
-        if (!commentCache.has(pid)) await loadComments(pid);
         renderCommentThread(pid, thread, p);
       } else {
         thread.setAttribute('hidden', '');
       }
+      toggle.classList.toggle('on', collapsed);
+      toggle.setAttribute('aria-expanded', String(collapsed));
     });
   });
 }
@@ -5361,6 +5469,8 @@ function refreshCommentThread(pinId) {
   const btn = card.querySelector('[data-toggle] b');
   const n = (commentCache.get(pinId) || []).length;
   if (btn) btn.textContent = n;
+  // persist to the browser cache (most-viewed survive reloads)
+  if (commentCache.has(pinId)) cacheCommentsLS(pinId, commentCache.get(pinId));
 }
 
 function renderCommentThread(pinId, thread, pin) {
@@ -5370,7 +5480,11 @@ function renderCommentThread(pinId, thread, pin) {
 
   let html = '<div class="ct-list">';
   if (!comments.length) {
-    html += `<div class="ct-empty">${escHtml(t('noComments'))}</div>`;
+    // Until the network confirms, show a loader rather than a wrong "empty".
+    const pending = !commentsLoaded.has(pinId);
+    html += pending
+      ? `<div class="ct-load">${escHtml(t('loading'))}</div>`
+      : `<div class="ct-empty">${escHtml(t('noComments'))}</div>`;
   } else {
     comments.forEach(c => {
       const col = userColorObj(c.puppet || c.uid || 'anon');
