@@ -2948,6 +2948,7 @@ const I18N = {
     savePersona: 'Save personnage',
     deletePersona: 'Delete this personnage',
     personaSaved: 'Personnage saved 🎭',
+    editPersonaTitle: 'Edit personnage',
     personaDeleted: 'Personnage deleted',
     personaNeedName: 'Give your personnage a name',
     confirmDeletePersona: 'Delete "{name}" and all of its drops? This cannot be undone.',
@@ -3190,6 +3191,7 @@ const I18N = {
     savePersona: 'Enregistrer le personnage',
     deletePersona: 'Supprimer ce personnage',
     personaSaved: 'Personnage enregistré 🎭',
+    editPersonaTitle: 'Modifier le personnage',
     personaDeleted: 'Personnage supprimé',
     personaNeedName: 'Donne un nom à ton personnage',
     confirmDeletePersona: 'Supprimer « {name} » et toutes ses pêches ? Action irréversible.',
@@ -3771,9 +3773,14 @@ function openPersonaEditor(id) {
   const p = id ? state.personas.find(x => x.id === id) : null;
   state.editingPersona = p ? { id: p.id } : { id: null };
   state.editingPersonaPhoto = p ? (p.photoURL || null) : null;
-  $('personaName').value = p ? p.name : '';
-  $('personaBio').value  = p ? (p.bio || '') : '';
-  renderPersonaEmojiGrid(p ? p.emoji : '🎭');
+
+  // Title reflects create vs. edit
+  const titleEl = $('personaEditTitle');
+  if (titleEl) titleEl.textContent = p ? t('editPersonaTitle') : t('newPersona');
+
+  $('personaName').value = p ? (p.name || '') : '';
+  $('personaBio').value  = p ? (p.bio || '')  : '';
+  renderPersonaEmojiGrid(p ? (p.emoji || '🎭') : '🎭');
   renderPersonaPhotoStage();
   $('personaDeleteBtn').style.display = p ? '' : 'none';
   openSheet('personaEditSheet');
@@ -3822,10 +3829,11 @@ function renderPersonaPhotoStage() {
 async function savePersona() {
   if (!requireAuth('generic')) return;
   if (!fbReady()) return;
+
   const name = ($('personaName').value || '').trim().slice(0, 24);
   if (!name) { toast(t('personaNeedName'), 'warn'); sfxErr(); vibrate(40); return; }
-  const emoji = ($('personaEmojiGrid').dataset.picked) || '🎭';
-  const bio   = ($('personaBio').value || '').trim().slice(0, 160);
+  const emoji    = ($('personaEmojiGrid').dataset.picked) || '🎭';
+  const bio      = ($('personaBio').value || '').trim().slice(0, 160);
   const photoURL = state.editingPersonaPhoto || null;
 
   const editingId = state.editingPersona && state.editingPersona.id;
@@ -3833,19 +3841,50 @@ async function savePersona() {
     toast(t('personaMax').replace('{n}', PERSONA_MAX), 'warn'); sfxErr(); return;
   }
 
-  const { db, doc, setDoc, collection, addDoc, serverTimestamp } = FB();
+  const { db, doc, setDoc, collection, addDoc, serverTimestamp,
+          query, where, getDocs } = FB();
+
   try {
+    let personaId = editingId;
     if (editingId) {
+      // EDIT an existing personnage (avatar image, name, bio, emoji)
       await setDoc(doc(db, 'users', state.user.uid, 'personas', editingId),
         { name, emoji, bio, photoURL, updatedAt: serverTimestamp() }, { merge: true });
-      // keep an already-active personnage in sync immediately
-      if (state.actingAs && state.actingAs.id === editingId) {
-        state.actingAs = { ...state.actingAs, name, emoji, bio, photoURL };
-      }
     } else {
-      await addDoc(collection(db, 'users', state.user.uid, 'personas'),
+      // CREATE a new personnage
+      const ref = await addDoc(collection(db, 'users', state.user.uid, 'personas'),
         { name, emoji, bio, photoURL, createdAt: serverTimestamp() });
+      personaId = ref.id;
     }
+
+    const key = 'persona:' + personaId;
+
+    // If this personnage is the one currently active, sync it instantly.
+    if (state.actingAs && state.actingAs.key === key) {
+      state.actingAs = { id: personaId, key, name, emoji, bio, photoURL };
+    }
+
+    // RETROACTIVE REFRESH — make the new avatar / name show on drops already
+    // posted as this personnage. Single-field query = no composite index needed.
+    if (editingId) {
+      try {
+        const snap = await getDocs(query(collection(db, 'pins'), where('puppet', '==', key)));
+        await Promise.all(snap.docs.map(d =>
+          setDoc(d.ref, { displayName: name, avatarEmoji: emoji, photoURL }, { merge: true })
+            .catch(() => {})));
+        // Mirror locally so the UI updates without waiting for the snapshot.
+        state.pins.forEach(pin => {
+          if (pin.puppet === key) {
+            pin.displayName = name;
+            pin.avatarEmoji = emoji;
+            pin.photoURL = photoURL;
+          }
+        });
+        markHexIndexDirty(); scheduleHexUpdate(); refreshAllMarkers();
+        if (typeof currentHexCell !== 'undefined' && currentHexCell) renderHexPinFeed(currentHexCell);
+      } catch (e) { console.warn('persona pin refresh', e); }
+    }
+
     toast(t('personaSaved'), 'win'); vibrate(20); sfxWin();
     closeAllSheets();
     openPersonaPicker();
@@ -3957,24 +3996,35 @@ function openPersonaPicker() {
 
 function renderPersonaPicker() {
   const list = $('personaPickList'); if (!list) return;
+
   const self = {
     name: state.nickname || (state.user && state.user.displayName) || t('postingAsSelf'),
     emoji: state.avatar || '🍑',
-    photoURL: (state.user && state.user.photoURL) || null, isPersona: false, id: null
+    photoURL: (state.user && state.user.photoURL) || null,
+    isPersona: false,
+    id: null
   };
+
+  // Self tile (no edit pencil — your real profile isn't a personnage)
   let html = personaTileHTML(self, { key: state.user && state.user.uid, active: !state.actingAs });
+
+  // One editable tile per personnage
   state.personas.forEach(p => {
     html += personaTileHTML(
       { name: p.name, emoji: p.emoji, photoURL: p.photoURL, bio: p.bio, isPersona: true, id: p.id },
       { key: p.key, active: state.actingAs && state.actingAs.id === p.id, editable: true });
   });
+
+  // "New personnage" tile
   html += `
     <button class="persona-tile add" id="personaPickAdd" type="button">
       <div class="pt-plus">＋</div>
       <div class="pt-name">${escHtml(t('newPersona'))}</div>
     </button>`;
+
   list.innerHTML = html;
 
+  // Tap a tile = switch identity (ignore taps that landed on the edit pencil)
   list.querySelectorAll('.persona-tile[data-pick]').forEach(tile => {
     tile.addEventListener('click', (e) => {
       if (e.target.closest('.pt-edit')) return;
@@ -3983,8 +4033,15 @@ function renderPersonaPicker() {
       closeAllSheets();
     });
   });
+
+  // ✏️ pencil = open the editor pre-loaded with that personnage (name, face, bio, avatar image)
   list.querySelectorAll('.pt-edit').forEach(b =>
-    b.addEventListener('click', (e) => { e.stopPropagation(); openPersonaEditor(b.dataset.edit); }));
+    b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openPersonaEditor(b.dataset.edit);
+    }));
+
+  // ＋ tile = create a new personnage
   const add = $('personaPickAdd');
   if (add) add.addEventListener('click', () => openPersonaEditor(null));
 }
@@ -8372,17 +8429,26 @@ function wireEvents() {
   $('personaDiceBtn') && $('personaDiceBtn').addEventListener('click', () => {
     $('personaName').value = randFunnyName(); vibrate(10); sfxTap();
   });
+   // Personnage avatar image (gallery / camera via OS picker)
   $('personaPhotoInput') && $('personaPhotoInput').addEventListener('change', async (e) => {
     const f = e.target.files && e.target.files[0];
     if (!f) return;
     try {
       state.editingPersonaPhoto = await compressImage(f, 256, 0.8);
       renderPersonaPhotoStage();
-    } catch (_) { toast('❌ ' + t('photoError') || 'Photo error', 'err'); }
+      vibrate(10); sfxTap();
+    } catch (_) { toast('❌ Photo', 'err'); }
     e.target.value = '';
   });
   $('personaPhotoStage') && $('personaPhotoStage').addEventListener('click', () => {
     if (!state.editingPersonaPhoto) $('personaPhotoInput').click();
+  });
+
+  // Save / delete (editor sheet)
+  $('personaSaveBtn') && $('personaSaveBtn').addEventListener('click', () => { vibrate(10); sfxTap(); savePersona(); });
+  $('personaDeleteBtn') && $('personaDeleteBtn').addEventListener('click', () => {
+    vibrate(20); sfxTap();
+    if (state.editingPersona && state.editingPersona.id) deletePersona(state.editingPersona.id);
   });
 
   // Switches
