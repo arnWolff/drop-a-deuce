@@ -2096,7 +2096,27 @@ html.theme-dark .hex-pin-row .ax.report { color: #fbbf24; }
   border-radius:999px;vertical-align:middle;}
 
 /* ===================== COMMENT THREAD ===================== */
-.fc-thread{margin-top:10px;border-top:1.5px dashed var(--border);padding-top:10px;}
+.fc-thread{margin-top:10px;}
+/* root note (original poster) heads the conversation */
+.ct-note{display:flex;gap:8px;align-items:flex-start;font-size:13px;font-weight:600;color:var(--ink);
+  background:var(--peach-grad-soft);border:1px solid var(--border);border-radius:var(--r-md);padding:10px 12px;}
+.ct-note .em{flex-shrink:0;}
+.ct-note span:last-child{word-break:break-word;min-width:0;}
+
+/* comment sort + count bar */
+.ct-bar{display:flex;align-items:center;gap:8px;margin:10px 0 2px;}
+.ct-bar .ct-count{font-size:12px;font-weight:800;color:var(--ink-2);}
+.ct-sort{display:flex;gap:3px;background:var(--surface-2);border:1.5px solid var(--border);
+  border-radius:999px;padding:2px;margin-left:auto;}
+.cs-opt{border:none;background:transparent;color:var(--ink-3);font-weight:700;font-size:11px;
+  padding:4px 9px;border-radius:999px;cursor:pointer;transition:all .12s var(--ease-out);}
+.cs-opt.on{background:var(--peach-grad);color:#fff;}
+
+/* comments cascade as replies under the note (left connector rail) */
+.ct-list{position:relative;padding-left:16px;}
+.ct-list::before{content:"";position:absolute;left:5px;top:4px;bottom:8px;width:2px;
+  background:var(--border);border-radius:2px;}
+.ct-list .ct-empty,.ct-list .ct-load{padding-left:0;}
 .ct-load,.ct-empty{color:var(--ink-3);font-size:12px;font-weight:600;padding:6px 2px;}
 .ct-item{display:flex;gap:10px;padding:8px 0;}
 .ct-ava{width:30px;height:30px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;
@@ -3020,6 +3040,8 @@ const I18N = {
     droppedXp: 'Peach dropped! +{xp} XP',
     needLoc: 'Pick a location first',
     needChallenge: 'Pick a quest first',
+    sortTop: 'Top', sortOldest: 'Oldest',
+    needNote: 'Add a note — tell the story 🍑',
     photoTooBig: 'Photo too big — try another',
     levelUp: "You're now a {title}!",
     locationDenied: 'Location denied. Check your settings.',
@@ -3266,6 +3288,8 @@ const I18N = {
     droppedXp: 'Pêche posée ! +{xp} XP',
     needLoc: 'Choisis un endroit',
     needChallenge: 'Choisis un défi',
+    sortTop: 'Top', sortOldest: 'Anciens',
+    needNote: 'Ajoute une note — raconte 🍑',
     photoTooBig: 'Photo trop lourde — essaie une autre',
     levelUp: 'Tu es maintenant {title} !',
     locationDenied: 'Localisation refusée. Active-la.',
@@ -3541,6 +3565,7 @@ state.dropLockChallenge = false;   // amenity drops lock the quest picker
 state.dropAmenity = null;          // amenity context for the auto-detected chip
 state.reportTarget = null;         // pin currently being reported
 state.hexSort = 'xp';     // 'xp' | 'date' | 'user'
+state.cmtSort = 'top';    // 'top' (vote score) | 'date' (oldest first)
 state.actingAs = null;        // resolved active identity object (null = self)
 state.personas = [];          // live personnages roster (from Firestore)
 state.editingPersona = null;  // { id } currently in the persona editor
@@ -5334,7 +5359,7 @@ function renderHexPinFeed(cell, pinsInCell) {
   if (!pins.length) {
     html += `<div class="hex-empty">${escHtml(onlyMine ? t('hexNoYourPins') : t('hexNoPins'))}</div>`;
     list.innerHTML = html;
-    wireHexFeed(list, cell, pins);   // keep sort buttons live even when empty
+    wireHexFeed(list, cell, pins);
     return;
   }
 
@@ -5342,7 +5367,6 @@ function renderHexPinFeed(cell, pinsInCell) {
     const ch = chById(p.challengeId);
     const c = userColorObj(typeof pinUserKey === 'function' ? pinUserKey(p) : (p.uid || ''));
     const isMine = !!(myUid && p.uid === myUid);
-    // Show the identity actually used to post (persona or real name).
     const name = p.displayName
       || (isMine ? (state.nickname || t('you')) : t('friend'));
     const personaTag = p.puppet ? ` <span class="fc-persona-tag" title="persona">🎭</span>` : '';
@@ -5352,15 +5376,12 @@ function renderHexPinFeed(cell, pinsInCell) {
           : (p.displayName ? escHtml(p.displayName[0].toUpperCase()) : '🍑'));
     const v = (typeof pinVoteCache !== 'undefined' && pinVoteCache.get(p.id)) || { score: 0, mine: 0 };
     const xp = effectivePinXp(p);
-    const cCount = (typeof commentCache !== 'undefined' && commentCache.get(p.id)) ? commentCache.get(p.id).length : null;
     const medal = state.hexSort === 'xp'
       ? (idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : (idx + 1) + '·')
       : '🍑';
     const thumb = p.photo
       ? `<button class="pin-thumb sm" data-photo="1" type="button" aria-label="${escHtml(viewLbl)}"><img src="${escHtml(p.photo)}" alt=""/></button>`
       : '';
-    const note = p.note ? `<div class="fc-note">💬 ${escHtml(p.note)}</div>` : '';
-    const media = (thumb || note) ? `<div class="fc-media">${thumb}${note}</div>` : '';
 
     html += `
     <div class="feed-card${isMine ? ' mine' : ''}" data-pid="${escHtml(p.id)}"
@@ -5374,14 +5395,13 @@ function renderHexPinFeed(cell, pinsInCell) {
         </div>
         <div class="fc-xp"><div class="n">${fmt(xp)}</div><div class="u">XP</div></div>
       </div>
-      ${media}
+      ${thumb}
       <div class="fc-acts">
         <div class="vote-pill">
           <button class="vb up${v.mine === 1 ? ' on' : ''}" data-vote="1" type="button" aria-label="${escHtml(t('upvote'))}">▲</button>
           <span class="vscore${v.score > 0 ? ' pos' : v.score < 0 ? ' neg' : ''}">${v.score}</span>
           <button class="vb down${v.mine === -1 ? ' on' : ''}" data-vote="-1" type="button" aria-label="${escHtml(t('downvote'))}">▼</button>
         </div>
-        <button class="fc-cmt on" data-toggle type="button" aria-expanded="true">💬 ${escHtml(t('comments'))} <b>${cCount != null ? cCount : 0}</b></button>
         <button class="fc-fly" data-fly type="button" aria-label="${escHtml(t('hexFlyToBtn'))}">🗺️</button>
         ${(canMod || isMine) ? `<button class="fc-del" data-del type="button" aria-label="${escHtml(t('deletePin'))}">🗑️</button>` : ''}
       </div>
@@ -5433,27 +5453,14 @@ function wireHexFeed(list, cell, pins) {
       if (ok) renderHexPinFeed(cell);
     });
 
-    // Comments OPEN by default: seed from browser cache for an instant first
-    // paint, then hydrateFeedComments() refreshes from the network.
-    const toggle = card.querySelector('[data-toggle]');
+    // Conversation (note + comments) is always shown. Seed from the browser
+    // cache for an instant paint; hydrateFeedComments() refreshes from network.
     const thread = card.querySelector('[data-thread]');
     if (thread) {
       if (!commentCache.has(pid)) seedCommentCacheFromLS(pid);
       renderCommentThread(pid, thread, p);
       bumpCommentViews(pid);
     }
-    if (toggle && thread) toggle.addEventListener('click', () => {
-      const collapsed = thread.hasAttribute('hidden');
-      vibrate(8); sfxTap();
-      if (collapsed) {
-        thread.removeAttribute('hidden');
-        renderCommentThread(pid, thread, p);
-      } else {
-        thread.setAttribute('hidden', '');
-      }
-      toggle.classList.toggle('on', collapsed);
-      toggle.setAttribute('aria-expanded', String(collapsed));
-    });
   });
 }
 
@@ -5465,22 +5472,53 @@ function refreshCommentThread(pinId) {
     const p = state.pins.find(x => x.id === pinId);
     renderCommentThread(pinId, thread, p);
   }
-  // keep the 💬 count badge fresh
-  const btn = card.querySelector('[data-toggle] b');
-  const n = (commentCache.get(pinId) || []).length;
-  if (btn) btn.textContent = n;
   // persist to the browser cache (most-viewed survive reloads)
   if (commentCache.has(pinId)) cacheCommentsLS(pinId, commentCache.get(pinId));
 }
 
+function commentScore(commentId) {
+  const v = commentVoteCache.get(commentId);
+  return v ? v.score : 0;
+}
+
+function sortComments(arr) {
+  const a = arr.slice();
+  if (state.cmtSort === 'date') {
+    a.sort((x, y) => (x.ts || 0) - (y.ts || 0));                              // oldest first (asc)
+  } else { // 'top' — highest score first, ties broken by oldest
+    a.sort((x, y) => (commentScore(y.id) - commentScore(x.id)) || (x.ts || 0) - (y.ts || 0));
+  }
+  return a;
+}
+
 function renderCommentThread(pinId, thread, pin) {
-  const comments = commentCache.get(pinId) || [];
+  const raw = commentCache.get(pinId) || [];
+  const comments = sortComments(raw);
   const myUid = state.user && state.user.uid;
   const canMod = state.isModerator || state.isAdmin;
 
-  let html = '<div class="ct-list">';
+  let html = '';
+
+  // --- root: the original poster's note --------------------------------
+  if (pin && pin.note) {
+    html += `<div class="ct-note"><span class="em">📝</span><span>${escHtml(pin.note)}</span></div>`;
+  }
+
+  // --- sort bar (only when there's something to sort) ------------------
+  if (comments.length) {
+    html += `
+      <div class="ct-bar">
+        <span class="ct-count">💬 ${comments.length}</span>
+        <div class="ct-sort">
+          <button class="cs-opt${state.cmtSort === 'top' ? ' on' : ''}" data-csort="top" type="button">⚡ ${escHtml(t('sortTop'))}</button>
+          <button class="cs-opt${state.cmtSort === 'date' ? ' on' : ''}" data-csort="date" type="button">🕒 ${escHtml(t('sortOldest'))}</button>
+        </div>
+      </div>`;
+  }
+
+  // --- comment list ----------------------------------------------------
+  html += '<div class="ct-list">';
   if (!comments.length) {
-    // Until the network confirms, show a loader rather than a wrong "empty".
     const pending = !commentsLoaded.has(pinId);
     html += pending
       ? `<div class="ct-load">${escHtml(t('loading'))}</div>`
@@ -5511,7 +5549,7 @@ function renderCommentThread(pinId, thread, pin) {
   }
   html += '</div>';
 
-  // composer
+  // --- composer --------------------------------------------------------
   html += `
     <div class="ct-compose">
       <input class="ct-input" type="text" maxlength="500" placeholder="${escHtml(t('addComment'))}"/>
@@ -5519,6 +5557,14 @@ function renderCommentThread(pinId, thread, pin) {
     </div>`;
 
   thread.innerHTML = html;
+
+  // sort toggle (re-renders this thread with the new order)
+  thread.querySelectorAll('.cs-opt').forEach(b =>
+    b.addEventListener('click', () => {
+      if (state.cmtSort === b.dataset.csort) return;
+      state.cmtSort = b.dataset.csort; vibrate(8); sfxTap();
+      renderCommentThread(pinId, thread, pin);
+    }));
 
   thread.querySelectorAll('.ct-item').forEach(item => {
     const cid = item.dataset.cid;
@@ -7888,6 +7934,12 @@ async function compressImage(file, maxDim = 900, quality = 0.78) {
 async function performDrop() {
   if (!state.draftLoc)        { toast(t('needLoc'),       'warn'); vibrate(40); sfxErr(); return; }
   if (!state.draftChallenge)  { toast(t('needChallenge'), 'warn'); vibrate(40); sfxErr(); return; }
+  // DipGo: a note is now REQUIRED (only the photo stays optional).
+  if (!($('dropNote').value || '').trim()) {
+    toast(t('needNote'), 'warn'); vibrate(40); sfxErr();
+    const el = $('dropNote'); if (el) el.focus();
+    return;
+  }
 
   // Anonymous = read-only. Politely invite, don't auto-sign-in.
   if (!state.user) { await promptSignIn('drop'); return; }
