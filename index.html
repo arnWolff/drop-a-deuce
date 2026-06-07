@@ -2530,6 +2530,19 @@ html.theme-dark .hex-pin-row .ax.report { color: #fbbf24; }
     <input class="input" id="nicknameInput" maxlength="24" placeholder="What should others see?" />
     <div class="section-label" data-i18n="avatarLabel">Avatar emoji</div>
     <div class="avatar-grid" id="avatarGrid"></div>
+
+    <div class="section-label" data-i18n="profilePhotoLabel">Profile photo (optional)</div>
+    <div class="photo-stage" id="profilePhotoStage">
+      <div class="ph">
+        <div class="em">🖼️</div>
+        <div class="lbl" data-i18n="photoTap">Tap to add photo</div>
+      </div>
+    </div>
+    <input type="file" accept="image/*" id="profilePhotoInput" style="display:none" />
+
+    <div class="section-label" data-i18n="profileBioLabel">Bio (optional)</div>
+    <textarea class="textarea" id="profileBio" maxlength="160" data-i18n-ph="profileBioPh" placeholder="A little something about you…"></textarea>
+
     <div style="height: 12px"></div>
     <button class="btn primary block" id="saveProfileBtn" type="button">
       <span class="ic">💾</span><span data-i18n="saveProfile">Save profile</span>
@@ -2929,6 +2942,9 @@ const I18N = {
     statDrops: 'Drops', statQuests: 'Quests', statStreak: 'Streak',
     accountLabel: 'Account',
     nicknameLabel: 'Display name', avatarLabel: 'Avatar emoji',
+    profilePhotoLabel: 'Profile photo (optional)',
+    profileBioLabel: 'Bio (optional)',
+    profileBioPh: 'A little something about you…',
     personasLabel: 'Personnages',
     personasHint: 'Slip into a fun alter-ego 🎭',
     newPersona: 'New personnage',
@@ -3172,6 +3188,9 @@ const I18N = {
     statDrops: 'Pêches', statQuests: 'Défis', statStreak: 'Série',
     accountLabel: 'Compte',
     nicknameLabel: 'Pseudo', avatarLabel: 'Avatar emoji',
+    profilePhotoLabel: 'Photo de profil (optionnelle)',
+    profileBioLabel: 'Bio (optionnelle)',
+    profileBioPh: 'Un petit mot sur toi…',
     personasLabel: 'Personnages',
     personasHint: 'Enfile un alter ego rigolo 🎭',
     newPersona: 'Nouveau personnage',
@@ -3482,6 +3501,8 @@ const DEFAULTS = {
   showZones: true,
   nickname: '',
   avatar: '🍑',
+  selfPhoto: null,          // custom self-profile photo (data URL); overrides the Google photo
+  selfBio: '',              // self-profile bio
   actingAsKey: null,        // persisted key of the active personnage (or null = self)
   welcomed: false,
   aiProvider: 'pollinations',                 // free + no key by default
@@ -3533,6 +3554,7 @@ function saveLS() {
       showOthers: state.showOthers,
       showZones: state.showZones,
       nickname: state.nickname, avatar: state.avatar,
+      selfPhoto: state.selfPhoto || null, selfBio: state.selfBio || '',
       welcomed: state.welcomed,
       actingAsKey: state.actingAsKey || null,
       aiProvider: state.aiProvider,
@@ -3681,9 +3703,6 @@ function myVoterKey() {
 }
 
 function myAuthorIdentity() {
-  // When acting as a personnage, the post's uid stays the REAL uid (rules
-  // require it), but the public-facing display fields become the personnage's.
-  // The `puppet` field carries the alias key, which drives colour + grouping.
   if (state.actingAs && state.actingAs.key) {
     return {
       uid: state.user.uid,
@@ -3698,7 +3717,7 @@ function myAuthorIdentity() {
     puppet: null,
     displayName: state.nickname || state.user.displayName || null,
     avatarEmoji: state.avatar || null,
-    photoURL: state.user.photoURL || null
+    photoURL: selfPhotoURL()
   };
 }
 
@@ -3942,11 +3961,12 @@ function personaTileHTML(view, opts) {
       ${badge}
       <div class="pt-ava" style="background:hsl(${c.h} ${c.s}% ${c.l}%);">${avatarInner(view, '🍑')}</div>
       <div class="pt-name">${escHtml(view.name)}</div>
-      ${view.isPersona && view.bio ? `<div class="pt-bio">${escHtml(view.bio)}</div>` : ''}
+      ${view.bio ? `<div class="pt-bio">${escHtml(view.bio)}</div>` : ''}
       ${editBtn}
     </div>`;
 }
 
+/* Horizontal rail shown in the Profile sheet. */
 /* Horizontal rail shown in the Profile sheet. */
 function renderPersonaRail() {
   const rail = $('personaRail'); if (!rail) return;
@@ -3954,10 +3974,12 @@ function renderPersonaRail() {
     rail.innerHTML = `<div class="hex-empty" style="padding:10px;">${escHtml(t('signinFirst'))}</div>`;
     return;
   }
-  const self = currentIdentityView.call(null) && {
+  const self = {
     name: state.nickname || (state.user.displayName) || t('postingAsSelf'),
     emoji: state.avatar || '🍑',
-    photoURL: state.user.photoURL || null, isPersona: false, id: null
+    photoURL: selfPhotoURL(),
+    bio: state.selfBio || '',
+    isPersona: false, id: null
   };
   let html = personaTileHTML(self, {
     key: state.user.uid, active: !state.actingAs
@@ -4000,7 +4022,8 @@ function renderPersonaPicker() {
   const self = {
     name: state.nickname || (state.user && state.user.displayName) || t('postingAsSelf'),
     emoji: state.avatar || '🍑',
-    photoURL: (state.user && state.user.photoURL) || null,
+    photoURL: selfPhotoURL(),
+    bio: state.selfBio || '',
     isPersona: false,
     id: null
   };
@@ -4034,7 +4057,7 @@ function renderPersonaPicker() {
     });
   });
 
-  // ✏️ pencil = open the editor pre-loaded with that personnage (name, face, bio, avatar image)
+  // ✏️ pencil = open the editor pre-loaded with that personnage
   list.querySelectorAll('.pt-edit').forEach(b =>
     b.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -4058,7 +4081,7 @@ function renderPostingAsChip() {
   const selfActive = !state.actingAs ? ' on' : '';
   opts += `
     <button class="pa-opt${selfActive}" data-pick="self" type="button">
-      <span class="pa-ava" style="background:hsl(${userColorObj(state.user.uid).h} 72% 56%);">${avatarInner({emoji: state.avatar || '🍑', photoURL: state.user.photoURL}, '🍑')}</span>
+      <span class="pa-ava" style="background:hsl(${userColorObj(state.user.uid).h} 72% 56%);">${avatarInner({emoji: state.avatar || '🍑', photoURL: selfPhotoURL()}, '🍑')}</span>
       <span class="pa-nm">${escHtml(t('postingAsSelf'))}</span>
     </button>`;
   state.personas.forEach(p => {
@@ -4117,7 +4140,7 @@ function currentIdentityView() {
   return {
     name: state.nickname || (state.user && state.user.displayName) || t('postingAsSelf'),
     emoji: state.avatar || '🍑',
-    photoURL: (state.user && state.user.photoURL) || null,
+    photoURL: selfPhotoURL(),
     isPersona: false,
     id: null
   };
@@ -6667,6 +6690,8 @@ function subscribeUserDoc() {
     }
     if (d.avatarEmoji) state.avatar = d.avatarEmoji;
     if (d.displayName) state.nickname = d.displayName;
+    if (typeof d.selfPhoto !== 'undefined') state.selfPhoto = d.selfPhoto || null;
+    if (typeof d.bio === 'string') state.selfBio = d.bio || '';
     saveLS();
     renderHeader();
     renderProfile();
@@ -6755,7 +6780,9 @@ async function persistUserProfile() {
     await setDoc(doc(db, 'users', state.user.uid), {
       displayName: state.nickname || state.user.displayName || null,
       avatarEmoji: state.avatar || null,
-      photoURL: state.user.photoURL || null,
+      photoURL: state.user.photoURL || null,   // Google account photo (base avatar)
+      selfPhoto: state.selfPhoto || null,       // custom upload — overrides the base avatar
+      bio: state.selfBio || null,
       xp: state.xp,
       completed: [...state.completed],
       updatedAt: serverTimestamp()
@@ -8058,8 +8085,9 @@ function renderProfile() {
   const isAnon = !u;   // no more isAnonymous flag — either signed in or not
 
   $('profileAvatar').textContent = '';
-  if (u && u.photoURL) {
-    $('profileAvatar').innerHTML = `<img src="${escHtml(u.photoURL)}" alt=""/>`;
+  const heroPhoto = selfPhotoURL();
+  if (heroPhoto) {
+    $('profileAvatar').innerHTML = `<img src="${escHtml(heroPhoto)}" alt=""/>`;
   } else {
     $('profileAvatar').textContent = state.avatar || '🍑';
   }
@@ -8166,7 +8194,11 @@ function renderProfile() {
   const myDropsBtn = $('myDropsBtn');
   if (myDropsBtn) myDropsBtn.style.display = state.user ? '' : 'none';
   $('nicknameInput').value = state.nickname || '';
+  // Bio: don't clobber what the user is actively typing.
+  const bioEl = $('profileBio');
+  if (bioEl && document.activeElement !== bioEl) bioEl.value = state.selfBio || '';
   renderAvatarGrid();
+  renderProfilePhotoStage();
   $('hapticsSwitch') && $('hapticsSwitch').classList.toggle('on', state.haptics);
   $('soundSwitch')   && $('soundSwitch').classList.toggle('on', state.sound);
   $('othersSwitch')  && $('othersSwitch').classList.toggle('on', state.showOthers);
@@ -8275,6 +8307,41 @@ function renderAvatarGrid() {
     });
     grid.appendChild(el);
   });
+}
+
+/* Resolved photo for your real self: a custom uploaded photo wins over the
+   Google account photo. Used everywhere the "self" avatar appears. */
+function selfPhotoURL() {
+  return state.selfPhoto || (state.user && state.user.photoURL) || null;
+}
+
+function renderProfilePhotoStage() {
+  const stage = $('profilePhotoStage'); if (!stage) return;
+  const ph = stage.querySelector('.ph');
+  stage.querySelectorAll('img, .rm-btn').forEach(n => n.remove());
+  if (state.selfPhoto) {
+    if (ph) ph.style.display = 'none';
+    const img = document.createElement('img');
+    img.src = state.selfPhoto; img.alt = '';
+    stage.appendChild(img);
+    const rm = document.createElement('button');
+    rm.type = 'button'; rm.className = 'rm-btn'; rm.textContent = '✕';
+    rm.addEventListener('click', (e) => {
+      e.stopPropagation();
+      state.selfPhoto = null;
+      saveLS();
+      renderProfilePhotoStage();
+      const av = $('profileAvatar');
+      if (av) {
+        const url = selfPhotoURL();
+        if (url) av.innerHTML = `<img src="${escHtml(url)}" alt=""/>`;
+        else av.textContent = state.avatar || '🍑';
+      }
+    });
+    stage.appendChild(rm);
+  } else if (ph) {
+    ph.style.display = '';
+  }
 }
 
 /* ---------- NAV ---------- */
@@ -8407,6 +8474,8 @@ function wireEvents() {
   // Profile
   $('saveProfileBtn').addEventListener('click', async () => {
     state.nickname = ($('nicknameInput').value || '').trim().slice(0, 24);
+    state.selfBio  = ($('profileBio') ? $('profileBio').value : '').trim().slice(0, 160);
+    // state.selfPhoto is kept in sync by the photo-input handler below.
     saveLS();
     if (state.user && fbReady() && !state.user.isAnonymous) {
       try {
@@ -8416,8 +8485,29 @@ function wireEvents() {
     }
     await persistUserProfile();
     renderProfile();
+    // Make the new look show everywhere your "self" identity appears.
+    renderPersonaRail();
+    renderPostingAsChip();
     toast(t('nicknameSaved'), 'win');
     vibrate(20); sfxWin();
+  });
+
+  // Self-profile photo (gallery / camera via OS picker)
+  $('profilePhotoInput') && $('profilePhotoInput').addEventListener('change', async (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    try {
+      state.selfPhoto = await compressImage(f, 256, 0.8);
+      saveLS();
+      renderProfilePhotoStage();
+      const av = $('profileAvatar');
+      if (av) av.innerHTML = `<img src="${escHtml(state.selfPhoto)}" alt=""/>`;
+      vibrate(10); sfxTap();
+    } catch (_) { toast('❌ Photo', 'err'); }
+    e.target.value = '';
+  });
+  $('profilePhotoStage') && $('profilePhotoStage').addEventListener('click', () => {
+    if (!state.selfPhoto) $('profilePhotoInput').click();
   });
 
   // Personnages
@@ -8442,14 +8532,7 @@ function wireEvents() {
   });
   $('personaPhotoStage') && $('personaPhotoStage').addEventListener('click', () => {
     if (!state.editingPersonaPhoto) $('personaPhotoInput').click();
-  });
-
-  // Save / delete (editor sheet)
-  $('personaSaveBtn') && $('personaSaveBtn').addEventListener('click', () => { vibrate(10); sfxTap(); savePersona(); });
-  $('personaDeleteBtn') && $('personaDeleteBtn').addEventListener('click', () => {
-    vibrate(20); sfxTap();
-    if (state.editingPersona && state.editingPersona.id) deletePersona(state.editingPersona.id);
-  });
+  });  
 
   // Switches
   qsa('.switch[data-key]').forEach((sw) => {
