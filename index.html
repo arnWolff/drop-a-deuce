@@ -2105,6 +2105,63 @@ html.theme-dark .hex-pin-row .ax.report { color: #fbbf24; }
   padding:9px 16px;border-radius:999px;cursor:pointer;}
 .ct-send:disabled{opacity:.5;}
 
+/* ===================== PERSONNAGES ===================== */
+.persona-rail{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 8px;-webkit-overflow-scrolling:touch;}
+.persona-rail::-webkit-scrollbar{height:0;}
+.persona-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+
+.persona-tile{position:relative;flex:0 0 auto;width:120px;min-height:118px;
+  background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--r-lg);
+  padding:12px 10px;display:flex;flex-direction:column;align-items:center;gap:6px;
+  cursor:pointer;text-align:center;transition:transform .12s var(--ease-out),border-color .15s var(--ease-out),box-shadow .15s var(--ease-out);}
+.persona-grid .persona-tile{width:auto;}
+.persona-tile:active{transform:scale(.96);}
+.persona-tile.active{border-color:hsl(var(--uc-h) var(--uc-s) var(--uc-l));
+  box-shadow:0 0 0 2px hsla(var(--uc-h),var(--uc-s),var(--uc-l),.35), var(--sh-sm);}
+.persona-tile .pt-ava{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:26px;color:#fff;overflow:hidden;flex-shrink:0;box-shadow:var(--sh-sm);}
+.persona-tile .pt-ava img{width:100%;height:100%;object-fit:cover;}
+.persona-tile .pt-name{font-weight:800;font-size:13px;color:var(--ink);line-height:1.15;
+  max-width:100%;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.persona-tile .pt-bio{font-size:11px;color:var(--ink-3);font-weight:600;line-height:1.2;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.persona-tile .pt-badge{position:absolute;top:6px;left:6px;font-size:9px;font-weight:800;
+  text-transform:uppercase;letter-spacing:.04em;background:var(--peach-grad);color:#fff;
+  padding:2px 7px;border-radius:999px;}
+.persona-tile .pt-edit{position:absolute;top:4px;right:4px;border:none;background:var(--surface);
+  border:1px solid var(--border);border-radius:50%;width:26px;height:26px;font-size:12px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;opacity:.85;}
+.persona-tile.add{justify-content:center;border-style:dashed;color:var(--ink-2);}
+.persona-tile .pt-plus{font-size:30px;line-height:1;color:var(--peach-2);font-weight:300;}
+
+/* Hex-feed acting button (now for everyone) */
+.feed-acting{border:1.5px solid var(--border);background:var(--surface-2);color:var(--ink);
+  font-weight:800;font-size:12px;padding:7px 12px;border-radius:999px;cursor:pointer;white-space:nowrap;}
+.feed-acting.persona{background:var(--peach-grad);color:#fff;border-color:transparent;}
+
+/* Inline "posting as" switcher in the Drop sheet */
+.posting-as{position:relative;margin-bottom:6px;}
+.pa-chip{width:100%;display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:var(--r-lg);
+  background:linear-gradient(135deg,var(--peach-grad-soft) 0%,rgba(167,139,250,.12) 100%);
+  border:1.5px solid var(--border);cursor:pointer;text-align:left;}
+.pa-ava{width:40px;height:40px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;font-size:20px;color:#fff;overflow:hidden;box-shadow:var(--sh-sm);}
+.pa-ava img{width:100%;height:100%;object-fit:cover;}
+.pa-ava.plus{background:var(--surface);color:var(--peach-2);border:1.5px dashed var(--border-2);font-size:20px;font-weight:300;}
+.pa-info{flex:1;min-width:0;display:flex;flex-direction:column;}
+.pa-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);}
+.pa-who{font-size:14px;font-weight:800;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pa-switch{font-size:12px;font-weight:800;color:var(--peach-2);flex-shrink:0;}
+.pa-list{margin-top:6px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-md);
+  padding:6px;display:flex;flex-direction:column;gap:2px;max-height:240px;overflow-y:auto;}
+.pa-opt{display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;border:none;background:transparent;
+  border-radius:10px;cursor:pointer;text-align:left;}
+.pa-opt:active{background:var(--surface-2);}
+.pa-opt.on{background:var(--peach-grad-soft);}
+.pa-opt .pa-ava{width:30px;height:30px;font-size:15px;}
+.pa-opt .pa-nm{font-weight:700;font-size:14px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pa-opt.add .pa-nm{color:var(--peach-2);}
+
 </style>
 </head>
 <body>
@@ -2206,6 +2263,7 @@ html.theme-dark .hex-pin-row .ax.report { color: #fbbf24; }
   </div>
   <div class="sheet-body">
 
+    <div id="dropPostingAs" style="display:none;"></div>
     <div class="section-label" data-i18n="dropLocLabel">Where</div>
     <div class="loc-grid" id="dropLocRow"></div>
 
@@ -2460,6 +2518,11 @@ html.theme-dark .hex-pin-row .ax.report { color: #fbbf24; }
       </button>
     </div>
 
+    <div class="section-label" data-i18n="personasLabel">Personnages
+      <span class="count" data-i18n="personasHint">Slip into a fun alter-ego 🎭</span>
+    </div>
+    <div class="persona-rail" id="personaRail"></div>
+
     <div class="section-label" data-i18n="accountLabel">Account</div>
     <div id="authBlock"></div>
 
@@ -2530,6 +2593,64 @@ html.theme-dark .hex-pin-row .ax.report { color: #fbbf24; }
   </div>
   <div class="sheet-body">
     <div id="myDropsList"></div>
+  </div>
+</div>
+
+<!-- PERSONNAGE PICKER / MANAGER SHEET -->
+<div class="sheet" id="personaSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-head">
+    <div class="title-block">
+      <h2 data-i18n="personaPickTitle">Who's posting?</h2>
+      <div class="sub" data-i18n="personaPickSub">Pick a face to wear 🎭</div>
+    </div>
+    <button class="sheet-close" data-close type="button">✕</button>
+  </div>
+  <div class="sheet-body">
+    <div class="persona-grid" id="personaPickList"></div>
+  </div>
+</div>
+
+<!-- PERSONNAGE EDITOR SHEET -->
+<div class="sheet" id="personaEditSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-head">
+    <div class="title-block">
+      <h2 data-i18n="personaEditTitle">Personnage</h2>
+      <div class="sub" data-i18n="personaEditSub">Give your alter-ego some vibe</div>
+    </div>
+    <button class="sheet-close" data-close type="button">✕</button>
+  </div>
+  <div class="sheet-body">
+    <div class="section-label" data-i18n="personaNameLabel">Name</div>
+    <div class="input-row">
+      <input class="input" id="personaName" maxlength="24" data-i18n-ph="personaNamePh" placeholder="e.g. Captain Flush"/>
+      <button class="btn soft" id="personaDiceBtn" type="button" style="min-height:auto;padding:0 14px;">🎲</button>
+    </div>
+
+    <div class="section-label" data-i18n="personaEmojiLabel">Face</div>
+    <div class="avatar-grid" id="personaEmojiGrid"></div>
+
+    <div class="section-label" data-i18n="personaPhotoLabel">Photo (optional)</div>
+    <div class="photo-stage" id="personaPhotoStage">
+      <div class="ph">
+        <div class="em">🖼️</div>
+        <div class="lbl" data-i18n="photoTap">Tap to add photo</div>
+      </div>
+    </div>
+    <input type="file" accept="image/*" id="personaPhotoInput" style="display:none" />
+
+    <div class="section-label" data-i18n="personaBioLabel">Bio (optional)</div>
+    <textarea class="textarea" id="personaBio" maxlength="160" data-i18n-ph="personaBioPh" placeholder="A tiny legend about this character…"></textarea>
+
+    <div style="height: 16px"></div>
+    <button class="btn primary block" id="personaSaveBtn" type="button">
+      <span class="ic">💾</span><span data-i18n="savePersona">Save personnage</span>
+    </button>
+    <div style="height: 10px"></div>
+    <button class="btn danger block" id="personaDeleteBtn" type="button" style="display:none;">
+      <span class="ic">🗑️</span><span data-i18n="deletePersona">Delete this personnage</span>
+    </button>
   </div>
 </div>
 
@@ -2808,6 +2929,35 @@ const I18N = {
     statDrops: 'Drops', statQuests: 'Quests', statStreak: 'Streak',
     accountLabel: 'Account',
     nicknameLabel: 'Display name', avatarLabel: 'Avatar emoji',
+    personasLabel: 'Personnages',
+    personasHint: 'Slip into a fun alter-ego 🎭',
+    newPersona: 'New personnage',
+    postingAs: 'Posting as',
+    postingAsSelf: 'Yourself',
+    switchPersona: 'Switch',
+    personaPickTitle: "Who's posting?",
+    personaPickSub: 'Pick a face to wear 🎭',
+    personaEditTitle: 'Personnage',
+    personaEditSub: 'Give your alter-ego some vibe',
+    personaNameLabel: 'Name',
+    personaNamePh: 'e.g. Captain Flush',
+    personaEmojiLabel: 'Face',
+    personaBioLabel: 'Bio (optional)',
+    personaBioPh: 'A tiny legend about this character…',
+    personaPhotoLabel: 'Photo (optional)',
+    savePersona: 'Save personnage',
+    deletePersona: 'Delete this personnage',
+    personaSaved: 'Personnage saved 🎭',
+    personaDeleted: 'Personnage deleted',
+    personaNeedName: 'Give your personnage a name',
+    confirmDeletePersona: 'Delete "{name}" and all of its drops? This cannot be undone.',
+    nowPostingAs: "You're now posting as {name} 🎭",
+    nowPostingSelf: 'Back to posting as yourself',
+    noPersonas: 'No personnages yet — make one!',
+    personaActive: 'Active',
+    personaMax: 'You can keep up to {n} personnages',
+    editPersona: 'Edit',
+    diceName: 'Surprise me',
     saveProfile: 'Save profile',
     settingsLabel: 'Settings',
     themeLabel: 'Theme', themeHint: 'Auto follows your device',
@@ -3021,6 +3171,35 @@ const I18N = {
     statDrops: 'Pêches', statQuests: 'Défis', statStreak: 'Série',
     accountLabel: 'Compte',
     nicknameLabel: 'Pseudo', avatarLabel: 'Avatar emoji',
+    personasLabel: 'Personnages',
+    personasHint: 'Enfile un alter ego rigolo 🎭',
+    newPersona: 'Nouveau personnage',
+    postingAs: 'Tu postes en tant que',
+    postingAsSelf: 'Toi-même',
+    switchPersona: 'Changer',
+    personaPickTitle: 'Qui poste ?',
+    personaPickSub: 'Choisis un masque à porter 🎭',
+    personaEditTitle: 'Personnage',
+    personaEditSub: 'Donne du style à ton alter ego',
+    personaNameLabel: 'Nom',
+    personaNamePh: 'ex. Capitaine Chasse',
+    personaEmojiLabel: 'Visage',
+    personaBioLabel: 'Bio (optionnelle)',
+    personaBioPh: 'Une petite légende sur ce personnage…',
+    personaPhotoLabel: 'Photo (optionnelle)',
+    savePersona: 'Enregistrer le personnage',
+    deletePersona: 'Supprimer ce personnage',
+    personaSaved: 'Personnage enregistré 🎭',
+    personaDeleted: 'Personnage supprimé',
+    personaNeedName: 'Donne un nom à ton personnage',
+    confirmDeletePersona: 'Supprimer « {name} » et toutes ses pêches ? Action irréversible.',
+    nowPostingAs: 'Tu postes maintenant en tant que {name} 🎭',
+    nowPostingSelf: 'Retour à ton profil principal',
+    noPersonas: 'Aucun personnage — crée-en un !',
+    personaActive: 'Actif',
+    personaMax: 'Tu peux garder jusqu’à {n} personnages',
+    editPersona: 'Modifier',
+    diceName: 'Au hasard',
     saveProfile: 'Enregistrer',
     settingsLabel: 'Paramètres',
     themeLabel: 'Thème', themeHint: "Auto suit ton appareil",
@@ -3277,6 +3456,15 @@ function reportReasonLabel(id) {
 }
 const AVATAR_EMOJIS = ['🍑','🐱','🐶','🦊','🦝','🐼','🐨','🐯','🦁','🐸','🐧','🦄','🐲','🐳','🦋','🌻','🌈','⭐','🔥','💎','🎯','🚀','👑','🎩','🧙','🦸','🥷','🧚','🤖','👽'];
 
+const PERSONA_MAX = 12;
+const FUNNY_NAMES = [
+  'Captain Flush', 'Sir Plops-a-Lot', 'La Reine du Trône', 'Baron von Bidet',
+  'Madame Pousse', 'El Pootón', 'Duke of Dookie', 'Lady Latrine',
+  'Le Grand Soulagement', 'Pépé Pipi', 'Count Dropula', 'Major Movement',
+  'Capitaine Chasse', 'Doctor Doo', 'Princesse Plouf', 'The Phantom Flusher'
+];
+const randFunnyName = () => FUNNY_NAMES[Math.floor(Math.random() * FUNNY_NAMES.length)];
+
 
 /* ---------- STATE & STORAGE ---------- */
 const LS_KEY = 'peach-app-v2';
@@ -3292,6 +3480,7 @@ const DEFAULTS = {
   showZones: true,
   nickname: '',
   avatar: '🍑',
+  actingAsKey: null,        // persisted key of the active personnage (or null = self)
   welcomed: false,
   aiProvider: 'pollinations',                 // free + no key by default
   hfSpace: '',                                // last-used Hugging Face Space id
@@ -3313,7 +3502,10 @@ state.dropLockChallenge = false;   // amenity drops lock the quest picker
 state.dropAmenity = null;          // amenity context for the auto-detected chip
 state.reportTarget = null;         // pin currently being reported
 state.hexSort = 'xp';     // 'xp' | 'date' | 'user'
-state.actingAs = null;    // admin puppet identity (null = act as self)
+state.actingAs = null;        // resolved active identity object (null = self)
+state.personas = [];          // live personnages roster (from Firestore)
+state.editingPersona = null;  // { id } currently in the persona editor
+state.editingPersonaPhoto = null;
 state.aiMode = 'generate';   // 'generate' | 'edit'
 state.aiModel = null;        // current provider's model id (ephemeral)
 state.aiResult = null;       // last generated data URL (ephemeral)
@@ -3340,6 +3532,7 @@ function saveLS() {
       showZones: state.showZones,
       nickname: state.nickname, avatar: state.avatar,
       welcomed: state.welcomed,
+      actingAsKey: state.actingAsKey || null,
       aiProvider: state.aiProvider,
       hfSpace: state.hfSpace,
       aiKeys: state.aiKeys
@@ -3409,9 +3602,11 @@ function userColorCss(key, alpha = 1) {
   const { h, s, l } = userColorObj(key);
   return alpha >= 1 ? `hsl(${h} ${s}% ${l}%)` : `hsla(${h}, ${s}%, ${l}%, ${alpha})`;
 }
-// Stable grouping key for pins (uid when signed-in, anon:displayName otherwise)
+// Stable grouping key for pins. A persona-authored pin carries its alias key in
+// `puppet`, giving each personnage its own colour + leaderboard row. Falls back
+// to uid (signed-in) or an anon label.
 function pinUserKey(p) {
-  return p.uid || ('anon:' + (p.displayName || 'guest'));
+  return p.puppet || p.uid || ('anon:' + (p.displayName || 'guest'));
 }
 
 /* ---------------------------------------------------------------------
@@ -3476,17 +3671,24 @@ const pinVotesLoaded = new Set();
    actingAs = { key:'puppet:rosalie', name:'Rosalie', emoji:'🦊' }
    Stored on state; puppet roster persisted in localStorage via saveLS(). */
 function myVoterKey() {
-  if (state.actingAs && state.actingAs.key) return state.actingAs.key;
+  // Firestore rules only let the ADMIN write arbitrary vote keys. For everyone
+  // else the vote key MUST be the real uid — so personnages share the human's
+  // single vote, which is exactly the anti-double-vote behaviour we want.
+  if (state.isAdmin && state.actingAs && state.actingAs.key) return state.actingAs.key;
   return (state.user && state.user.uid) || null;
 }
+
 function myAuthorIdentity() {
+  // When acting as a personnage, the post's uid stays the REAL uid (rules
+  // require it), but the public-facing display fields become the personnage's.
+  // The `puppet` field carries the alias key, which drives colour + grouping.
   if (state.actingAs && state.actingAs.key) {
     return {
-      uid: state.user.uid,                 // real owner stays admin (rules require it)
+      uid: state.user.uid,
       puppet: state.actingAs.key,
       displayName: state.actingAs.name || 'Anon',
       avatarEmoji: state.actingAs.emoji || '🎭',
-      photoURL: null
+      photoURL: state.actingAs.photoURL || null
     };
   }
   return {
@@ -3496,6 +3698,378 @@ function myAuthorIdentity() {
     avatarEmoji: state.avatar || null,
     photoURL: state.user.photoURL || null
   };
+}
+
+/* =====================================================================
+   PERSONNAGES — per-account alter-ego profiles. Stored at
+   users/{uid}/personas/{id}. Each may post / comment as itself; others
+   see the personnage as the author, never the real account.
+   ===================================================================== */
+let personasUnsub = null;
+
+function subscribePersonas() {
+  if (!fbReady() || !state.user) return;
+  const { db, collection, onSnapshot } = FB();
+  if (personasUnsub) personasUnsub();
+  personasUnsub = onSnapshot(collection(db, 'users', state.user.uid, 'personas'), (snap) => {
+    state.personas = [];
+    snap.forEach(d => {
+      const data = d.data();
+      state.personas.push({
+        id: d.id,
+        key: 'persona:' + d.id,
+        name: data.name || 'Mystery',
+        emoji: data.emoji || '🎭',
+        bio: data.bio || '',
+        photoURL: data.photoURL || null
+      });
+    });
+    // Re-resolve the active personnage from the persisted key (survives reloads
+    // and edits). If it vanished, fall back to self.
+    if (state.actingAsKey && state.actingAsKey.indexOf('persona:') === 0) {
+      const found = state.personas.find(p => p.key === state.actingAsKey);
+      state.actingAs = found || null;
+      if (!found) { state.actingAsKey = null; saveLS(); }
+    }
+    renderPersonaRail();
+    renderPostingAsChip();
+    if (currentSheet === 'personaSheet') renderPersonaPicker();
+  }, (e) => console.warn('personas snapshot', e));
+}
+
+function setActivePersona(id) {
+  const p = state.personas.find(x => x.id === id);
+  if (!p) return;
+  state.actingAs = p;
+  state.actingAsKey = p.key;
+  saveLS();
+  vibrate(12); sfxTap();
+  afterIdentityChange();
+}
+
+function actAsSelf() {
+  state.actingAs = null;
+  state.actingAsKey = null;
+  saveLS();
+  vibrate(8); sfxTap();
+  afterIdentityChange();
+}
+
+function afterIdentityChange() {
+  renderPersonaRail();
+  renderPostingAsChip();
+  if (currentSheet === 'personaSheet') renderPersonaPicker();
+  if (typeof currentHexCell !== 'undefined' && currentHexCell) renderHexPinFeed(currentHexCell);
+  toast(state.actingAs
+    ? t('nowPostingAs').replace('{name}', state.actingAs.name)
+    : t('nowPostingSelf'), 'win');
+}
+
+/* ---- Editor (create / edit) ---------------------------------------- */
+function openPersonaEditor(id) {
+  if (!requireAuth('generic')) return;
+  const p = id ? state.personas.find(x => x.id === id) : null;
+  state.editingPersona = p ? { id: p.id } : { id: null };
+  state.editingPersonaPhoto = p ? (p.photoURL || null) : null;
+  $('personaName').value = p ? p.name : '';
+  $('personaBio').value  = p ? (p.bio || '') : '';
+  renderPersonaEmojiGrid(p ? p.emoji : '🎭');
+  renderPersonaPhotoStage();
+  $('personaDeleteBtn').style.display = p ? '' : 'none';
+  openSheet('personaEditSheet');
+}
+
+function renderPersonaEmojiGrid(picked) {
+  const grid = $('personaEmojiGrid'); if (!grid) return;
+  grid.dataset.picked = picked || '🎭';
+  grid.innerHTML = '';
+  AVATAR_EMOJIS.forEach((e) => {
+    const el = document.createElement('button');
+    el.type = 'button';
+    el.className = 'ax' + (e === grid.dataset.picked ? ' selected' : '');
+    el.textContent = e;
+    el.addEventListener('click', () => {
+      grid.dataset.picked = e;
+      vibrate(8); sfxTap();
+      renderPersonaEmojiGrid(e);
+    });
+    grid.appendChild(el);
+  });
+}
+
+function renderPersonaPhotoStage() {
+  const stage = $('personaPhotoStage'); if (!stage) return;
+  const ph = stage.querySelector('.ph');
+  stage.querySelectorAll('img, .rm-btn').forEach(n => n.remove());
+  if (state.editingPersonaPhoto) {
+    if (ph) ph.style.display = 'none';
+    const img = document.createElement('img');
+    img.src = state.editingPersonaPhoto; img.alt = '';
+    stage.appendChild(img);
+    const rm = document.createElement('button');
+    rm.type = 'button'; rm.className = 'rm-btn'; rm.textContent = '✕';
+    rm.addEventListener('click', (e) => {
+      e.stopPropagation();
+      state.editingPersonaPhoto = null;
+      renderPersonaPhotoStage();
+    });
+    stage.appendChild(rm);
+  } else if (ph) {
+    ph.style.display = '';
+  }
+}
+
+async function savePersona() {
+  if (!requireAuth('generic')) return;
+  if (!fbReady()) return;
+  const name = ($('personaName').value || '').trim().slice(0, 24);
+  if (!name) { toast(t('personaNeedName'), 'warn'); sfxErr(); vibrate(40); return; }
+  const emoji = ($('personaEmojiGrid').dataset.picked) || '🎭';
+  const bio   = ($('personaBio').value || '').trim().slice(0, 160);
+  const photoURL = state.editingPersonaPhoto || null;
+
+  const editingId = state.editingPersona && state.editingPersona.id;
+  if (!editingId && state.personas.length >= PERSONA_MAX) {
+    toast(t('personaMax').replace('{n}', PERSONA_MAX), 'warn'); sfxErr(); return;
+  }
+
+  const { db, doc, setDoc, collection, addDoc, serverTimestamp } = FB();
+  try {
+    if (editingId) {
+      await setDoc(doc(db, 'users', state.user.uid, 'personas', editingId),
+        { name, emoji, bio, photoURL, updatedAt: serverTimestamp() }, { merge: true });
+      // keep an already-active personnage in sync immediately
+      if (state.actingAs && state.actingAs.id === editingId) {
+        state.actingAs = { ...state.actingAs, name, emoji, bio, photoURL };
+      }
+    } else {
+      await addDoc(collection(db, 'users', state.user.uid, 'personas'),
+        { name, emoji, bio, photoURL, createdAt: serverTimestamp() });
+    }
+    toast(t('personaSaved'), 'win'); vibrate(20); sfxWin();
+    closeAllSheets();
+    openPersonaPicker();
+  } catch (e) {
+    console.error('savePersona', e);
+    toast('❌ ' + (e.message || 'Save failed'), 'err');
+  }
+}
+
+async function deletePersona(id) {
+  if (!state.user || !fbReady()) return;
+  const p = state.personas.find(x => x.id === id);
+  if (!p) return;
+  if (!confirm(t('confirmDeletePersona').replace('{name}', p.name))) return;
+
+  const { db, doc, deleteDoc, collection, query, where, getDocs } = FB();
+  try {
+    // 1) Delete every pin authored as this personnage (single-field query =
+    //    no composite index needed; rules still gate it to the owner).
+    try {
+      const snap = await getDocs(query(collection(db, 'pins'), where('puppet', '==', p.key)));
+      await Promise.all(snap.docs.map(d => deleteDoc(d.ref).catch(() => {})));
+      state.pins = state.pins.filter(pin => pin.puppet !== p.key);
+    } catch (e) { console.warn('persona pins delete', e); }
+
+    // 2) Delete the personnage definition itself.
+    await deleteDoc(doc(db, 'users', state.user.uid, 'personas', id));
+
+    // 3) If it was active, snap back to self.
+    if (state.actingAsKey === p.key) actAsSelf();
+
+    toast(t('personaDeleted'), 'win'); vibrate([20, 40]); sfxWin();
+    markHexIndexDirty(); scheduleHexUpdate(); recomputeStats();
+    closeAllSheets();
+  } catch (e) {
+    console.error('deletePersona', e);
+    toast('❌ ' + (e.message || 'Delete failed'), 'err');
+  }
+}
+
+/* =====================================================================
+   PERSONNAGE UI — rail (profile), picker sheet, and the inline
+   "posting as" switcher used in the Drop sheet.
+   ===================================================================== */
+function personaTileHTML(view, opts) {
+  opts = opts || {};
+  const c = userColorObj(opts.key || (view.id ? 'persona:' + view.id : (state.user && state.user.uid) || 'self'));
+  const active = opts.active ? ' active' : '';
+  const editBtn = opts.editable
+    ? `<button class="pt-edit" data-edit="${escHtml(view.id || '')}" type="button" aria-label="${escHtml(t('editPersona'))}">✏️</button>` : '';
+  const badge = opts.active ? `<span class="pt-badge">${escHtml(t('personaActive'))}</span>` : '';
+  return `
+    <div class="persona-tile${active}" data-pick="${escHtml(view.id == null ? 'self' : view.id)}"
+         style="--uc-h:${c.h};--uc-s:${c.s}%;--uc-l:${c.l}%;">
+      ${badge}
+      <div class="pt-ava" style="background:hsl(${c.h} ${c.s}% ${c.l}%);">${avatarInner(view, '🍑')}</div>
+      <div class="pt-name">${escHtml(view.name)}</div>
+      ${view.isPersona && view.bio ? `<div class="pt-bio">${escHtml(view.bio)}</div>` : ''}
+      ${editBtn}
+    </div>`;
+}
+
+/* Horizontal rail shown in the Profile sheet. */
+function renderPersonaRail() {
+  const rail = $('personaRail'); if (!rail) return;
+  if (!state.user) {
+    rail.innerHTML = `<div class="hex-empty" style="padding:10px;">${escHtml(t('signinFirst'))}</div>`;
+    return;
+  }
+  const self = currentIdentityView.call(null) && {
+    name: state.nickname || (state.user.displayName) || t('postingAsSelf'),
+    emoji: state.avatar || '🍑',
+    photoURL: state.user.photoURL || null, isPersona: false, id: null
+  };
+  let html = personaTileHTML(self, {
+    key: state.user.uid, active: !state.actingAs
+  });
+  state.personas.forEach(p => {
+    html += personaTileHTML(
+      { name: p.name, emoji: p.emoji, photoURL: p.photoURL, bio: p.bio, isPersona: true, id: p.id },
+      { key: p.key, active: state.actingAs && state.actingAs.id === p.id, editable: true });
+  });
+  html += `
+    <button class="persona-tile add" id="personaRailAdd" type="button">
+      <div class="pt-plus">＋</div>
+      <div class="pt-name">${escHtml(t('newPersona'))}</div>
+    </button>`;
+  rail.innerHTML = html;
+
+  rail.querySelectorAll('.persona-tile[data-pick]').forEach(tile => {
+    tile.addEventListener('click', (e) => {
+      if (e.target.closest('.pt-edit')) return;   // edit handled below
+      const id = tile.dataset.pick;
+      id === 'self' ? actAsSelf() : setActivePersona(id);
+    });
+  });
+  rail.querySelectorAll('.pt-edit').forEach(b =>
+    b.addEventListener('click', (e) => { e.stopPropagation(); openPersonaEditor(b.dataset.edit); }));
+  const add = $('personaRailAdd');
+  if (add) add.addEventListener('click', () => openPersonaEditor(null));
+}
+
+/* Full-screen picker / manager sheet. */
+function openPersonaPicker() {
+  if (!requireAuth('generic')) return;
+  openSheet('personaSheet');
+  renderPersonaPicker();
+}
+
+function renderPersonaPicker() {
+  const list = $('personaPickList'); if (!list) return;
+  const self = {
+    name: state.nickname || (state.user && state.user.displayName) || t('postingAsSelf'),
+    emoji: state.avatar || '🍑',
+    photoURL: (state.user && state.user.photoURL) || null, isPersona: false, id: null
+  };
+  let html = personaTileHTML(self, { key: state.user && state.user.uid, active: !state.actingAs });
+  state.personas.forEach(p => {
+    html += personaTileHTML(
+      { name: p.name, emoji: p.emoji, photoURL: p.photoURL, bio: p.bio, isPersona: true, id: p.id },
+      { key: p.key, active: state.actingAs && state.actingAs.id === p.id, editable: true });
+  });
+  html += `
+    <button class="persona-tile add" id="personaPickAdd" type="button">
+      <div class="pt-plus">＋</div>
+      <div class="pt-name">${escHtml(t('newPersona'))}</div>
+    </button>`;
+  list.innerHTML = html;
+
+  list.querySelectorAll('.persona-tile[data-pick]').forEach(tile => {
+    tile.addEventListener('click', (e) => {
+      if (e.target.closest('.pt-edit')) return;
+      const id = tile.dataset.pick;
+      id === 'self' ? actAsSelf() : setActivePersona(id);
+      closeAllSheets();
+    });
+  });
+  list.querySelectorAll('.pt-edit').forEach(b =>
+    b.addEventListener('click', (e) => { e.stopPropagation(); openPersonaEditor(b.dataset.edit); }));
+  const add = $('personaPickAdd');
+  if (add) add.addEventListener('click', () => openPersonaEditor(null));
+}
+
+/* Inline "posting as" switcher inside the Drop sheet (keeps the draft). */
+function renderPostingAsChip() {
+  const wrap = $('dropPostingAs'); if (!wrap) return;
+  if (!state.user) { wrap.innerHTML = ''; wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+  const v = currentIdentityView();
+  const c = userColorObj(state.actingAs ? state.actingAs.key : (state.user.uid || 'self'));
+
+  let opts = '';
+  const selfActive = !state.actingAs ? ' on' : '';
+  opts += `
+    <button class="pa-opt${selfActive}" data-pick="self" type="button">
+      <span class="pa-ava" style="background:hsl(${userColorObj(state.user.uid).h} 72% 56%);">${avatarInner({emoji: state.avatar || '🍑', photoURL: state.user.photoURL}, '🍑')}</span>
+      <span class="pa-nm">${escHtml(t('postingAsSelf'))}</span>
+    </button>`;
+  state.personas.forEach(p => {
+    const pc = userColorObj(p.key);
+    const on = (state.actingAs && state.actingAs.id === p.id) ? ' on' : '';
+    opts += `
+      <button class="pa-opt${on}" data-pick="${escHtml(p.id)}" type="button">
+        <span class="pa-ava" style="background:hsl(${pc.h} 72% 56%);">${avatarInner({emoji: p.emoji, photoURL: p.photoURL}, '🎭')}</span>
+        <span class="pa-nm">${escHtml(p.name)}</span>
+      </button>`;
+  });
+  opts += `
+    <button class="pa-opt add" data-pick="__new" type="button">
+      <span class="pa-ava plus">＋</span><span class="pa-nm">${escHtml(t('newPersona'))}</span>
+    </button>`;
+
+  wrap.innerHTML = `
+    <div class="posting-as">
+      <button class="pa-chip" id="paToggle" type="button">
+        <span class="pa-ava" style="background:hsl(${c.h} 72% 56%);">${avatarInner(v, v.isPersona ? '🎭' : '🍑')}</span>
+        <span class="pa-info">
+          <span class="pa-lbl">${escHtml(t('postingAs'))}</span>
+          <span class="pa-who">${escHtml(v.name)}</span>
+        </span>
+        <span class="pa-switch">${escHtml(t('switchPersona'))} ▾</span>
+      </button>
+      <div class="pa-list" id="paList" hidden>${opts}</div>
+    </div>`;
+
+  const toggle = $('paToggle'), pl = $('paList');
+  toggle.addEventListener('click', () => {
+    const opening = pl.hasAttribute('hidden');
+    pl.toggleAttribute('hidden', !opening);
+    vibrate(8); sfxTap();
+  });
+  pl.querySelectorAll('.pa-opt').forEach(b =>
+    b.addEventListener('click', () => {
+      const id = b.dataset.pick;
+      if (id === '__new') { openPersonaEditor(null); return; }
+      id === 'self' ? actAsSelf() : setActivePersona(id);
+      pl.setAttribute('hidden', '');   // re-render happens via afterIdentityChange
+    }));
+}
+
+/* The identity currently shown to others, for the "posting as" UI. */
+function currentIdentityView() {
+  if (state.actingAs) {
+    return {
+      name: state.actingAs.name,
+      emoji: state.actingAs.emoji || '🎭',
+      photoURL: state.actingAs.photoURL || null,
+      isPersona: true,
+      id: state.actingAs.id || null
+    };
+  }
+  return {
+    name: state.nickname || (state.user && state.user.displayName) || t('postingAsSelf'),
+    emoji: state.avatar || '🍑',
+    photoURL: (state.user && state.user.photoURL) || null,
+    isPersona: false,
+    id: null
+  };
+}
+
+function avatarInner(view, fallbackChar) {
+  if (view.photoURL) return `<img src="${escHtml(view.photoURL)}" alt=""/>`;
+  if (view.emoji)    return escHtml(view.emoji);
+  return escHtml((fallbackChar || '🍑'));
 }
 
 /* ---- READ: load all votes for a set of pins (batched, one-shot) ----- */
@@ -3533,8 +4107,8 @@ async function castPinVote(pin, value) {
   if (!fbReady()) return;
   const ownerKey = pin.uid;
   const myKey = myVoterKey();
-  // Block self-vote (own pin) unless acting as a puppet / admin alias.
-  if (!state.actingAs && state.user.uid === ownerKey && !state.isAdmin) {
+  // Block self-vote on your own pin (admin is exempt — rules allow any key).
+  if (state.user.uid === ownerKey && !state.isAdmin) {
     toast(t('voteSelf'), 'warn'); vibrate(30); sfxErr(); return;
   }
   const { db, doc, setDoc, deleteDoc, serverTimestamp } = FB();
@@ -3657,7 +4231,7 @@ async function deleteComment(pinId, commentId) {
 async function castCommentVote(pinId, commentId, ownerUid, value) {
   if (!requireAuth('generic')) return;
   if (!fbReady()) return;
-  if (!state.actingAs && state.user.uid === ownerUid && !state.isAdmin) {
+  if (state.user.uid === ownerUid && !state.isAdmin) {
     toast(t('voteSelf'), 'warn'); vibrate(30); sfxErr(); return;
   }
   const { db, doc, setDoc, deleteDoc, serverTimestamp } = FB();
@@ -3763,7 +4337,7 @@ function confettiBurst() {
 
 
 /* ---------- SHEETS ---------- */
-const SHEETS = ['dropSheet', 'questsSheet', 'placesSheet', 'addPlaceSheet', 'profileSheet', 'iosSheet', 'welcomeSheet', 'hexSheet', 'signInSheet', 'adminSheet', 'aiSheet', 'myDropsSheet', 'reportSheet', 'reportsSheet'];
+const SHEETS = ['dropSheet', 'questsSheet', 'placesSheet', 'addPlaceSheet', 'profileSheet', 'iosSheet', 'welcomeSheet', 'hexSheet', 'signInSheet', 'adminSheet', 'aiSheet', 'myDropsSheet', 'reportSheet', 'reportsSheet', 'personaSheet', 'personaEditSheet'];
 let currentSheet = null;
 
 /**
@@ -4684,8 +5258,8 @@ function renderHexPinFeed(cell, pinsInCell) {
     ['date', '🕒 ' + t('sortDate')],
     ['user', '🧑 ' + t('sortUser')]
   ];
-  const adminBar = state.isAdmin ? `
-    <button class="feed-acting" id="hexActingBtn" type="button">
+  const actingBar = state.user ? `
+    <button class="feed-acting${state.actingAs ? ' persona' : ''}" id="hexActingBtn" type="button">
       🎭 ${escHtml(state.actingAs ? state.actingAs.name : t('actAsSelf'))}
     </button>` : '';
 
@@ -4891,26 +5465,8 @@ function renderCommentThread(pinId, thread, pin) {
 /* Admin-only: choose a puppet identity (or revert to self). Static-safe
    alias, NOT a real auth account. */
 function pickActingIdentity() {
-  if (!state.isAdmin) return;
-  if (!Array.isArray(state.puppets)) state.puppets = [];
-  const names = state.puppets.map(p => p.name).join(', ');
-  const ans = prompt(t('puppetPrompt') + (names ? `\n(${names})` : '') + `\n"${t('actAsSelf')}" → ${t('puppetSelfWord')}`, '');
-  if (ans === null) return;
-  const v = ans.trim();
-  if (!v || v.toLowerCase() === t('puppetSelfWord').toLowerCase()) {
-    state.actingAs = null;
-  } else {
-    let pp = state.puppets.find(p => p.name.toLowerCase() === v.toLowerCase());
-    if (!pp) {
-      pp = { key: 'puppet:' + v.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-             name: v, emoji: AVATAR_EMOJIS[Math.floor(Math.random() * AVATAR_EMOJIS.length)] };
-      state.puppets.push(pp);
-    }
-    state.actingAs = pp;
-  }
-  saveLS();
-  vibrate(12); sfxTap();
-  renderHexPinFeed(currentHexCell);
+  if (!state.user) { promptSignIn('generic'); return; }
+  openPersonaPicker();
 }
 
 function paintAmenities(cell, list, pins) {
@@ -6077,6 +6633,7 @@ function unsubAll() {
   if (pinsUnsub) { pinsUnsub(); pinsUnsub = null; }
   if (placesUnsub) { placesUnsub(); placesUnsub = null; }
   if (userDocUnsub) { userDocUnsub(); userDocUnsub = null; }
+  if (personasUnsub) { personasUnsub(); personasUnsub = null; }
 }
 
 let modRoleUnsub = null;
@@ -6232,37 +6789,26 @@ async function deleteAccount() {
 
   const user = auth.currentUser;
   if (!user) { toast(t('googleSigninErr'), 'err'); return; }
-  if (user.isAnonymous) {
-    toast(t('signinFirst'), 'warn');
-    return;
-  }
+  if (user.isAnonymous) { toast(t('signinFirst'), 'warn'); return; }
 
   // Step 1: are you sure?
-  if (!confirm(t('confirmDelete1'))) {
-    toast(t('deleteCancelled'));
-    return;
-  }
+  if (!confirm(t('confirmDelete1'))) { toast(t('deleteCancelled')); return; }
   // Step 2: type the magic word
   const expected = t('confirmDeleteWord');
   const answer = prompt(t('confirmDelete2'));
   if (!answer || answer.trim().toUpperCase() !== expected.toUpperCase()) {
-    toast(t('deleteCancelled'));
-    return;
+    toast(t('deleteCancelled')); return;
   }
 
   const uid = user.uid;
-
-  // Block the listener's "user is null → re-anonymize" path while we tear down.
   state.deleting = true;
-
-  // Show a long-running toast — the deletion can take a few seconds.
   toast(t('deleting'), 'warn', 5000);
 
   try {
-    // Stop all snapshot listeners so they don't fire during teardown.
     unsubAll();
 
-    // 1) Delete every pin owned by this user.
+    // 1) Delete every pin owned by this user (covers all personnages too,
+    //    since persona pins still carry the real uid).
     try {
       const pinsSnap = await getDocs(query(collection(db, 'pins'), where('uid', '==', uid)));
       await Promise.all(pinsSnap.docs.map(d => deleteDoc(d.ref).catch(() => {})));
@@ -6273,6 +6819,12 @@ async function deleteAccount() {
       const placesSnap = await getDocs(collection(db, 'users', uid, 'locations'));
       await Promise.all(placesSnap.docs.map(d => deleteDoc(d.ref).catch(() => {})));
     } catch (e) { console.warn('places delete error:', e); }
+
+    // 2b) Delete every personnage under this user.
+    try {
+      const personasSnap = await getDocs(collection(db, 'users', uid, 'personas'));
+      await Promise.all(personasSnap.docs.map(d => deleteDoc(d.ref).catch(() => {})));
+    } catch (e) { console.warn('personas delete error:', e); }
 
     // 3) Delete the user profile doc.
     try { await deleteDoc(doc(db, 'users', uid)); }
@@ -6286,15 +6838,12 @@ async function deleteAccount() {
         toast(t('reauthNeeded'), 'warn', 3500);
         const provider = new GoogleAuthProvider();
         provider.setCustomParameters({ prompt: 'select_account' });
-        // reauthenticate then retry — auth.currentUser is the same UID until delete() lands.
         await reauthenticateWithPopup(user, provider);
         await user.delete();
-      } else {
-        throw e;
-      }
+      } else { throw e; }
     }
 
-    // 5) Wipe local cache & in-memory state so nothing leaks into the next session.
+    // 5) Wipe local cache & in-memory state.
     try { localStorage.removeItem(LS_KEY); } catch (_) {}
     state.nickname = '';
     state.avatar = '🍑';
@@ -6302,10 +6851,12 @@ async function deleteAccount() {
     state.completed = new Set();
     state.places = [];
     state.pins = [];
-    state.welcomed = true; // don't bounce them into the welcome sheet right after
+    state.personas = [];
+    state.actingAs = null;
+    state.actingAsKey = null;
+    state.welcomed = true;
     saveLS();
 
-    // Release the guards BEFORE the auth state listener fires for the new anon user.
     state.deleting = false;
 
     // 6) Become an unauthenticated visitor (read-only).
@@ -6313,7 +6864,7 @@ async function deleteAccount() {
     state.role = 'guest';
     state.isAdmin = false;
     state.isModerator = false;
-    subscribePins();   // keep showing public pins
+    subscribePins();
 
     // 7) Refresh every surface.
     closeAllSheets();
@@ -6330,14 +6881,13 @@ async function deleteAccount() {
   } catch (e) {
     state.deleting = false;
     console.error('Account deletion failed:', e);
-    const msg = t('deleteFailed') + ': ' + (e.message || e.code || '');
-    toast(msg, 'err', 4500);
+    toast(t('deleteFailed') + ': ' + (e.message || e.code || ''), 'err', 4500);
     sfxErr();
-    // Try to re-establish listeners so the app keeps working.
     if (auth.currentUser) {
       subscribePins();
       subscribeUserDoc();
       subscribePlaces();
+      subscribePersonas();
     }
   }
 }
@@ -6353,6 +6903,10 @@ async function doSignOut() {
     state.role = 'guest';
     state.isAdmin = false;
     state.isModerator = false;
+    state.personas = [];
+    state.actingAs = null;
+    state.actingAsKey = null;
+    saveLS();
     refreshAllMarkers();   // wipe "mine" styling from all markers
     renderHeader();
     renderProfile();
@@ -6535,6 +7089,7 @@ function openDrop(presetChallenge, opts = {}) {
   renderDropChalGrid();
   renderPhotoStage();
   $('dropNote').value = '';
+  renderPostingAsChip();
   applyDropChallengeVisibility();
   openSheet('dropSheet');
 }
@@ -7250,9 +7805,12 @@ async function performDrop() {
 
   const ch = chById(state.draftChallenge);
   if (!ch) return;
+
+  const me = myAuthorIdentity();   // self OR active personnage
   const ts = Date.now();
   const pin = {
-    uid: state.user.uid,
+    uid: me.uid,                   // ALWAYS the real uid (rules require it)
+    puppet: me.puppet,             // persona alias key, or null when self
     lat: state.draftLoc.lat,
     lng: state.draftLoc.lng,
     ts,
@@ -7263,9 +7821,9 @@ async function performDrop() {
     note: ($('dropNote').value || '').trim().slice(0, 160),
     photo: state.draftPhoto || null,
     placeName: state.draftLoc.name || null,
-    displayName: state.nickname || state.user.displayName || null,
-    photoURL: state.user.photoURL || null,
-    avatarEmoji: state.avatar || null
+    displayName: me.displayName,
+    photoURL: me.photoURL,
+    avatarEmoji: me.avatarEmoji
   };
 
   const firstTime = !state.completed.has(ch.id);
@@ -7545,6 +8103,7 @@ function renderProfile() {
   }
 
   recomputeStats();
+  renderPersonaRail();
   const repBtn = $('reportsBtn');
   if (repBtn) repBtn.style.display = (state.isModerator || state.isAdmin) ? '' : 'none';
   const myDropsBtn = $('myDropsBtn');
@@ -7674,6 +8233,10 @@ function applyLang() {
     const k = el.dataset.i18n;
     if (I18N[state.lang] && I18N[state.lang][k]) el.textContent = I18N[state.lang][k];
   });
+  qsa('[data-i18n-ph]').forEach((el) => {
+    const k = el.dataset.i18nPh;
+    if (I18N[state.lang] && I18N[state.lang][k]) el.setAttribute('placeholder', I18N[state.lang][k]);
+  });
   renderHeader();
   renderQuests();
   renderPlaces();
@@ -7798,6 +8361,28 @@ function wireEvents() {
     renderProfile();
     toast(t('nicknameSaved'), 'win');
     vibrate(20); sfxWin();
+  });
+
+  // Personnages
+  $('personaSaveBtn') && $('personaSaveBtn').addEventListener('click', () => { vibrate(10); sfxTap(); savePersona(); });
+  $('personaDeleteBtn') && $('personaDeleteBtn').addEventListener('click', () => {
+    vibrate(20); sfxTap();
+    if (state.editingPersona && state.editingPersona.id) deletePersona(state.editingPersona.id);
+  });
+  $('personaDiceBtn') && $('personaDiceBtn').addEventListener('click', () => {
+    $('personaName').value = randFunnyName(); vibrate(10); sfxTap();
+  });
+  $('personaPhotoInput') && $('personaPhotoInput').addEventListener('change', async (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    try {
+      state.editingPersonaPhoto = await compressImage(f, 256, 0.8);
+      renderPersonaPhotoStage();
+    } catch (_) { toast('❌ ' + t('photoError') || 'Photo error', 'err'); }
+    e.target.value = '';
+  });
+  $('personaPhotoStage') && $('personaPhotoStage').addEventListener('click', () => {
+    if (!state.editingPersonaPhoto) $('personaPhotoInput').click();
   });
 
   // Switches
@@ -7945,7 +8530,6 @@ async function boot() {
       if (modRoleUnsub) { modRoleUnsub(); modRoleUnsub = null; }
 
       if (user) {
-        // We don't auto-anon, so any user here is real Google-signed.
         if (wasRedirecting) {
           try { await user.reload(); } catch (_) {}
           user = auth.currentUser;
@@ -7956,13 +8540,14 @@ async function boot() {
         subscribePins();
         subscribeUserDoc();
         subscribePlaces();
+        subscribePersonas();
         subscribeModRole();
         computeMyRole();
       } else {
-        // Truly unauthenticated visitor — read-only mode.
         state.user = null;
+        state.personas = [];
+        state.actingAs = null;
         computeMyRole();
-        // Subscribe to pins ONLY (no user doc, no places, no mod role).
         subscribePins();
       }
       renderHeader();
