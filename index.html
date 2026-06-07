@@ -2078,6 +2078,10 @@ html.theme-dark .hex-pin-row .ax.report { color: #fbbf24; }
 .fc-cmt b{color:var(--peach-2);}
 .fc-del{margin-left:auto;border:1.5px solid var(--border);background:var(--surface);font-size:14px;
   padding:6px 10px;border-radius:999px;cursor:pointer;}
+.fc-fly{border:1.5px solid var(--border);background:var(--surface);font-size:14px;
+  padding:6px 10px;border-radius:999px;cursor:pointer;transition:transform .12s var(--ease-out);}
+.fc-fly:active{transform:scale(.9);}
+.fc-persona-tag{font-size:11px;opacity:.85;flex-shrink:0;}
 
 /* ===================== COMMENT THREAD ===================== */
 .fc-thread{margin-top:10px;border-top:1.5px dashed var(--border);padding-top:10px;}
@@ -3156,7 +3160,7 @@ const I18N = {
     reportDeletePin: 'Delete',
     reportDismiss: 'Dismiss',
     reportDismissed: 'Report dismissed',
-    sortXp: 'Top', sortDate: 'New', sortUser: 'By user',
+    sortXp: 'Top', sortDate: 'New', sortUser: 'By user', sortMine: 'Just me',
     comments: 'Comments', noComments: 'No comments yet — break the ice 🧊',
     addComment: 'Drop a witty comment…', send: 'Send',
     upvote: 'Upvote', downvote: 'Downvote',
@@ -3400,7 +3404,7 @@ const I18N = {
     reportDeletePin: 'Supprimer',
     reportDismiss: 'Ignorer',
     reportDismissed: 'Signalement ignoré',
-    sortXp: 'Top', sortDate: 'Récent', sortUser: 'Par membre',
+    sortXp: 'Top', sortDate: 'Récent', sortUser: 'Par membre', sortMine: 'Moi',
     comments: 'Commentaires', noComments: 'Aucun commentaire — lance-toi 🧊',
     addComment: 'Lâche un commentaire malin…', send: 'Envoyer',
     upvote: 'Voter pour', downvote: 'Voter contre',
@@ -5069,13 +5073,7 @@ function renderHexSheet(cell) {
 
     <div class="section-label">👑 ${escHtml(t('hexTerritory'))} <span class="count">${ranking.length}</span></div>
     <div class="hex-territory" id="hexTerritory"></div>
-
-    <div class="section-label">🍑 ${escHtml(t('hexYourDrops'))} <span class="count" id="hexMyPinsCnt">${myPins.length}</span></div>
-    <div class="hex-pins" id="hexPinsList"></div>
-
-    <div class="section-label">👥 ${escHtml(t('hexOthersHere'))} <span class="count" id="hexOthersCnt">${otherUsers.length}</span></div>
-    <div class="hex-pins" id="hexOthersList"></div>
-
+  
     <div class="section-label">🌍 ${escHtml(t('hexAmenitiesHere'))} <span class="count" id="hexAmenCnt">…</span></div>
     <div class="hex-amen" id="hexAmenList">
       <div class="hex-skel">
@@ -5138,134 +5136,7 @@ function renderHexSheet(cell) {
     loadPinVotes(pinsInCell.slice(0, 60).map(p => p.id)).then(() => {
       if (currentHexCell === cell) { renderHexPinFeed(cell); markHexIndexDirty(); scheduleHexUpdate(); }
     });
-  }
-
-  // ---- 3) YOUR drops — detailed rows (with delete) -------------------
-  const pinsList = $('hexPinsList');
-  if (!myPins.length) {
-    pinsList.innerHTML = `<div class="hex-empty">${escHtml(t('hexNoYourPins'))}</div>`;
-  } else {
-    const viewLbl = state.lang === 'fr' ? 'Voir la photo' : 'View photo';
-    const frag = document.createDocumentFragment();
-    myPins.slice(0, 40).forEach(p => {
-      const row = document.createElement('div');
-      row.className = 'hex-pin-row';
-      const ch = chById(p.challengeId);
-      const ava = p.photoURL
-        ? `<img src="${escHtml(p.photoURL)}" alt=""/>`
-        : (p.avatarEmoji ? escHtml(p.avatarEmoji)
-            : (state.avatar || (p.displayName ? escHtml(p.displayName[0].toUpperCase()) : '🍑')));
-      const thumb = p.photo
-        ? `<button class="pin-thumb" type="button" aria-label="${escHtml(viewLbl)}"><img src="${escHtml(p.photo)}" alt=""/></button>`
-        : '';
-      row.innerHTML = `
-        <div class="ava">${ava}</div>
-        <div class="info">
-          <div class="who">${escHtml(t('you'))} <span class="mine-tag">${escHtml(t('mine'))}</span></div>
-          <div class="meta">${ch ? ch.em + ' ' + escHtml(chName(ch)) + ' · +' + ch.xp + ' XP' : ''} · ${escHtml(relTime(p.ts))}</div>
-          ${p.note ? `<div class="note">💬 ${escHtml(p.note)}</div>` : ''}
-        </div>
-        ${thumb}
-        <div class="hex-row-acts">
-          <button class="ax fly" type="button" aria-label="${escHtml(t('hexFlyToBtn'))}">🗺️</button>
-          <button class="ax del" type="button" aria-label="${escHtml(t('deleteMine'))}">🗑️</button>
-        </div>
-      `;
-      const thumbBtn = row.querySelector('.pin-thumb');
-      if (thumbBtn) {
-        thumbBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          openImageLightbox(p.photo, p.note || p.placeName || (ch ? chName(ch) : ''));
-        });
-      }
-      row.querySelector('.fly').addEventListener('click', () => {
-        vibrate(8); sfxTap();
-        closeAllSheets();
-        if (map) map.flyTo([p.lat, p.lng], 17, { duration: 0.6 });
-      });
-      row.querySelector('.del').addEventListener('click', async (e) => {
-        e.stopPropagation();
-        const ok = await deletePin(p);
-        if (ok) row.remove();
-      });
-      frag.appendChild(row);
-    });
-    pinsList.appendChild(frag);
-  }
-
-  // ---- 4) OTHER peach-droppers — one row per user (report + moderate) -
-  const othersList = $('hexOthersList');
-  if (!otherUsers.length) {
-    othersList.innerHTML = `<div class="hex-empty">${escHtml(t('hexNoOthers'))}</div>`;
-  } else {
-    const viewLbl = state.lang === 'fr' ? 'Voir la photo' : 'View photo';
-    const canModerate = !!(state.isModerator || state.isAdmin);
-    const canReport   = !!state.user;
-    const frag = document.createDocumentFragment();
-    otherUsers.slice(0, 40).forEach(u => {
-      const c = userColorObj(u.key);
-      const row = document.createElement('div');
-      row.className = 'hex-pin-row';
-      const ava = u.photoURL
-        ? `<img src="${escHtml(u.photoURL)}" alt=""/>`
-        : (u.avatarEmoji ? escHtml(u.avatarEmoji)
-            : (u.displayName ? escHtml(u.displayName[0].toUpperCase()) : '🍑'));
-      const name = u.displayName || t('friend');
-      const cntLabel = u.count === 1
-        ? t('onePeach')
-        : t('manyPeaches').replace('{n}', u.count);
-      const userPins = pinsInCell.filter(p => pinUserKey(p) === u.key);
-      const lastPin  = userPins.reduce((a, b) => ((b.ts || 0) > (a.ts || 0) ? b : a), userPins[0]);
-      const ch = chById(lastPin && lastPin.challengeId);
-      const photoPin = userPins
-        .filter(p => p.photo)
-        .reduce((a, b) => ((b.ts || 0) > ((a && a.ts) || 0) ? b : a), null);
-      const thumb = photoPin
-        ? `<button class="pin-thumb" type="button" aria-label="${escHtml(viewLbl)}"><img src="${escHtml(photoPin.photo)}" alt=""/></button>`
-        : '';
-      const reportBtn = (canReport && lastPin)
-        ? `<button class="ax report" type="button" aria-label="${escHtml(t('reportPinBtn'))}">🚩</button>` : '';
-      const modBtn = (canModerate && lastPin)
-        ? `<button class="ax del" type="button" aria-label="${escHtml(t('deleteAsMod'))}">🗑️</button>` : '';
-      row.innerHTML = `
-        <div class="ava" style="box-shadow: 0 0 0 2px hsl(${c.h} ${c.s}% ${c.l}%);">${ava}</div>
-        <div class="info">
-          <div class="who">${escHtml(name)}</div>
-          <div class="meta">${ch ? ch.em + ' ' : ''}${escHtml(cntLabel)} · ⚡ ${fmt(u.xp)} XP · ${escHtml(relTime(u.latestTs))}</div>
-          ${lastPin && lastPin.note ? `<div class="note">💬 ${escHtml(lastPin.note)}</div>` : ''}
-        </div>
-        ${thumb}
-        <div class="hex-row-acts">
-          <button class="ax fly" type="button" aria-label="${escHtml(t('hexFlyToBtn'))}">🗺️</button>
-          ${reportBtn}
-          ${modBtn}
-        </div>
-      `;
-      const thumbBtn = row.querySelector('.pin-thumb');
-      if (thumbBtn) {
-        thumbBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const cap = photoPin.note || (lastPin && lastPin.placeName) || name;
-          openImageLightbox(photoPin.photo, cap);
-        });
-      }
-      row.querySelector('.fly').addEventListener('click', () => {
-        vibrate(8); sfxTap();
-        closeAllSheets();
-        if (map && lastPin) map.flyTo([lastPin.lat, lastPin.lng], 17, { duration: 0.6 });
-      });
-      const rep = row.querySelector('.report');
-      if (rep) rep.addEventListener('click', (e) => { e.stopPropagation(); reportPin(lastPin); });
-      const del = row.querySelector('.del');
-      if (del) del.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        const ok = await deletePin(lastPin);
-        if (ok) row.remove();
-      });
-      frag.appendChild(row);
-    });
-    othersList.appendChild(frag);
-  }
+  }  
 
   // ---- 5) Fun loading message cycle for amenities --------------------
   const loadMsgs = [t('hexLoading'), t('hexLoading2'), t('hexLoading3'), t('hexLoading4')];
@@ -5304,7 +5175,7 @@ function effectivePinXp(p) {
 
 function sortHexPins(pins) {
   const arr = pins.slice();
-  if (state.hexSort === 'date') {
+  if (state.hexSort === 'date' || state.hexSort === 'mine') {
     arr.sort((a, b) => (b.ts || 0) - (a.ts || 0));
   } else if (state.hexSort === 'user') {
     arr.sort((a, b) =>
@@ -5329,8 +5200,13 @@ function renderHexPinFeed(cell, pinsInCell) {
 
   const myUid = state.user && state.user.uid;
   const canMod = state.isModerator || state.isAdmin;
-  const pins = sortHexPins(pinsInCell);
   const viewLbl = state.lang === 'fr' ? 'Voir la photo' : 'View photo';
+
+  // "Just me" filter: only the signed-in human's own drops (personas still
+  // carry the real uid, so they're included). No filter when signed out.
+  const onlyMine = state.hexSort === 'mine' && !!myUid;
+  const sourcePins = onlyMine ? pinsInCell.filter(p => p.uid === myUid) : pinsInCell;
+  const pins = sortHexPins(sourcePins);
 
   // --- Sort control bar -------------------------------------------------
   const sorts = [
@@ -5338,6 +5214,8 @@ function renderHexPinFeed(cell, pinsInCell) {
     ['date', '🕒 ' + t('sortDate')],
     ['user', '🧑 ' + t('sortUser')]
   ];
+  if (myUid) sorts.push(['mine', '🙋 ' + t('sortMine')]);
+
   const actingBar = state.user ? `
     <button class="feed-acting${state.actingAs ? ' persona' : ''}" id="hexActingBtn" type="button">
       🎭 ${escHtml(state.actingAs ? state.actingAs.name : t('actAsSelf'))}
@@ -5354,8 +5232,9 @@ function renderHexPinFeed(cell, pinsInCell) {
     </div>`;
 
   if (!pins.length) {
-    html += `<div class="hex-empty">${escHtml(t('hexNoPins'))}</div>`;
+    html += `<div class="hex-empty">${escHtml(onlyMine ? t('hexNoYourPins') : t('hexNoPins'))}</div>`;
     list.innerHTML = html;
+    wireHexFeed(list, cell, pins);   // keep sort buttons live even when empty
     return;
   }
 
@@ -5363,7 +5242,11 @@ function renderHexPinFeed(cell, pinsInCell) {
     const ch = chById(p.challengeId);
     const c = userColorObj(typeof pinUserKey === 'function' ? pinUserKey(p) : (p.uid || ''));
     const isMine = !!(myUid && p.uid === myUid);
-    const name = isMine ? t('you') : (p.displayName || t('friend'));
+    // DipGo: show the identity actually used to post (persona or real name) —
+    // never a generic "You". Persona-authored drops get a little mask.
+    const name = p.displayName
+      || (isMine ? (state.nickname || t('you')) : t('friend'));
+    const personaTag = p.puppet ? ` <span class="fc-persona-tag" title="persona">🎭</span>` : '';
     const ava = p.photoURL
       ? `<img src="${escHtml(p.photoURL)}" alt=""/>`
       : (p.avatarEmoji ? escHtml(p.avatarEmoji)
@@ -5385,7 +5268,7 @@ function renderHexPinFeed(cell, pinsInCell) {
         <span class="fc-rank">${medal}</span>
         <div class="fc-ava" style="background:hsl(${c.h} ${c.s}% ${c.l}%);">${ava}</div>
         <div class="fc-id">
-          <div class="fc-name">${escHtml(name)}${isMine ? ` <span class="mine-tag">${escHtml(t('mine'))}</span>` : ''}</div>
+          <div class="fc-name">${escHtml(name)}${personaTag}</div>
           <div class="fc-meta">${ch ? ch.em + ' ' + escHtml(chName(ch)) + ' · ' : ''}${escHtml(relTime(p.ts))}</div>
         </div>
         <div class="fc-xp"><div class="n">${fmt(xp)}</div><div class="u">XP</div></div>
@@ -5399,6 +5282,7 @@ function renderHexPinFeed(cell, pinsInCell) {
           <button class="vb down${v.mine === -1 ? ' on' : ''}" data-vote="-1" type="button" aria-label="${escHtml(t('downvote'))}">▼</button>
         </div>
         <button class="fc-cmt" data-toggle type="button">💬 ${escHtml(t('comments'))}${cCount != null ? ` <b>${cCount}</b>` : ''}</button>
+        <button class="fc-fly" data-fly type="button" aria-label="${escHtml(t('hexFlyToBtn'))}">🗺️</button>
         ${(canMod || isMine) ? `<button class="fc-del" data-del type="button" aria-label="${escHtml(t('deletePin'))}">🗑️</button>` : ''}
       </div>
       <div class="fc-thread" data-thread hidden></div>
@@ -5434,6 +5318,13 @@ function wireHexFeed(list, cell, pins) {
 
     card.querySelectorAll('.vb').forEach(b =>
       b.addEventListener('click', () => castPinVote(p, parseInt(b.dataset.vote, 10))));
+
+    const fly = card.querySelector('[data-fly]');
+    if (fly) fly.addEventListener('click', (e) => {
+      e.stopPropagation();
+      vibrate(8); sfxTap(); closeAllSheets();
+      if (map) map.flyTo([p.lat, p.lng], 17, { duration: 0.6 });
+    });
 
     const del = card.querySelector('[data-del]');
     if (del) del.addEventListener('click', async () => {
